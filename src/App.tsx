@@ -444,9 +444,16 @@ export default function App() {
                   <h4 className="text-xs font-extrabold text-[#0084ff] uppercase tracking-widest border-l-2 border-[#0084ff] pl-2 block">
                     BIOGRAPHY OUTLINE
                   </h4>
-                  <p className="text-sm md:text-base text-slate-600 leading-relaxed font-normal">
-                    {settings.about_text}
-                  </p>
+                  <div 
+                    className="text-sm md:text-base text-slate-600 leading-relaxed font-normal space-y-3 prose max-w-none 
+                               [&_strong]:font-bold [&_strong]:text-slate-800 
+                               [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-slate-900 [&_h3]:mt-4 [&_h3]:mb-2 
+                               [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_ul]:text-slate-600
+                               [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1 [&_ol]:text-slate-600
+                               [&_blockquote]:border-l-4 [&_blockquote]:border-blue-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:bg-slate-50 [&_blockquote]:py-1 [&_blockquote]:my-2 [&_blockquote]:rounded-r-md 
+                               [&_pre]:bg-slate-950 [&_pre]:text-slate-200 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-xs [&_pre]:my-2 overflow-x-auto"
+                    dangerouslySetInnerHTML={{ __html: settings.about_text }}
+                  />
                 </div>
               </section>
 

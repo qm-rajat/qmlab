@@ -5,6 +5,7 @@ import {
   LineChart, Mail, FileText, CheckCircle, Clock, Eye, Sparkles, Filter, Archive, BookOpen
 } from 'lucide-react';
 import { Project, Blog, Certificate, Contact, SiteSettings, Skill, Experience, Education } from '../types';
+import RichTextEditor from './RichTextEditor';
 
 interface AdminConsoleProps {
   settings: SiteSettings;
@@ -1344,14 +1345,12 @@ export default function AdminConsole({
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label htmlFor="set-about" className="text-xs font-bold text-slate-505 block">Detailed About paragraph</label>
-                    <textarea
-                      id="set-about"
+                  <div className="space-y-1 px-1">
+                    <label className="text-xs font-bold text-slate-500 block mb-1">Detailed About paragraph (Rich Text Editor)</label>
+                    <RichTextEditor
                       value={settings.about_text}
-                      onChange={(e) => onUpdateSettings({ ...settings, about_text: e.target.value })}
-                      rows={5}
-                      className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+                      onChange={(val) => onUpdateSettings({ ...settings, about_text: val })}
+                      placeholder="Write rich formatted bios outlines..."
                     />
                   </div>
                 </div>
