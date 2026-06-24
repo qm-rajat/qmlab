@@ -13,6 +13,7 @@ export default function ContactForm({ onAddContact }: ContactFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [smtpStatusMsg, setSmtpStatusMsg] = useState('');
 
   const validateEmail = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
@@ -42,28 +43,47 @@ export default function ContactForm({ onAddContact }: ContactFormProps) {
 
     setIsSubmitting(true);
 
-    // Simulate database network timing
-    setTimeout(() => {
-      try {
-        onAddContact({
-          name: name.trim(),
-          email: email.trim(),
-          message: message.trim(),
-          status: 'unread'
-        });
-        
-        setSubmitStatus('success');
-        // Clear fields
-        setName('');
-        setEmail('');
-        setMessage('');
-      } catch (err: any) {
-        setSubmitStatus('error');
-        setErrorMessage(err.message || 'Connecting failure. Failed to save lead.');
-      } finally {
-        setIsSubmitting(false);
+    // Call server-side API to log contact and trigger SMTP emails
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name.trim(),
+        email: email.trim(),
+        message: message.trim()
+      })
+    })
+    .then(async (response) => {
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Server processing error.');
       }
-    }, 900);
+      return data;
+    })
+    .then((data) => {
+      // Log to local CRM list for dynamic rendering in dashboard
+      onAddContact({
+        name: name.trim(),
+        email: email.trim(),
+        message: message.trim(),
+        status: 'unread'
+      });
+      setSmtpStatusMsg(data.message || 'Logged in CRM.');
+      setSubmitStatus('success');
+      // Clear fields
+      setName('');
+      setEmail('');
+      setMessage('');
+    })
+    .catch((err: any) => {
+      setSubmitStatus('error');
+      setErrorMessage(err.message || 'Connecting failure. Failed to save lead.');
+    })
+    .finally(() => {
+      setIsSubmitting(false);
+    });
   };
 
   return (
@@ -76,9 +96,9 @@ export default function ContactForm({ onAddContact }: ContactFormProps) {
         <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col items-center text-center space-y-4 animate-[fade-in_0.4s_ease-out]">
           <CheckCircle2 className="w-12 h-12 text-emerald-500 animate-[scale_0.3s_cubic-bezier(0.34,1.56,0.64,1)]" />
           <div>
-            <h4 className="font-bold text-emerald-900 text-base">Message Sent Successfully!</h4>
+            <h4 className="font-bold text-emerald-900 text-base">Message Logged & Sent!</h4>
             <p className="text-sm text-emerald-700 mt-1.5 leading-relaxed">
-              Thanks! Your inquiry has been logged securely in Rajat's CRM database. You can even visit the CRM Console to verify it!
+              {smtpStatusMsg || "Thanks! Your inquiry has been logged securely in Rajat's CRM database."}
             </p>
           </div>
           <button

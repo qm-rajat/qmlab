@@ -11,13 +11,43 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
-  // Extract all unique technologies from project objects
-  const allTags = Array.from(
-    new Set(projects.flatMap(p => p.technologies))
-  );
+  const curatedFilters = [
+    { label: 'Python & Scripting', key: 'Python' },
+    { label: 'QA Automation', key: 'QA Automation' },
+    { label: 'Machine Learning & AI', key: 'Machine Learning' },
+    { label: 'Technical SEO & Security', key: 'SEO' },
+    { label: 'Analytics & BI', key: 'BI' }
+  ];
+
+  const matchesFilter = (project: Project, filterKey: string) => {
+    const query = filterKey.toLowerCase();
+    const searchString = [
+      project.title,
+      project.description,
+      ...project.technologies
+    ].join(' ').toLowerCase();
+
+    if (query === 'python') {
+      return searchString.includes('python') || searchString.includes('bash') || searchString.includes('shell') || searchString.includes('parrot os');
+    }
+    if (query === 'qa automation') {
+      return searchString.includes('pytest') || searchString.includes('selenium') || searchString.includes('automation') || searchString.includes('testing');
+    }
+    if (query === 'machine learning') {
+      return searchString.includes('scikit') || searchString.includes('learning') || searchString.includes('tensorflow') || searchString.includes('keras') || searchString.includes('opencv') || searchString.includes('classification');
+    }
+    if (query === 'seo') {
+      return searchString.includes('seo') || searchString.includes('security') || searchString.includes('nmap') || searchString.includes('pentest');
+    }
+    if (query === 'bi') {
+      return searchString.includes('bi') || searchString.includes('power bi') || searchString.includes('excel') || searchString.includes('business intelligence');
+    }
+    
+    return project.technologies.some(t => t.toLowerCase().includes(query));
+  };
 
   const filteredProjects = selectedTag
-    ? projects.filter(p => p.technologies.includes(selectedTag))
+    ? projects.filter(p => matchesFilter(p, selectedTag))
     : projects;
 
   const handleProjectClick = (proj: Project) => {
@@ -37,22 +67,23 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
               : 'text-slate-500 bg-slate-50 hover:bg-slate-100 border border-transparent'
           }`}
         >
-          All Tech ({projects.length})
+          All Areas ({projects.length})
         </button>
-        {allTags.map((tag) => {
-          const isActive = selectedTag === tag;
-          const count = projects.filter(p => p.technologies.includes(tag)).length;
+        {curatedFilters.map((filter) => {
+          const isActive = selectedTag === filter.key;
+          const count = projects.filter(p => matchesFilter(p, filter.key)).length;
+          if (count === 0) return null; // Only show filters that have matching projects
           return (
             <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
+              key={filter.key}
+              onClick={() => setSelectedTag(filter.key)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold select-none cursor-pointer transition-all ${
                 isActive
                   ? 'bg-primary-light text-primary border border-primary-light font-bold shadow-xs'
                   : 'text-slate-500 bg-slate-50 hover:bg-slate-100 border border-transparent'
               }`}
             >
-              {tag} <span className="opacity-50 text-[10px]">({count})</span>
+              {filter.label} <span className="opacity-50 text-[10px]">({count})</span>
             </button>
           );
         })}

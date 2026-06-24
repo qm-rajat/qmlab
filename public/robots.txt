@@ -1,0 +1,68 @@
+# Optimized robots.txt for QM Labs & Rajat Kumar Dash
+# Technical SEO Audit Standard
+
+# Allow all reputable Search Engine crawlers fully
+User-agent: Googlebot
+Allow: /
+Allow: /projects
+Allow: /blog
+Allow: /certificates
+Allow: /contact
+
+User-agent: Bingbot
+Allow: /
+Allow: /projects
+Allow: /blog
+Allow: /certificates
+Allow: /contact
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: Baiduspider
+Disallow: /admin
+Allow: /
+
+User-agent: YandexBot
+Disallow: /admin
+Allow: /
+
+# Prevent aggressive AI scraper crawlers from draining process bandwidth while maintaining article visibility
+User-agent: GPTBot
+Disallow: /admin/
+Disallow: /api/
+Allow: /blog
+
+User-agent: ChatGPT-User
+Disallow: /admin/
+Disallow: /api/
+Allow: /blog
+
+User-agent: ClaudeBot
+Disallow: /admin/
+Allow: /blog
+Crawl-delay: 1
+
+User-agent: Google-Extended
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /admin/
+Allow: /blog
+
+# Global rule for other agents
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Allow: /
+Crawl-delay: 1
+
+# Sitemap Location
+Sitemap: https://rajatkumar.dev/sitemap.xml

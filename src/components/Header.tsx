@@ -25,6 +25,7 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
     { label: 'Projects', value: 'projects' },
     { label: 'Blog', value: 'blog' },
     { label: 'Certifications', value: 'certificates' },
+    { label: 'Vitals Lab', value: 'vitals' },
     { label: 'Contact', value: 'contact' },
   ];
 

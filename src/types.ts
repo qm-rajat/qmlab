@@ -13,6 +13,7 @@ export interface Project {
   is_featured: boolean;
   display_order: number;
   created_at: string;
+  project_type?: 'company' | 'portfolio' | 'both';
 }
 
 export interface Blog {
@@ -61,6 +62,9 @@ export interface Contact {
   status: 'unread' | 'read' | 'replied' | 'archived';
   ip_hash?: string;
   created_at: string;
+  priority?: 'low' | 'medium' | 'high';
+  notes?: string;
+  estimated_value?: string;
 }
 
 export interface Skill {
@@ -94,6 +98,12 @@ export interface SocialLinks {
   instagram?: string;
 }
 
+export interface CompanyService {
+  title: string;
+  description: string;
+  icon_name: string;
+}
+
 export interface SiteSettings {
   hero_name: string;
   hero_tagline: string;
@@ -112,6 +122,11 @@ export interface SiteSettings {
   logo_url: string;
   google_maps_embed_url: string;
   contact_email: string;
+  company_name: string;
+  company_tagline: string;
+  company_bio: string;
+  company_about_html: string;
+  company_services?: CompanyService[];
 }
 
 export interface AnalyticsSummary {

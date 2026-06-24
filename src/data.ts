@@ -122,7 +122,17 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   resume_storage_path: "resume/rajat_resume.pdf",
   logo_url: "",
   google_maps_embed_url: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112064.93510529683!2d77.12644264663953!3d28.628929969145624!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0xd5c854199617651c!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1718018501234!5m2!1sen!2sin",
-  contact_email: "rajatkudash.2004@gmail.com"
+  contact_email: "rajatkudash.2004@gmail.com",
+  company_name: "QM Labs",
+  company_tagline: "Quality Builds Trust. Momentum Drives Growth.",
+  company_bio: "A premium software consulting and engineering lab specializing in secure web architecture, automated test infrastructures, and technical search engine optimization.",
+  company_about_html: "<h3><strong>QM Labs — Engineering Digital Acceleration</strong></h3><p>We are a high-performance freelance and consulting agency delivering premium digital solutions to modern businesses. We combine full-stack programming, professional search engine optimization, and advanced automated testing into a singular, high-velocity delivery model.</p><ul><li><strong>Precision Engineering:</strong> We write component-driven React, TypeScript, Node.js, and Python systems structured for high uptime.</li><li><strong>Organic Growth Science:</strong> We translate search engine parameters into code, optimizing metadata, schema layouts, indexing pathways, and Core Web Vitals to increase visitor yield.</li><li><strong>Automated Stability:</strong> We formulate extensive regression suites and Page Object Model frameworks to verify that every user experience is flawless.</li></ul><p>We operate transparently, with code verified by modern telemetry, keeping your engineering momentum forward.</p>",
+  company_services: [
+    { title: "Custom Web & Full-Stack Development", description: "Design and implement robust client interfaces paired with secure, light-weight server middleware (React, TypeScript, Express).", icon_name: "Cpu" },
+    { title: "Technical SEO & Web Analytics Campaigns", description: "Diagnose crawl issues, configure JSON-LD Schema structures, optimize Core Web Vitals (LCP, FID, CLS), and deploy custom GA4 telemetry.", icon_name: "TrendingUp" },
+    { title: "End-to-End QA Automation & Security", description: "Maintain bulletproof production builds with automated PyTest/Selenium suites and system security evaluations.", icon_name: "CheckCircle" },
+    { title: "Advanced BI & Data Analysis Pipelines", description: "Formulate explanatory machine learning classifications, clean dense spreadsheets, and build custom metrics dashboards.", icon_name: "Activity" }
+  ]
 };
 
 export const DEFAULT_PROJECTS: Project[] = [

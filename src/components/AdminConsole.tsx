@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Shield, Key, LayoutDashboard, FileCode, Search, Award, Inbox, Settings, LogOut,
   Plus, Edit2, Trash2, Check, ArrowRight, ToggleLeft, ToggleRight, Save, Info,
-  LineChart, Mail, FileText, CheckCircle, Clock, Eye, Sparkles, Filter, Archive, BookOpen
+  LineChart, Mail, FileText, CheckCircle, Clock, Eye, Sparkles, Filter, Archive, BookOpen,
+  Copy, Flame, DollarSign, AlertTriangle
 } from 'lucide-react';
 import { Project, Blog, Certificate, Contact, SiteSettings, Skill, Experience, Education } from '../types';
 import RichTextEditor from './RichTextEditor';
@@ -22,7 +23,7 @@ interface AdminConsoleProps {
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
 
-type AdminTab = 'dashboard' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'settings';
+type AdminTab = 'dashboard' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'settings' | 'smtp';
 
 export default function AdminConsole({
   settings,
@@ -63,6 +64,28 @@ export default function AdminConsole({
   // Contact filtering state
   const [contactFilter, setContactFilter] = useState<'all' | 'unread' | 'read' | 'replied' | 'archived'>('all');
 
+  // SMTP Connection Diagnostic State
+  const [smtpStatus, setSmtpStatus] = useState<{ configured: boolean; host: string | null; user: string | null; toEmail: string | null } | null>(null);
+  const [isTestingSmtp, setIsTestingSmtp] = useState(false);
+  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Custom Deletion Confirmation Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string;
+    type: 'contact' | 'project' | 'blog' | 'certificate';
+    title: string;
+  } | null>(null);
+
+  // Load SMTP Status when SMTP Tab is opened
+  useEffect(() => {
+    if (activeTab === 'smtp') {
+      fetch('/api/smtp-status')
+        .then(res => res.json())
+        .then(data => setSmtpStatus(data))
+        .catch(err => console.error('SMTP Status Fetch Failure:', err));
+    }
+  }, [activeTab]);
+
   // Analytics Metrics Simulation
   const views7Days = [142, 185, 230, 247, 198, 265, 312]; // Last element is today views
   const topVisitedPages = [
@@ -92,14 +115,37 @@ export default function AdminConsole({
   };
 
   // Contacts CRM updates
-  const handleContactStatusChange = (id: string, s: 'unread' | 'read' | 'replied' | 'archived') => {
-    const updated = contacts.map(c => c.id === id ? { ...c, status: s } : c);
+  const handleUpdateContact = (id: string, updatedFields: Partial<Contact>) => {
+    const updated = contacts.map(c => c.id === id ? { ...c, ...updatedFields } : c);
     onUpdateContacts(updated);
   };
 
   const handleDeleteContact = (id: string) => {
-    const updated = contacts.filter(c => c.id !== id);
-    onUpdateContacts(updated);
+    const contact = contacts.find(c => c.id === id);
+    setDeleteConfirm({
+      id,
+      type: 'contact',
+      title: contact ? `lead inquiry from "${contact.name}"` : 'this lead inquiry'
+    });
+  };
+
+  const executeDelete = () => {
+    if (!deleteConfirm) return;
+    const { id, type } = deleteConfirm;
+    if (type === 'contact') {
+      const updated = contacts.filter(c => c.id !== id);
+      onUpdateContacts(updated);
+    } else if (type === 'project') {
+      const updated = projects.filter(p => p.id !== id);
+      onUpdateProjects(updated);
+    } else if (type === 'blog') {
+      const updated = blogs.filter(b => b.id !== id);
+      onUpdateBlogs(updated);
+    } else if (type === 'certificate') {
+      const updated = certificates.filter(c => c.id !== id);
+      onUpdateCertificates(updated);
+    }
+    setDeleteConfirm(null);
   };
 
   // Projects CRUD Actions
@@ -146,10 +192,12 @@ export default function AdminConsole({
   };
 
   const handleProjectDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this project?')) {
-      const updated = projects.filter(p => p.id !== id);
-      onUpdateProjects(updated);
-    }
+    const proj = projects.find(p => p.id === id);
+    setDeleteConfirm({
+      id,
+      type: 'project',
+      title: proj ? `project "${proj.title}"` : 'this project'
+    });
   };
 
   // Blogs CRUD Actions
@@ -204,10 +252,12 @@ export default function AdminConsole({
   };
 
   const handleBlogDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this blog post?')) {
-      const updated = blogs.filter(b => b.id !== id);
-      onUpdateBlogs(updated);
-    }
+    const blog = blogs.find(b => b.id === id);
+    setDeleteConfirm({
+      id,
+      type: 'blog',
+      title: blog ? `blog post "${blog.title}"` : 'this blog post'
+    });
   };
 
   // Certificates CRUD Actions
@@ -251,10 +301,12 @@ export default function AdminConsole({
   };
 
   const handleCertDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this certification?')) {
-      const updated = certificates.filter(c => c.id !== id);
-      onUpdateCertificates(updated);
-    }
+    const cert = certificates.find(c => c.id === id);
+    setDeleteConfirm({
+      id,
+      type: 'certificate',
+      title: cert ? `certification "${cert.title}"` : 'this certification'
+    });
   };
 
   // Settings Dynamic Array Handlers
@@ -278,9 +330,53 @@ export default function AdminConsole({
 
   // Contacts aggregation
   const unreadContactCount = contacts.filter(c => c.status === 'unread').length;
-  const filteredContacts = contactFilter === 'all'
-    ? contacts
-    : contacts.filter(c => c.status === contactFilter);
+
+  // CRM Search & Sorting Extensions
+  const [crmSearchText, setCrmSearchText] = useState('');
+  const [crmSortBy, setCrmSortBy] = useState<'date_desc' | 'date_asc' | 'priority_high'>('date_desc');
+  const [crmCopiedTemplateId, setCrmCopiedTemplateId] = useState<string | null>(null);
+
+  const getFilteredAndSortedContacts = () => {
+    let result = [...contacts];
+
+    // 1. Status Filter
+    if (contactFilter !== 'all') {
+      result = result.filter(c => c.status === contactFilter);
+    }
+
+    // 2. Search Text Keyword
+    if (crmSearchText.trim()) {
+      const query = crmSearchText.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        c.message.toLowerCase().includes(query) ||
+        (c.notes && c.notes.toLowerCase().includes(query)) ||
+        (c.estimated_value && c.estimated_value.toLowerCase().includes(query))
+      );
+    }
+
+    // 3. Sorting
+    if (crmSortBy === 'date_desc') {
+      result.sort((a, b) => new Date(b.created_at || Date.now()).getTime() - new Date(a.created_at || Date.now()).getTime());
+    } else if (crmSortBy === 'date_asc') {
+      result.sort((a, b) => new Date(a.created_at || Date.now()).getTime() - new Date(b.created_at || Date.now()).getTime());
+    } else if (crmSortBy === 'priority_high') {
+      const priorityWeight: { [key: string]: number } = { high: 3, medium: 2, low: 1, undefined: 0 };
+      result.sort((a, b) => {
+        const weightA = priorityWeight[a.priority || 'undefined'] ?? 0;
+        const weightB = priorityWeight[b.priority || 'undefined'] ?? 0;
+        if (weightB !== weightA) {
+          return weightB - weightA;
+        }
+        return new Date(b.created_at || Date.now()).getTime() - new Date(a.created_at || Date.now()).getTime();
+      });
+    }
+
+    return result;
+  };
+
+  const processedContacts = getFilteredAndSortedContacts();
 
   // SECURE AUTH CHECK
   if (!isAdminLoggedIn) {
@@ -375,6 +471,7 @@ export default function AdminConsole({
             { label: 'Technical Blogs', value: 'blogs', icon: BookOpen },
             { label: 'Certifications', value: 'certs', icon: Award },
             { label: 'Contacts Enquiries', value: 'contacts', icon: Inbox, alert: unreadContactCount > 0 ? `${unreadContactCount}` : null },
+            { label: 'SMTP Connection', value: 'smtp', icon: Mail },
             { label: 'Site settings', value: 'settings', icon: Settings },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -654,7 +751,18 @@ export default function AdminConsole({
                                     className="w-10 h-8 object-cover rounded-md border border-slate-100"
                                   />
                                   <div>
-                                    <div className="font-bold text-slate-900 text-sm leading-tight">{proj.title}</div>
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <div className="font-bold text-slate-900 text-sm leading-tight">{proj.title}</div>
+                                      {proj.project_type === 'company' && (
+                                        <span className="text-[8px] font-extrabold uppercase bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded-md">🏢 Company</span>
+                                      )}
+                                      {proj.project_type === 'portfolio' && (
+                                        <span className="text-[8px] font-extrabold uppercase bg-blue-50 text-blue-700 border border-blue-105/10 px-1.5 py-0.5 rounded-md">👨‍💻 Portfolio</span>
+                                      )}
+                                      {(proj.project_type === 'both' || !proj.project_type) && (
+                                        <span className="text-[8px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md">🌟 Both</span>
+                                      )}
+                                    </div>
                                     <span className="text-[10px] text-slate-400 mt-0.5 block truncate">/{proj.slug}</span>
                                   </div>
                                 </div>
@@ -792,8 +900,8 @@ export default function AdminConsole({
                       />
                     </div>
 
-                    {/* Display Order */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Display Order & Section Designation */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-1">
                         <label htmlFor="pform-order" className="text-xs font-bold text-slate-505 block">Display Order</label>
                         <input
@@ -804,6 +912,21 @@ export default function AdminConsole({
                           className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
                         />
                       </div>
+
+                      <div className="space-y-1">
+                        <label htmlFor="pform-type" className="text-xs font-bold text-slate-505 block">Designation Section</label>
+                        <select
+                          id="pform-type"
+                          value={projectForm.project_type || 'both'}
+                          onChange={(e) => setProjectForm({ ...projectForm, project_type: e.target.value as any })}
+                          className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden cursor-pointer"
+                        >
+                          <option value="company">🏢 Company Project</option>
+                          <option value="portfolio">👨‍💻 Portfolio Project</option>
+                          <option value="both">🌟 Both Sections</option>
+                        </select>
+                      </div>
+
                       {/* Featured checkbox */}
                       <div className="flex items-center gap-2 pt-6 pl-2">
                         <input
@@ -1202,78 +1325,423 @@ export default function AdminConsole({
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Inbound Leads Hub</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Track, categorize, and archive recruiter communications.</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Track, categorize, prioritize, and manage recruiter communications.</p>
                 </div>
 
                 {/* Filter bar */}
-                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 p-1 rounded-xl">
-                  {['all', 'unread', 'read', 'replied', 'archived'].map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setContactFilter(f as any)}
-                      className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg cursor-pointer ${
-                        contactFilter === f ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-400 hover:text-slate-700'
-                      }`}
-                    >
-                      {f}
-                    </button>
-                  ))}
+                <div className="flex flex-wrap items-center gap-1 bg-slate-50 border border-slate-100 p-1 rounded-xl">
+                  {['all', 'unread', 'read', 'replied', 'archived'].map((f) => {
+                    const count = f === 'all' ? contacts.length : contacts.filter(c => c.status === f).length;
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setContactFilter(f as any)}
+                        className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg cursor-pointer transition-all ${
+                          contactFilter === f ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-400 hover:text-slate-700'
+                        }`}
+                      >
+                        {f} <span className="text-[9px] opacity-60">({count})</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {filteredContacts.length === 0 ? (
+              {/* Advanced Search & Sorting Options Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/50 border border-slate-100 p-4 rounded-2xl">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, query, budget, notes..."
+                    value={crmSearchText}
+                    onChange={(e) => setCrmSearchText(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 focus:border-primary rounded-xl text-xs text-slate-800 focus:outline-hidden"
+                  />
+                  {crmSearchText && (
+                    <button
+                      onClick={() => setCrmSearchText('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Sort By:</span>
+                  <select
+                    value={crmSortBy}
+                    onChange={(e) => setCrmSortBy(e.target.value as any)}
+                    className="px-3 py-1.5 bg-white border border-slate-200 focus:border-primary rounded-xl text-xs text-slate-700 cursor-pointer focus:outline-hidden"
+                  >
+                    <option value="date_desc">Date (Newest First)</option>
+                    <option value="date_asc">Date (Oldest First)</option>
+                    <option value="priority_high">Priority (🔥 High First)</option>
+                  </select>
+                </div>
+              </div>
+
+              {processedContacts.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 bg-slate-50/20 border border-slate-100 rounded-3xl">
                   <Mail className="w-12 h-12 stroke-[1] mx-auto mb-3 text-slate-300 pointer-events-none" />
-                  Your mailbox folder is empty.
+                  {crmSearchText ? 'No matching contacts found for your search term.' : 'Your matched mailbox folder is empty.'}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredContacts.map((lead) => (
-                    <div
-                      key={lead.id}
-                      className="bg-white border border-slate-150/80 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 border-l-4 border-l-primary"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-bold text-slate-900 text-sm">{lead.name}</span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-xs text-slate-500 font-medium">{lead.email}</span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-xs text-slate-450 font-mono">
-                            {new Date(lead.created_at || Date.now()).toLocaleString('en-IN')}
-                          </span>
+                  {processedContacts.map((lead) => {
+                    // Stylistic borders and backgrounds based on priority
+                    let borderClass = 'border-l-4 border-l-slate-300';
+                    let bgOverlay = 'bg-white';
+                    if (lead.priority === 'high') {
+                      borderClass = 'border-l-4 border-l-rose-500';
+                      bgOverlay = 'bg-rose-50/5';
+                    } else if (lead.priority === 'medium') {
+                      borderClass = 'border-l-4 border-l-amber-500';
+                      bgOverlay = 'bg-amber-50/5';
+                    } else if (lead.priority === 'low') {
+                      borderClass = 'border-l-4 border-l-blue-400';
+                      bgOverlay = 'bg-blue-50/5';
+                    }
+
+                    const handleCopyTemplate = (text: string, templateId: string) => {
+                      navigator.clipboard.writeText(text);
+                      setCrmCopiedTemplateId(`${lead.id}-${templateId}`);
+                      setTimeout(() => setCrmCopiedTemplateId(null), 2000);
+                    };
+
+                    return (
+                      <div
+                        key={lead.id}
+                        className={`border border-slate-150/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between gap-4 transition-all hover:shadow-sm ${borderClass} ${bgOverlay}`}
+                      >
+                        <div className="space-y-3">
+                          {/* Top Metadata row */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100/65 pb-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-extrabold text-slate-900 text-sm">{lead.name}</span>
+                              <span className="text-slate-300">•</span>
+                              <span className="text-xs text-slate-500 font-medium select-all">{lead.email}</span>
+                              <span className="text-slate-300">•</span>
+                              <span className="text-xs text-slate-400 font-mono">
+                                {new Date(lead.created_at || Date.now()).toLocaleString('en-IN')}
+                              </span>
+                            </div>
+
+                            {/* Status tags */}
+                            <div className="flex items-center gap-1.5Packed">
+                              {lead.priority && (
+                                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                                  lead.priority === 'high' ? 'bg-rose-50 text-rose-600 border border-rose-100/50' :
+                                  lead.priority === 'medium' ? 'bg-amber-50 text-amber-750 border border-amber-100/50' :
+                                  'bg-slate-50 text-slate-550'
+                                }`}>
+                                  {lead.priority === 'high' && <Flame className="w-2.5 h-2.5 text-rose-500 animate-pulse" />}
+                                  {lead.priority.toUpperCase()} PRIORITY
+                                </span>
+                              )}
+                              {lead.estimated_value && (
+                                <span className="text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100/50 px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                                  <DollarSign className="w-2.5 h-2.5" />
+                                  Value: {lead.estimated_value}
+                                </span>
+                              )}
+                              <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+                                lead.status === 'unread' ? 'bg-rose-500 text-white animate-pulse' :
+                                lead.status === 'replied' ? 'bg-emerald-500 text-white' :
+                                'bg-slate-800 text-white'
+                              }`}>
+                                {lead.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Original message details */}
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Inquiry Message</label>
+                            <p className="text-xs text-slate-700 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100/50 whitespace-pre-wrap select-text selection:bg-blue-100">
+                              {lead.message}
+                            </p>
+                          </div>
+
+                          {/* Private CRM notes block */}
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+                              Private Follow-up CRM Notes (Auto-saved)
+                            </label>
+                            <textarea
+                              value={lead.notes || ''}
+                              placeholder="Type private admin follow-up notes here (e.g. 'Awaiting scheduling callback', 'Sent interview link' ...)"
+                              onChange={(e) => handleUpdateContact(lead.id, { notes: e.target.value })}
+                              rows={2}
+                              className="w-full px-3 py-2 text-xs bg-slate-50/40 hover:bg-slate-50/80 focus:bg-white border border-slate-205 focus:border-primary rounded-xl focus:outline-hidden text-slate-750 resize-none transition-all placeholder:text-slate-350"
+                            />
+                          </div>
+
+                          {/* Quick answers templates pill row */}
+                          <div className="bg-blue-50/25 border border-blue-100/35 rounded-xl p-3 space-y-2">
+                            <span className="text-[9.5px] font-extrabold text-blue-600 uppercase tracking-widest block flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-[#0084ff]" />
+                              Canned Response Engine (Click to instant copy response)
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                {
+                                  id: 'ack',
+                                  label: '📬 Acknowledge Receipt',
+                                  text: `Hi ${lead.name},\n\nThank you for reaching out to Rajat / QM Labs!\n\nThis is a quick acknowledgment to confirm I have successfully received your inquiry regarding potential collaboration. I am currently evaluating the scope of work and will revert with a detailed response within 24 hours.\n\nTalk soon,\nRajat\nTechnical Expert • QM Labs\nhttps://qmlabs.tech`
+                                },
+                                {
+                                  id: 'call',
+                                  label: '📅 Request Discovery Call',
+                                  text: `Hi ${lead.name},\n\nThank you for getting in touch!\n\nI have reviewed your message and would love to learn more. To establish technical compatibility and explore how we could work together, let's schedule a brief 10-minute discovery video call. Please feel free to reply with your preferred days/times, or use my calendar scheduler.\n\nLooking forward to speaking with you!\n\nBest regards,\nRajat`
+                                },
+                                {
+                                  id: 'spec',
+                                  label: '💼 Request Spec/Requirements',
+                                  text: `Hi ${lead.name},\n\nThank you for getting in touch regarding your product goals!\n\nTo ensure I generate a precise technical feasibility assessment and a tailored quotation or fixed budget estimate, could you share any additional project specification documentation, UI/UX mockups, or an existing repository you want optimized?\n\nBest regards,\nRajat\nQM Labs`
+                                }
+                              ].map((tpl) => {
+                                const isCopied = crmCopiedTemplateId === `${lead.id}-${tpl.id}`;
+                                return (
+                                  <button
+                                    key={tpl.id}
+                                    type="button"
+                                    onClick={() => handleCopyTemplate(tpl.text, tpl.id)}
+                                    className={`px-3 py-1.5 text-[9px] font-bold rounded-lg cursor-pointer transition-all border outline-hidden ${
+                                      isCopied
+                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                        : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-150 shadow-2xs hover:shadow-xs'
+                                    }`}
+                                  >
+                                    {isCopied ? '✓ Copied to Clipboard!' : tpl.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
-                          {lead.message}
-                        </p>
-                      </div>
 
-                      {/* CRM State dropdown controls */}
-                      <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-2 pt-2 md:pt-0">
-                        <select
-                          value={lead.status}
-                          onChange={(e) => handleContactStatusChange(lead.id, e.target.value as any)}
-                          className="px-2.5 py-1 text-[10px] font-bold uppercase bg-slate-50 border border-slate-150 rounded-lg text-slate-600 focus:outline-hidden"
-                        >
-                          <option value="unread">Unread</option>
-                          <option value="read">Read</option>
-                          <option value="replied">Replied</option>
-                          <option value="archived">Archived</option>
-                        </select>
+                        {/* Dropdown control panel */}
+                        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                          <div className="grid grid-cols-3 gap-3 w-full md:w-auto">
+                            <div className="min-w-[120px]">
+                              <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Priority Level</span>
+                              <select
+                                value={lead.priority || ''}
+                                onChange={(e) => handleUpdateContact(lead.id, { priority: (e.target.value || undefined) as any })}
+                                className="w-full px-2 py-1 bg-slate-50 border border-slate-150 rounded-lg text-xs text-slate-650 cursor-pointer focus:outline-hidden font-medium"
+                              >
+                                <option value="">-- None --</option>
+                                <option value="high">🔴 High Urgency</option>
+                                <option value="medium">🟡 Medium Urgency</option>
+                                <option value="low">🔵 Low Urgency</option>
+                              </select>
+                            </div>
 
-                        <button
-                          onClick={() => handleDeleteContact(lead.id)}
-                          className="px-2.5 py-1 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] rounded-lg font-bold flex items-center gap-1 cursor-pointer hover:bg-rose-100 transition-colors"
-                          title="Purge message record"
-                        >
-                          <Archive className="w-3 h-3" /> Archive/Erase
-                        </button>
+                            <div className="min-w-[130px]">
+                              <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Est. Deal Value</span>
+                              <select
+                                value={lead.estimated_value || ''}
+                                onChange={(e) => handleUpdateContact(lead.id, { estimated_value: e.target.value })}
+                                className="w-full px-2 py-1 bg-slate-50 border border-slate-150 rounded-lg text-xs text-slate-650 cursor-pointer focus:outline-hidden font-medium"
+                              >
+                                <option value="">-- Unassigned --</option>
+                                <option value="Under $2k">Under $2k</option>
+                                <option value="$2k - $10k">$2k - $10k (Core)</option>
+                                <option value="$10k+">$10k+ Enterprise</option>
+                                <option value="Candidate Job">F-T / Contract Job</option>
+                              </select>
+                            </div>
+
+                            <div className="min-w-[120px]">
+                              <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Pipeline Status</span>
+                              <select
+                                value={lead.status}
+                                onChange={(e) => handleUpdateContact(lead.id, { status: e.target.value as any })}
+                                className="w-full px-2 py-1 bg-slate-100 border border-slate-205 rounded-lg text-xs font-bold text-slate-800 cursor-pointer focus:outline-hidden"
+                              >
+                                <option value="unread">📬 Unread</option>
+                                <option value="read">📖 Read</option>
+                                <option value="replied">✅ Replied</option>
+                                <option value="archived">📦 Archived</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleDeleteContact(lead.id)}
+                            className="w-full md:w-auto px-4 py-2 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer hover:bg-rose-100 transition-colors"
+                            title="Format delete lead enquiry record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Permanent Delete
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB: SMTP OUTBOUND EMAIL DIAGNOSTICS */}
+          {activeTab === 'smtp' && (
+            <div className="space-y-6 animate-fade-in text-left">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">SMTP Outbound Connection Lab</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Diagnose, authenticate, and run test transmissions on your portfolio mailers.</p>
+              </div>
+
+              {/* Status Indicator Card */}
+              {smtpStatus ? (
+                <div className={`p-6 rounded-3xl border ${smtpStatus.configured ? 'bg-emerald-50/40 border-emerald-100/80 text-emerald-900' : 'bg-rose-50/40 border-rose-100/80 text-rose-900'} space-y-4`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${smtpStatus.configured ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                        <h4 className="font-extrabold text-sm uppercase tracking-wider">
+                          {smtpStatus.configured ? 'Outbound SMTP Connection Active' : 'SMTP Server Offline / Unconfigured'}
+                        </h4>
+                      </div>
+                      <p className="text-xs opacity-80 max-w-xl leading-relaxed">
+                        {smtpStatus.configured 
+                          ? 'Your full-stack Node server has successfully loaded valid credentials. Real-time lead notifications and polished recruiter confirmations are online!' 
+                          : 'Your portfolio emailers are currently running in local fallback mode. Fill out the .env instructions below to activate direct auto-replies.'}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSmtpStatus(null);
+                        fetch('/api/smtp-status')
+                          .then(res => res.json())
+                          .then(data => setSmtpStatus(data));
+                      }}
+                      className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[10px] font-bold rounded-xl cursor-pointer select-none active:scale-95 transition-all"
+                    >
+                      Refresh Check
+                    </button>
+                  </div>
+
+                  {smtpStatus.configured && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-200/55 text-xs">
+                      <div>
+                        <span className="block font-bold text-slate-400 uppercase text-[9px] tracking-wider mb-0.5">SMTP Host Address</span>
+                        <span className="font-mono text-slate-700 font-semibold">{smtpStatus.host}</span>
+                      </div>
+                      <div>
+                        <span className="block font-bold text-slate-400 uppercase text-[9px] tracking-wider mb-0.5">Authenticated User</span>
+                        <span className="font-mono text-slate-700 font-semibold">{smtpStatus.user}</span>
+                      </div>
+                      <div>
+                        <span className="block font-bold text-slate-400 uppercase text-[9px] tracking-wider mb-0.5">Receiving Inbox (TO)</span>
+                        <span className="font-mono text-slate-700 font-semibold select-all">{smtpStatus.toEmail}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-12 text-center text-slate-400 bg-slate-50 border border-slate-100 rounded-3xl">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+                  Querying mail server configurations...
+                </div>
+              )}
+
+              {/* Guide card on configuring Google SMTP */}
+              <div className="bg-white border border-slate-150 rounded-3xl p-6 space-y-4">
+                <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#0084ff]" />
+                  How to link Google/Gmail SMTP Credentials Securely
+                </h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Due to Google's strict security regulations, you cannot use your regular Gmail password. You must generate a secure 16-character <strong>Google App Password</strong>:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-2">
+                    <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
+                    <h5 className="font-bold text-slate-800 text-xs">Activate 2FA</h5>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Visit <a href="https://myaccount.google.com" target="_blank" rel="noreferrer" className="text-primary hover:underline">Google My Account</a>. Go to Security and verify 2-Step Verification is active.
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-2">
+                    <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
+                    <h5 className="font-bold text-slate-800 text-xs">App Password</h5>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Search "App Passwords" in the top bar. Enter a custom name like "QM Labs Portfolio" and click Create.
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-2">
+                    <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">3</span>
+                    <h5 className="font-bold text-slate-800 text-xs">Configure Env</h5>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Open your portfolio secrets settings/secrets panel or <code>.env</code> file and save the 16-digit key under <code>SMTP_PASS</code>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action: Send Test Email */}
+              <div className="bg-slate-50/40 border border-slate-150 rounded-3xl p-6 space-y-4">
+                <div className="space-y-1">
+                  <h4 className="font-bold text-slate-900 text-sm">Transmitter Integration Test</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Trigger a secure SMTP ping from your Cloud Run container using your active credentials. This will dispatch a diagnostic test report email directly to your inbox.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTestingSmtp(true);
+                      setSmtpTestResult(null);
+                      fetch('/api/test-smtp', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => setSmtpTestResult(data))
+                        .catch(err => setSmtpTestResult({ success: false, message: err.message }))
+                        .finally(() => setIsTestingSmtp(false));
+                    }}
+                    disabled={isTestingSmtp}
+                    className={`px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-white bg-primary hover:bg-primary-dark transition-all cursor-pointer ${isTestingSmtp ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  >
+                    {isTestingSmtp ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Transmitting Diagnostic Mail...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-3.5 h-3.5" />
+                        Send Test Email Alert
+                      </>
+                    )}
+                  </button>
+
+                  <span className="text-[10px] text-slate-400 italic sm:max-w-xs">
+                    * Make sure to specify <code>SMTP_PASS</code> and <code>SMTP_USER</code> in your environment parameters.
+                  </span>
+                </div>
+
+                {smtpTestResult && (
+                  <div className={`p-4 rounded-xl border flex items-start gap-3 text-xs animate-slide-up ${smtpTestResult.success ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}`}>
+                    {smtpTestResult.success ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-1">
+                      <p className="font-bold">{smtpTestResult.success ? 'Outbound SMTP Test Passed!' : 'Connection Handshake Failed'}</p>
+                      <p className="opacity-90 font-mono text-[11px] leading-relaxed select-text">{smtpTestResult.message || (smtpTestResult as any).error}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1286,9 +1754,10 @@ export default function AdminConsole({
               </div>
 
               {/* Sub-tabs header */}
-              <div className="flex flex-wrap items-center gap-1 border-b border-slate-100 pb-1.5">
+              <div className="flex flex-wrap items-center gap-1 border-b border-slate-100 pb-1.5 font-sans">
                 {[
                   { label: 'Hero & Summary', value: 'hero' },
+                  { label: 'Company Profile', value: 'company' },
                   { label: 'Skills lists', value: 'skills' },
                   { label: 'Social connections', value: 'socials' },
                   { label: 'Map / Meta', value: 'seo' }
@@ -1346,12 +1815,151 @@ export default function AdminConsole({
                   </div>
 
                   <div className="space-y-1 px-1">
-                    <label className="text-xs font-bold text-slate-500 block mb-1">Detailed About paragraph (Rich Text Editor)</label>
+                    <label className="text-xs font-bold text-slate-500 block mb-1 font-sans">Detailed About paragraph (Rich Text Editor)</label>
                     <RichTextEditor
                       value={settings.about_text}
                       onChange={(val) => onUpdateSettings({ ...settings, about_text: val })}
                       placeholder="Write rich formatted bios outlines..."
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Settings Sub-Tab: Company Profile */}
+              {settingsSubTab === 'company' && (
+                <div className="space-y-5 animate-fade-in text-left font-sans">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1 text-left">
+                      <label className="text-xs font-bold text-slate-500 block">Company Name</label>
+                      <input
+                        type="text"
+                        value={settings.company_name || 'QM Labs'}
+                        onChange={(e) => onUpdateSettings({ ...settings, company_name: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                      />
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="text-xs font-bold text-slate-500 block">Company Tagline</label>
+                      <input
+                        type="text"
+                        value={settings.company_tagline || 'Quality Builds Trust. Momentum Drives Growth.'}
+                        onChange={(e) => onUpdateSettings({ ...settings, company_tagline: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-bold text-slate-500 block">Company Bio / Short Intro</label>
+                    <textarea
+                      value={settings.company_bio || ''}
+                      onChange={(e) => onUpdateSettings({ ...settings, company_bio: e.target.value })}
+                      rows={2}
+                      className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1 px-1 text-left">
+                    <label className="text-xs font-bold text-slate-500 block mb-1">Detailed Company Profile / Pitch (Rich Text Editor)</label>
+                    <RichTextEditor
+                      value={settings.company_about_html || ''}
+                      onChange={(val) => onUpdateSettings({ ...settings, company_about_html: val })}
+                      placeholder="Explain what your company does in detail..."
+                    />
+                  </div>
+
+                  {/* Company Services list editor */}
+                  <div className="space-y-3 pt-3 border-t border-slate-100 text-left">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-widest">Company Services & Capabilities</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const services = settings.company_services || [];
+                          onUpdateSettings({
+                            ...settings,
+                            company_services: [...services, { title: 'New Service', description: 'Service description...', icon_name: 'Cpu' }]
+                          });
+                        }}
+                        className="px-2.5 py-1 text-[10px] font-bold bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" /> Add Service
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(settings.company_services || []).map((srv, sIdx) => {
+                        const iconSelectVal = srv.icon_name || 'Cpu';
+                        return (
+                          <div key={sIdx} className="p-4 bg-slate-50 rounded-2xl border border-slate-150 space-y-3 relative group/srv">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const filtered = (settings.company_services || []).filter((_, i) => i !== sIdx);
+                                onUpdateSettings({ ...settings, company_services: filtered });
+                              }}
+                              className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover/srv:opacity-100 cursor-pointer"
+                              title="Remove Service"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="col-span-2 text-left">
+                                  <label className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Title</label>
+                                  <input
+                                    type="text"
+                                    value={srv.title}
+                                    onChange={(e) => {
+                                      const next = [...(settings.company_services || [])];
+                                      next[sIdx] = { ...srv, title: e.target.value };
+                                      onUpdateSettings({ ...settings, company_services: next });
+                                    }}
+                                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs text-slate-800"
+                                  />
+                                </div>
+                                <div className="text-left">
+                                  <label className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Icon (Lucide)</label>
+                                  <select
+                                    value={iconSelectVal}
+                                    onChange={(e) => {
+                                      const next = [...(settings.company_services || [])];
+                                      next[sIdx] = { ...srv, icon_name: e.target.value };
+                                      onUpdateSettings({ ...settings, company_services: next });
+                                    }}
+                                    className="w-full px-1 py-1 bg-white border border-slate-200 rounded-md text-xs cursor-pointer text-slate-800"
+                                  >
+                                    <option value="Cpu">Cpu</option>
+                                    <option value="TrendingUp">TrendingUp</option>
+                                    <option value="CheckCircle">CheckCircle</option>
+                                    <option value="Activity">Activity</option>
+                                    <option value="Mail">Mail</option>
+                                    <option value="FileText">FileText</option>
+                                    <option value="Search">Search</option>
+                                    <option value="Award">Award</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="text-left">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Description</label>
+                                <textarea
+                                  value={srv.description}
+                                  onChange={(e) => {
+                                    const next = [...(settings.company_services || [])];
+                                    next[sIdx] = { ...srv, description: e.target.value };
+                                    onUpdateSettings({ ...settings, company_services: next });
+                                  }}
+                                  rows={2}
+                                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs resize-none text-slate-805"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1486,6 +2094,43 @@ export default function AdminConsole({
           )}
         </div>
       </div>
+
+      {/* Custom Deletion Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-fade-in">
+          <div className="bg-white rounded-3xl border border-slate-100 p-6 max-w-md w-full shadow-2xl space-y-6 text-left">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="p-2.5 bg-rose-50 rounded-2xl">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">
+                Confirm Deletion
+              </h3>
+            </div>
+            
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Are you absolutely sure you want to permanently delete <strong className="text-slate-900">{deleteConfirm.title}</strong>? This action is irreversible and will immediately erase this record.
+            </p>
+
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-150 text-slate-700 text-xs font-bold rounded-xl uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDelete}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider shadow-md shadow-rose-600/10 transition-all cursor-pointer"
+              >
+                Permanently Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
