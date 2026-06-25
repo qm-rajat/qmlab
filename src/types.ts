@@ -67,9 +67,14 @@ export interface Contact {
   estimated_value?: string;
 }
 
+export interface SkillItem {
+  name: string;
+  proficiency?: number;  // 1 to 5
+}
+
 export interface Skill {
   category: string;      // e.g. "Web Development"
-  items: string[];       // e.g. ["Next.js", "React", "Node.js"]
+  items: (string | SkillItem)[];       // e.g. ["Next.js", { name: "React", proficiency: 5 }]
 }
 
 export interface Experience {

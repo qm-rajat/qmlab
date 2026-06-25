@@ -13,23 +13,66 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   skills: [
     {
       category: "Web Development",
-      items: ["HTML5", "CSS3", "JavaScript (ES6+)", "TypeScript", "React.js", "Vite.js", "Node.js", "Express.js", "Tailwind CSS", "WordPress CMS", "PHP", "REST APIs", "SQL"]
+      items: [
+        { name: "React/Next.js", proficiency: 92 },
+        { name: "Node.js", proficiency: 78 },
+        { name: "TypeScript", proficiency: 70 },
+        { name: "Tailwind CSS", proficiency: 85 },
+        { name: "Express.js", proficiency: 68 },
+        { name: "WordPress CMS", proficiency: 60 },
+        { name: "PHP", proficiency: 55 },
+        { name: "SQL", proficiency: 72 }
+      ]
     },
     {
       category: "Technical SEO & Web Analytics",
-      items: ["Core Web Vitals Optimization", "Schema Markup / Structured Data", "Sitemap & Robots.txt Protocol", "Crawl Error Resolution", "Indexing & Rendering Audits", "Keyword Research", "Google Analytics 4 (GA4)", "Google Search Console", "SEMrush", "Ahrefs", "Screaming Frog"]
+      items: [
+        { name: "Core Web Vitals", proficiency: 88 },
+        { name: "Schema Markup", proficiency: 82 },
+        { name: "Sitemap & Robots.txt", proficiency: 75 },
+        { name: "Crawl Error Resolution", proficiency: 78 },
+        { name: "Ranking & Indexing", proficiency: 72 },
+        { name: "GA4 / GSC", proficiency: 80 },
+        { name: "Ahrefs / Semrush", proficiency: 74 },
+        { name: "Screaming Frog", proficiency: 70 }
+      ]
     },
     {
       category: "QA Automation & Scripting",
-      items: ["Selenium WebDriver", "PyTest", "Page Object Model (POM)", "Functional Testing", "Regression Testing", "Manual Test Case Design", "Python Debugging", "Automated Scraping", "API Integration Testing"]
+      items: [
+        { name: "Selenium WebDriver", proficiency: 80 },
+        { name: "PyTest", proficiency: 68 },
+        { name: "Functional Testing", proficiency: 72 },
+        { name: "API Integration Testing", proficiency: 75 },
+        { name: "Python Debugging", proficiency: 65 },
+        { name: "Web Scraping", proficiency: 70 },
+        { name: "Automated Scraping", proficiency: 62 }
+      ]
     },
     {
       category: "Data Science & BI",
-      items: ["Python Data Stack (Pandas, NumPy, Scikit-Learn, Matplotlib)", "Machine Learning (Random Forest, SVM, KNN)", "Exploratory Data Analysis (EDA)", "Feature Engineering", "Data Visualizations", "Microsoft Power BI", "Advanced Excel"]
+      items: [
+        { name: "Python/Pandas/NumPy", proficiency: 82 },
+        { name: "Machine Learning (scikit-learn)", proficiency: 65 },
+        { name: "Feature Engineering", proficiency: 60 },
+        { name: "Data Visualization", proficiency: 72 },
+        { name: "Microsoft Power BI", proficiency: 70 },
+        { name: "Advanced Excel", proficiency: 75 }
+      ]
     },
     {
       category: "Cybersecurity & Infrastructure",
-      items: ["Vulnerability Assessment", "Network Security Protocols", "Wireshark Packet Analysis", "Nmap Port Scanning", "Burp Suite Proxy", "Metasploit", "Parrot OS & Kali Linux", "Git/GitHub Lifecycle", "Linux Environments"]
+      items: [
+        { name: "Vulnerability Assessment", proficiency: 72 },
+        { name: "Network Security Protocols", proficiency: 68 },
+        { name: "Wireshark Packet Analysis", proficiency: 70 },
+        { name: "Nmap Port Scanning", proficiency: 75 },
+        { name: "Burp Suite Proxy", proficiency: 65 },
+        { name: "Metasploit", proficiency: 60 },
+        { name: "Parrot OS / Kali Linux", proficiency: 72 },
+        { name: "DevSecOps / GitHub Lifecycle", proficiency: 65 },
+        { name: "Linux Environments", proficiency: 70 }
+      ]
     }
   ],
   experience: [

@@ -193,7 +193,8 @@ export default function ResumeCenter({ settings }: ResumeCenterProps) {
     if (visibleSections.skills) {
       md += `## TECHNICAL SKILLS\n`;
       activeSkills.forEach(cat => {
-        md += `- **${cat.category}**: ${cat.items.join(', ')}\n`;
+        const skillNames = cat.items.map(s => typeof s === 'string' ? s : s.name);
+        md += `- **${cat.category}**: ${skillNames.join(', ')}\n`;
       });
       md += `\n`;
     }
@@ -446,12 +447,13 @@ export default function ResumeCenter({ settings }: ResumeCenterProps) {
             </div>
             
             <div className="flex flex-wrap gap-1 max-h-[85px] overflow-y-auto bg-white/40 border border-slate-150 p-2 rounded-xl border-dashed">
-              {(settings.skills.flatMap(s => s.items)).map((sk) => {
-                const isDisabled = disabledSkills.includes(sk);
+              {(settings.skills.flatMap(s => s.items)).map((sk, skIdx) => {
+                const skName = typeof sk === 'string' ? sk : sk.name;
+                const isDisabled = disabledSkills.includes(skName);
                 return (
                   <button
-                    key={sk}
-                    onClick={() => handleToggleSkill(sk)}
+                    key={skIdx}
+                    onClick={() => handleToggleSkill(skName)}
                     className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
                       isDisabled
                         ? 'bg-slate-200/50 border border-slate-300 text-slate-400 line-through scale-95'
@@ -459,7 +461,7 @@ export default function ResumeCenter({ settings }: ResumeCenterProps) {
                     }`}
                   >
                     <span className={`w-1 h-1 rounded-full ${isDisabled ? 'bg-slate-400' : 'bg-emerald-500 animate-pulse'}`} />
-                    {sk}
+                    {skName}
                   </button>
                 );
               })}
@@ -664,11 +666,12 @@ export default function ResumeCenter({ settings }: ResumeCenterProps) {
                     <span className="text-[11px] font-bold text-slate-600/90 tracking-wide translate-y-0.5">{cat.category}:</span>
                     <div className="col-span-3 flex flex-wrap gap-1 md:gap-1.5">
                       {cat.items.map((skill, sIdx) => {
-                        const isDeselected = disabledSkills.includes(skill);
+                        const skillName = typeof skill === 'string' ? skill : skill.name;
+                        const isDeselected = disabledSkills.includes(skillName);
                         return (
                           <span 
                             key={sIdx} 
-                            onClick={() => isEditable && handleToggleSkill(skill)}
+                            onClick={() => isEditable && handleToggleSkill(skillName)}
                             className={`text-[10px] px-2 py-0.5 rounded-md transition-all ${
                               isDeselected 
                                 ? 'hidden' 
@@ -676,7 +679,7 @@ export default function ResumeCenter({ settings }: ResumeCenterProps) {
                             }`}
                             title={isEditable ? "Click to toggle hide style" : ""}
                           >
-                            {skill}{sIdx < cat.items.length - 1 ? ',' : ''}
+                            {skillName}{sIdx < cat.items.length - 1 ? ',' : ''}
                           </span>
                         );
                       })}

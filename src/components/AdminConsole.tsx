@@ -312,13 +312,29 @@ export default function AdminConsole({
   // Settings Dynamic Array Handlers
   const handleSkillUpdate = (catIdx: number, itemIdx: number, val: string) => {
     const updatedSkills = [...settings.skills];
-    updatedSkills[catIdx].items[itemIdx] = val;
+    const current = updatedSkills[catIdx].items[itemIdx];
+    if (typeof current === 'object' && current !== null) {
+      updatedSkills[catIdx].items[itemIdx] = { ...current, name: val };
+    } else {
+      updatedSkills[catIdx].items[itemIdx] = { name: val, proficiency: 80 };
+    }
+    onUpdateSettings({ ...settings, skills: updatedSkills });
+  };
+
+  const handleSkillProficiencyUpdate = (catIdx: number, itemIdx: number, level: number) => {
+    const updatedSkills = [...settings.skills];
+    const current = updatedSkills[catIdx].items[itemIdx];
+    if (typeof current === 'object' && current !== null) {
+      updatedSkills[catIdx].items[itemIdx] = { ...current, proficiency: level };
+    } else {
+      updatedSkills[catIdx].items[itemIdx] = { name: current as string, proficiency: level };
+    }
     onUpdateSettings({ ...settings, skills: updatedSkills });
   };
 
   const handleAddSkill = (catIdx: number) => {
     const updatedSkills = [...settings.skills];
-    updatedSkills[catIdx].items.push('New Skill');
+    updatedSkills[catIdx].items.push({ name: 'New Skill', proficiency: 80 });
     onUpdateSettings({ ...settings, skills: updatedSkills });
   };
 
@@ -1979,23 +1995,58 @@ export default function AdminConsole({
                         </h4>
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {cat.items.map((skill, itemIdx) => (
-                            <div key={itemIdx} className="relative group/skill">
-                              <input
-                                type="text"
-                                value={skill}
-                                onChange={(e) => handleSkillUpdate(catIdx, itemIdx, e.target.value)}
-                                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-primary pr-6 font-medium text-slate-700"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSkill(catIdx, itemIdx)}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover/skill:opacity-100 transition-opacity cursor-pointer text-[9px] font-bold"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
+                          {cat.items.map((skill, itemIdx) => {
+                            const skillName = typeof skill === 'string' ? skill : skill.name;
+                            const skillProfRaw = typeof skill === 'string' ? 80 : (skill.proficiency || 80);
+                            const skillProf = skillProfRaw <= 5 ? skillProfRaw * 20 : skillProfRaw;
+                            return (
+                              <div key={itemIdx} className="bg-white rounded-xl border border-slate-200 p-2.5 space-y-2 flex flex-col justify-between group/skill relative transition-shadow hover:shadow-xs">
+                                <div className="relative pr-5">
+                                  <input
+                                    type="text"
+                                    value={skillName}
+                                    onChange={(e) => handleSkillUpdate(catIdx, itemIdx, e.target.value)}
+                                    className="w-full text-xs font-bold text-slate-800 bg-transparent focus:outline-hidden border-b border-transparent focus:border-slate-300 pb-0.5"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveSkill(catIdx, itemIdx)}
+                                    className="absolute -right-1 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover/skill:opacity-100 transition-opacity cursor-pointer text-xs font-bold"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                                <div className="space-y-1.5 border-t border-slate-100 pt-1.5">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[9px] font-mono font-bold text-slate-400">Level:</span>
+                                    <div className="flex items-center gap-0.5">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        value={skillProf}
+                                        onChange={(e) => {
+                                          const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                                          handleSkillProficiencyUpdate(catIdx, itemIdx, val);
+                                        }}
+                                        className="w-9 px-1 py-0.5 text-[9px] font-bold text-center bg-slate-50 border border-slate-200 rounded-sm focus:outline-hidden focus:border-primary text-slate-700 font-mono"
+                                      />
+                                      <span className="text-[9px] font-bold text-slate-400">%</span>
+                                    </div>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min="10"
+                                    max="100"
+                                    step="5"
+                                    value={skillProf}
+                                    onChange={(e) => handleSkillProficiencyUpdate(catIdx, itemIdx, parseInt(e.target.value))}
+                                    className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
                           <button
                             type="button"
                             onClick={() => handleAddSkill(catIdx)}

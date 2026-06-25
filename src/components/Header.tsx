@@ -24,6 +24,7 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
     { label: 'Home', value: 'home' },
     { label: 'Projects', value: 'projects' },
     { label: 'Blog', value: 'blog' },
+    { label: 'Resume', value: 'resume' },
     { label: 'Certifications', value: 'certificates' },
     { label: 'Vitals Lab', value: 'vitals' },
     { label: 'Contact', value: 'contact' },
@@ -90,22 +91,17 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
             {isAdminLoggedIn ? 'Console Panel' : 'CRM Dashboard'}
           </button>
           
-          <a
-            href="#resume-section"
-            onClick={(e) => {
-              if (currentView !== 'home') {
-                e.preventDefault();
-                handleNavClick('home');
-                setTimeout(() => {
-                  document.getElementById('resume-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 400);
-              }
-            }}
-            className="px-4 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm shadow-blue-500/10 cursor-pointer transition-all"
+          <button
+            onClick={() => handleNavClick('resume')}
+            className={`px-4 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition-all ${
+              currentView === 'resume'
+                ? 'bg-slate-900 text-white border border-slate-900'
+                : 'bg-primary hover:bg-primary-dark text-white shadow-blue-500/10'
+            }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            Get Resumes
-          </a>
+            Resume Hub
+          </button>
         </div>
 
         {/* Mobile menu trigger */}
@@ -150,23 +146,13 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
               <Shield className="w-4 h-4" />
               {isAdminLoggedIn ? 'Enter CRM Panel' : 'CRM Dashboard Access'}
             </button>
-            <a
-              href="#resume-section"
-              onClick={(e) => {
-                setIsMobileMenuOpen(false);
-                if (currentView !== 'home') {
-                  e.preventDefault();
-                  handleNavClick('home');
-                  setTimeout(() => {
-                    document.getElementById('resume-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 400);
-                }
-              }}
-              className="w-full text-center py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
+            <button
+              onClick={() => handleNavClick('resume')}
+              className="w-full text-center py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               View & Export Resumes
-            </a>
+            </button>
           </div>
         </div>
       )}
