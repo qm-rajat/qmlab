@@ -16,7 +16,7 @@ import ContactForm from './components/ContactForm';
 import AdminConsole from './components/AdminConsole';
 import QMLogo from './components/QMLogo';
 import CoreWebVitalsLab from './components/CoreWebVitalsLab';
-const rajatAvatar = '/src/assets/images/rajat_avatar_1781089080303.png';
+const rajatAvatar = './src/assets/images/rajat_avatar_1781089080303.png';
 
 import {
   DEFAULT_SETTINGS,
