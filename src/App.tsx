@@ -16,7 +16,7 @@ import ContactForm from './components/ContactForm';
 import AdminConsole from './components/AdminConsole';
 import QMLogo from './components/QMLogo';
 import CoreWebVitalsLab from './components/CoreWebVitalsLab';
-const rajatAvatar = './src/assets/images/rajat_avatar_1781089080303.png';
+const rajatAvatar = '/src/assets/images/rajat_avatar_1781089080303.png';
 
 import {
   DEFAULT_SETTINGS,
@@ -554,7 +554,7 @@ export default function App() {
                             src={rajatAvatar}
                             alt="Rajat Kumar Dash Avatar Illustration"
                             referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover select-none pointer-events-none"
+                            className="w-[200px] h-[200px] object-cover select-none pointer-events-none"
                           />
                         </div>
 
