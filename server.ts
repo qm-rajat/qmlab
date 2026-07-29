@@ -12,7 +12,7 @@ import {
   clearSessionCookie,
   isValidSession,
   requireAdmin,
-} from "./server/auth";
+} from "./server-lib/auth";
 import {
   isStoreConfigured,
   getSettings,
@@ -25,7 +25,7 @@ import {
   saveCertificates,
   getContacts,
   saveContacts,
-} from "./server/store";
+} from "./server-lib/store";
 import { Contact } from "./src/types";
 
 // Initialize environment configuration
