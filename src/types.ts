@@ -65,6 +65,7 @@ export interface Contact {
   priority?: 'low' | 'medium' | 'high';
   notes?: string;
   estimated_value?: string;
+  inquiry_type?: 'freelance_project' | 'general';
 }
 
 export interface SkillItem {

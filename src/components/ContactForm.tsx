@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { Mail, User, MessageSquare, Send, CheckCircle2, AlertCircle } from 'lucide-react';
-import { Contact } from '../types';
+import { Mail, User, MessageSquare, Send, CheckCircle2, AlertCircle, Briefcase, MessageCircle } from 'lucide-react';
 
-interface ContactFormProps {
-  onAddContact: (contact: Omit<Contact, 'id' | 'created_at'>) => void;
-}
+type InquiryType = 'freelance_project' | 'general';
 
-export default function ContactForm({ onAddContact }: ContactFormProps) {
+export default function ContactForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [inquiryType, setInquiryType] = useState<InquiryType>('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -52,7 +50,8 @@ export default function ContactForm({ onAddContact }: ContactFormProps) {
       body: JSON.stringify({
         name: name.trim(),
         email: email.trim(),
-        message: message.trim()
+        message: message.trim(),
+        inquiry_type: inquiryType
       })
     })
     .then(async (response) => {
@@ -63,19 +62,13 @@ export default function ContactForm({ onAddContact }: ContactFormProps) {
       return data;
     })
     .then((data) => {
-      // Log to local CRM list for dynamic rendering in dashboard
-      onAddContact({
-        name: name.trim(),
-        email: email.trim(),
-        message: message.trim(),
-        status: 'unread'
-      });
       setSmtpStatusMsg(data.message || 'Logged in CRM.');
       setSubmitStatus('success');
       // Clear fields
       setName('');
       setEmail('');
       setMessage('');
+      setInquiryType('general');
     })
     .catch((err: any) => {
       setSubmitStatus('error');
@@ -117,6 +110,37 @@ export default function ContactForm({ onAddContact }: ContactFormProps) {
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {/* Inquiry Type */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">
+              What's this about?
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setInquiryType('freelance_project')}
+                className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  inquiryType === 'freelance_project'
+                    ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/10'
+                    : 'bg-slate-50 text-slate-500 border-slate-200/80 hover:bg-slate-100/60'
+                }`}
+              >
+                <Briefcase className="w-3.5 h-3.5" /> Freelance / Project
+              </button>
+              <button
+                type="button"
+                onClick={() => setInquiryType('general')}
+                className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  inquiryType === 'general'
+                    ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/10'
+                    : 'bg-slate-50 text-slate-500 border-slate-200/80 hover:bg-slate-100/60'
+                }`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" /> General
+              </button>
+            </div>
+          </div>
 
           {/* Full Name */}
           <div className="space-y-2">

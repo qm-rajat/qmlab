@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, ExternalLink, Eye, X, ChevronLeft, ChevronRight, BookOpen, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Certificate } from '../types';
 
 interface CertificateGridProps {
@@ -87,7 +88,11 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
               }`}
             >
               {isActive && (
-                <span className="absolute inset-0 bg-blue-50/70 border border-blue-100/40 rounded-lg -z-10" />
+                <motion.span
+                  layoutId="activeCertFilter"
+                  className="absolute inset-0 bg-blue-50/70 border border-blue-100/40 rounded-lg -z-10"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
               )}
               {categoryNames[key]}
             </button>
@@ -102,71 +107,81 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
           No certifications logged under this folder.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-          {filteredCerts.map((cert, idx) => (
-            <div
-              key={cert.id}
-              className="bg-white rounded-2xl border border-slate-150/70 overflow-hidden shadow-xs hover:shadow-lg transition-all group flex flex-col"
-            >
-              {/* Image Preview with overlay */}
-              <div className="relative aspect-4/3 bg-slate-50 flex items-center justify-center overflow-hidden border-b border-slate-100 p-4">
-                <img
-                  src={cert.image_url}
-                  alt={cert.title}
-                  className="w-full h-full object-cover rounded-lg group-hover:scale-[1.02] transition-transform duration-500 shadow-xs"
-                />
-                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setSelectedIdx(idx)}
-                    className="p-2.5 bg-white rounded-full text-slate-800 hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center"
-                    title="Examine certificate zoom"
-                  >
-                    <Eye className="w-4.5 h-4.5 text-primary" />
-                  </button>
-                  {cert.verify_url && (
-                    <a
-                      href={cert.verify_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-2.5 bg-white rounded-full text-slate-800 hover:scale-110 active:scale-95 transition-all shadow-md flex items-center justify-center"
-                      title="Direct verify verification URL link"
+        <motion.div 
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredCerts.map((cert, idx) => (
+              <motion.div
+                key={cert.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.25 }}
+                className="bg-white rounded-2xl border border-slate-150/70 overflow-hidden shadow-xs hover:shadow-lg transition-shadow group flex flex-col"
+              >
+                {/* Image Preview with overlay */}
+                <div className="relative aspect-4/3 bg-slate-50 flex items-center justify-center overflow-hidden border-b border-slate-100 p-4">
+                  <img
+                    src={cert.image_url}
+                    alt={cert.title}
+                    className="w-full h-full object-cover rounded-lg group-hover:scale-[1.02] transition-transform duration-500 shadow-xs"
+                  />
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setSelectedIdx(idx)}
+                      className="p-2.5 bg-white rounded-full text-slate-800 hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center"
+                      title="Examine certificate zoom"
                     >
-                      <ExternalLink className="w-4.5 h-4.5 text-indigo-500" />
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Text Info */}
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${getCategoryTheme(cert.category)}`}>
-                      {getShorthandCategory(cert.category)}
-                    </span>
-                    {cert.issue_date && (
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {new Date(cert.issue_date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                      </span>
+                      <Eye className="w-4.5 h-4.5 text-primary" />
+                    </button>
+                    {cert.verify_url && (
+                      <a
+                        href={cert.verify_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2.5 bg-white rounded-full text-slate-800 hover:scale-110 active:scale-95 transition-all shadow-md flex items-center justify-center"
+                        title="Direct verify verification URL link"
+                      >
+                        <ExternalLink className="w-4.5 h-4.5 text-indigo-500" />
+                      </a>
                     )}
                   </div>
-                  <h4 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-                    {cert.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Issued by <strong className="font-semibold text-slate-700">{cert.issuer}</strong>
-                  </p>
                 </div>
 
-                {cert.credential_id && (
-                  <div className="border-t border-slate-100 pt-3 mt-4 text-[10px] font-mono text-slate-450 truncate">
-                    ID: {cert.credential_id}
+                {/* Text Info */}
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${getCategoryTheme(cert.category)}`}>
+                        {getShorthandCategory(cert.category)}
+                      </span>
+                      {cert.issue_date && (
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {new Date(cert.issue_date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                      {cert.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Issued by <strong className="font-semibold text-slate-700">{cert.issuer}</strong>
+                    </p>
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+
+                  {cert.credential_id && (
+                    <div className="border-t border-slate-100 pt-3 mt-4 text-[10px] font-mono text-slate-450 truncate">
+                      ID: {cert.credential_id}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
 
       {/* Zoomable Lightbox Modal with Key Event Navs */}

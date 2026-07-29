@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Github, ExternalLink, X, ChevronLeft, ChevronRight, Code, Tag, Layers } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Project } from '../types';
 
 interface ProjectGalleryProps {
@@ -61,12 +62,19 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
       <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-100">
         <button
           onClick={() => setSelectedTag(null)}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold select-none cursor-pointer transition-all ${
+          className={`relative px-3 py-1.5 rounded-xl text-xs font-semibold select-none cursor-pointer transition-all ${
             selectedTag === null
-              ? 'bg-primary-light text-primary border border-primary-light font-bold shadow-xs'
-              : 'text-slate-500 bg-slate-50 hover:bg-slate-100 border border-transparent'
+              ? 'text-primary font-bold shadow-xs'
+              : 'text-slate-500 hover:text-slate-805'
           }`}
         >
+          {selectedTag === null && (
+            <motion.span
+              layoutId="activeProjectTag"
+              className="absolute inset-0 bg-primary-light border border-primary-light/50 rounded-xl -z-10"
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            />
+          )}
           All Areas ({projects.length})
         </button>
         {curatedFilters.map((filter) => {
@@ -77,13 +85,20 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
             <button
               key={filter.key}
               onClick={() => setSelectedTag(filter.key)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold select-none cursor-pointer transition-all ${
+              className={`relative px-3 py-1.5 rounded-xl text-xs font-semibold select-none cursor-pointer transition-all ${
                 isActive
-                  ? 'bg-primary-light text-primary border border-primary-light font-bold shadow-xs'
-                  : 'text-slate-500 bg-slate-50 hover:bg-slate-100 border border-transparent'
+                  ? 'text-primary font-bold shadow-xs'
+                  : 'text-slate-500 hover:text-slate-805'
               }`}
             >
-              {filter.label} <span className="opacity-50 text-[10px]">({count})</span>
+              {isActive && (
+                <motion.span
+                  layoutId="activeProjectTag"
+                  className="absolute inset-0 bg-primary-light border border-primary-light/50 rounded-xl -z-10"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              {filter.label} <span className="opacity-60 text-[10px]">({count})</span>
             </button>
           );
         })}
@@ -96,62 +111,72 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
           No projects matching this technical query.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-          {filteredProjects.map((project) => (
-            <div
-              key={project.id}
-              onClick={() => handleProjectClick(project)}
-              className="bg-white rounded-2xl border border-slate-150/70 overflow-hidden shadow-xs hover:shadow-lg transition-all group flex flex-col cursor-pointer h-full"
-            >
-              {/* Media banner */}
-              <div className="relative aspect-4/3 bg-slate-100 overflow-hidden border-b border-slate-100">
-                <img
-                  src={project.images[0] || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b'}
-                  alt={project.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <p className="text-white text-xs font-bold uppercase tracking-widest mb-1.5">View Architecture</p>
-                    <div className="w-10 h-0.5 bg-[#0084ff] mx-auto" />
+        <motion.div 
+          layout
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredProjects.map((project) => (
+              <motion.div
+                key={project.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
+                onClick={() => handleProjectClick(project)}
+                className="bg-white rounded-2xl border border-slate-150/70 overflow-hidden shadow-xs hover:shadow-lg transition-shadow group flex flex-col cursor-pointer h-full"
+              >
+                {/* Media banner */}
+                <div className="relative aspect-4/3 bg-slate-100 overflow-hidden border-b border-slate-100">
+                  <img
+                    src={project.images[0] || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b'}
+                    alt={project.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="text-center p-4">
+                      <p className="text-white text-xs font-bold uppercase tracking-widest mb-1.5">View Architecture</p>
+                      <div className="w-10 h-0.5 bg-[#0084ff] mx-auto" />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Information body with customized electric borders */}
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2.5">
-                    {project.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
-                    {project.description}
-                  </p>
-                </div>
+                {/* Information body with customized electric borders */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2.5">
+                      {project.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                      {project.description}
+                    </p>
+                  </div>
 
-                {/* Tech Pills */}
-                <div className="flex flex-wrap gap-1 border-t border-slate-10 border-dashed pt-4 mt-5">
-                  {project.technologies.slice(0, 3).map((tech) => (
-                    <span
-                      key={tech}
-                      className="text-[9px] font-extrabold uppercase bg-slate-50 text-slate-500 border border-slate-100 px-2 py-0.5 rounded-lg"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                  {project.technologies.length > 3 && (
-                    <span className="text-[9px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-lg">
-                      +{project.technologies.length - 3}
-                    </span>
-                  )}
+                  {/* Tech Pills */}
+                  <div className="flex flex-wrap gap-1 border-t border-slate-10 border-dashed pt-4 mt-5">
+                    {project.technologies.slice(0, 3).map((tech) => (
+                      <span
+                        key={tech}
+                        className="text-[9px] font-extrabold uppercase bg-slate-50 text-slate-500 border border-slate-100 px-2 py-0.5 rounded-lg"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                    {project.technologies.length > 3 && (
+                      <span className="text-[9px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-lg">
+                        +{project.technologies.length - 3}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
 
       {/* Project detail lightbox details modal */}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Heart, Bookmark, Eye, Calendar, Clock, Share2, Twitter, Linkedin, Copy, Check } from 'lucide-react';
 import { Blog, SiteSettings } from '../types';
-import { formatDate } from '../lib/utils'; // we will write custom helper or define inline
+import { formatDate, sanitizeHtml } from '../lib/utils'; // we will write custom helper or define inline
 
 interface BlogPostProps {
   blog: Blog;
@@ -112,7 +112,7 @@ export default function BlogPost({
       {/* Article Inner Contents (HTML Prose) */}
       <div
         className="blog-prose mb-12"
-        dangerouslySetInnerHTML={{ __html: blog.content_html || '' }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content_html || '') }}
       />
 
       {/* Category Tags Pill Stack */}

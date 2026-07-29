@@ -3,10 +3,11 @@ import {
   Shield, Key, LayoutDashboard, FileCode, Search, Award, Inbox, Settings, LogOut,
   Plus, Edit2, Trash2, Check, ArrowRight, ToggleLeft, ToggleRight, Save, Info,
   LineChart, Mail, FileText, CheckCircle, Clock, Eye, Sparkles, Filter, Archive, BookOpen,
-  Copy, Flame, DollarSign, AlertTriangle
+  Copy, Flame, DollarSign, AlertTriangle, Briefcase, MessageCircle
 } from 'lucide-react';
 import { Project, Blog, Certificate, Contact, SiteSettings, Skill, Experience, Education } from '../types';
 import RichTextEditor from './RichTextEditor';
+import { sanitizeHtml } from '../lib/utils';
 
 interface AdminConsoleProps {
   settings: SiteSettings;
@@ -17,8 +18,6 @@ interface AdminConsoleProps {
   onUpdateBlogs: (blogs: Blog[]) => void;
   certificates: Certificate[];
   onUpdateCertificates: (certs: Certificate[]) => void;
-  contacts: Contact[];
-  onUpdateContacts: (contacts: Contact[]) => void;
   isAdminLoggedIn: boolean;
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
@@ -34,8 +33,6 @@ export default function AdminConsole({
   onUpdateBlogs,
   certificates,
   onUpdateCertificates,
-  contacts,
-  onUpdateContacts,
   isAdminLoggedIn,
   onAdminLoginToggle
 }: AdminConsoleProps) {
@@ -43,6 +40,41 @@ export default function AdminConsole({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Contacts CRM state — fetched from the server so real visitor submissions show up here,
+  // not just whatever was submitted from this same browser.
+  const [contacts, setContacts] = useState<Contact[]>([]);
+
+  useEffect(() => {
+    if (!isAdminLoggedIn) return;
+    fetch('/api/admin/contacts', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setContacts(data.contacts);
+      })
+      .catch(err => console.error('Failed to load contacts:', err));
+  }, [isAdminLoggedIn]);
+
+  const persistContacts = (updated: Contact[]) => {
+    setContacts(updated);
+    fetch('/api/admin/contacts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(updated)
+    })
+      .then(async res => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Save failed (${res.status})`);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to save contacts:', err);
+        window.alert(`Your change didn't save to the server: ${err.message}`);
+      });
+  };
 
   // Active Admin View State
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
@@ -97,27 +129,41 @@ export default function AdminConsole({
   ];
   const mockResumeDownloadsCount = 67;
 
-  // Handle Admin Authorization
-  const handleLogin = (e: React.FormEvent) => {
+  // Handle Admin Authorization — verified server-side against ADMIN_EMAIL/ADMIN_PASSWORD_HASH
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-
-    if (email.trim() === 'admin@qmlabs.com' && password === 'admin123') {
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email.trim(), password })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Invalid administrator credentials.');
+      }
+      setPassword('');
       onAdminLoginToggle(true);
       setActiveTab('dashboard');
-    } else {
-      setLoginError('Invalid Administrator credentials. Try with email: admin@qmlabs.com / pwd: admin123');
+    } catch (err: any) {
+      setLoginError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const handleLogout = () => {
+    fetch('/api/admin/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     onAdminLoginToggle(false);
   };
 
   // Contacts CRM updates
   const handleUpdateContact = (id: string, updatedFields: Partial<Contact>) => {
     const updated = contacts.map(c => c.id === id ? { ...c, ...updatedFields } : c);
-    onUpdateContacts(updated);
+    persistContacts(updated);
   };
 
   const handleDeleteContact = (id: string) => {
@@ -134,7 +180,7 @@ export default function AdminConsole({
     const { id, type } = deleteConfirm;
     if (type === 'contact') {
       const updated = contacts.filter(c => c.id !== id);
-      onUpdateContacts(updated);
+      persistContacts(updated);
     } else if (type === 'project') {
       const updated = projects.filter(p => p.id !== id);
       onUpdateProjects(updated);
@@ -347,6 +393,20 @@ export default function AdminConsole({
   // Contacts aggregation
   const unreadContactCount = contacts.filter(c => c.status === 'unread').length;
 
+  // Active Pipeline value — the public contact form doesn't ask for a budget, so
+  // estimated_value only exists on leads an admin has manually tagged after the fact.
+  // Only sum leads that actually have a real tag; don't fabricate a number for the rest.
+  const ESTIMATED_VALUE_MIDPOINTS: { [key: string]: number } = {
+    '< $1,000': 500,
+    '$1,000 - $5,000': 3000,
+    '$5,000 - $10,000': 7500,
+    '$10,000+': 15000,
+  };
+  const activeLeads = contacts.filter(c => c.status !== 'archived');
+  const taggedActiveLeads = activeLeads.filter(c => c.estimated_value && ESTIMATED_VALUE_MIDPOINTS[c.estimated_value] !== undefined);
+  const activePipelineValue = taggedActiveLeads.reduce((sum, c) => sum + ESTIMATED_VALUE_MIDPOINTS[c.estimated_value!], 0);
+  const untaggedActiveLeadCount = activeLeads.length - taggedActiveLeads.length;
+
   // CRM Search & Sorting Extensions
   const [crmSearchText, setCrmSearchText] = useState('');
   const [crmSortBy, setCrmSortBy] = useState<'date_desc' | 'date_asc' | 'priority_high'>('date_desc');
@@ -447,18 +507,13 @@ export default function AdminConsole({
               />
             </div>
 
-            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100/40 text-[10px] text-primary font-medium tracking-wide flex flex-col space-y-1">
-              <p>📍 Admin Access Coordinates:</p>
-              <p>• Username: <strong>admin@qmlabs.com</strong></p>
-              <p>• Password: <strong>admin123</strong></p>
-            </div>
-
             <button
               type="submit"
-              className="w-full py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 cursor-pointer"
+              disabled={isLoggingIn}
+              className="w-full py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Key className="w-3.5 h-3.5" />
-              Authorize Credentials
+              {isLoggingIn ? 'Authorizing...' : 'Authorize Credentials'}
             </button>
           </form>
         </div>
@@ -566,9 +621,9 @@ export default function AdminConsole({
               </div>
 
               {/* Dynamic Interactive SVG Charts Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* 7 Days View Timeline chart */}
-                <div className="md:col-span-2 bg-slate-50/20 border border-slate-100 rounded-2xl p-5 space-y-4">
+                <div className="md:col-span-2 bg-slate-50/20 border border-slate-100 rounded-2xl p-5 space-y-4 text-left">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest">Pageviews (Last 7 Days)</h4>
@@ -662,23 +717,53 @@ export default function AdminConsole({
                   </div>
                 </div>
 
+                {/* Pipeline Analysis */}
+                <div className="bg-slate-50/20 border border-slate-100 rounded-2xl p-5 flex flex-col justify-between text-left">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Active Pipeline
+                    </h4>
+                    <p className="text-[11px] text-slate-400">Estimated value of active leads.</p>
+                  </div>
+
+                  <div className="py-4 space-y-1">
+                    <div className="text-2xl font-black text-emerald-600 tracking-tight">
+                      ${activePipelineValue.toLocaleString('en-US')}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                      <span>{contacts.filter(c => c.priority === 'high' && c.status !== 'archived').length} High-Urgency Leads</span>
+                    </div>
+                    {untaggedActiveLeadCount > 0 && (
+                      <div className="text-[9px] text-slate-400 font-mono">
+                        +{untaggedActiveLeadCount} lead{untaggedActiveLeadCount === 1 ? '' : 's'} without a budget tag
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                    <span>Pending CRM:</span>
+                    <span className="font-bold text-slate-800">{contacts.filter(c => c.status === 'unread').length} items</span>
+                  </div>
+                </div>
+
                 {/* Popular files downloads */}
-                <div className="bg-slate-50/20 border border-slate-100 rounded-2xl p-5 flex flex-col justify-between">
+                <div className="bg-slate-50/20 border border-slate-100 rounded-2xl p-5 flex flex-col justify-between text-left">
                   <div>
                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest">Downloads & Stats</h4>
                     <p className="text-[11px] text-slate-400">Resume download telemetry.</p>
                   </div>
 
-                  <div className="py-6 flex flex-col items-center justify-center space-y-2">
-                    <div className="w-12 h-12 rounded-full bg-blue-50/60 flex items-center justify-center text-primary border border-blue-100/50">
-                      <FileText className="w-6 h-6 animate-[bounce_3s_linear_infinite]" />
+                  <div className="py-4 flex flex-col items-center justify-center space-y-1">
+                    <div className="w-10 h-10 rounded-full bg-blue-50/60 flex items-center justify-center text-primary border border-blue-100/50">
+                      <FileText className="w-5 h-5 animate-[bounce_3s_linear_infinite]" />
                     </div>
-                    <div className="text-3xl font-black text-slate-800 tracking-tight">{mockResumeDownloadsCount}</div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">Total Resume Handoffs</span>
+                    <div className="text-2xl font-black text-slate-800 tracking-tight">{mockResumeDownloadsCount}</div>
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 font-semibold">Total Resume Handoffs</span>
                   </div>
 
-                  <div className="text-[10px] bg-emerald-50 border border-emerald-100/50 p-2 rounded-xl text-emerald-800 text-center font-medium leading-relaxed">
-                    🌟 Direct resume print views generated are optimized for applicant tracking systems (ATS).
+                  <div className="text-[9px] bg-emerald-50 border border-emerald-100/50 p-2 rounded-xl text-emerald-800 text-center font-medium leading-relaxed">
+                    🌟 Direct resume print views generated are ATS-optimized.
                   </div>
                 </div>
               </div>
@@ -1163,7 +1248,7 @@ export default function AdminConsole({
                     ) : (
                       <div
                         className="p-5 border border-slate-150 rounded-xl bg-slate-50/50 blog-prose min-h-[250px]"
-                        dangerouslySetInnerHTML={{ __html: blogForm.content_html || '' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(blogForm.content_html || '') }}
                       />
                     )}
                   </div>
@@ -1445,7 +1530,17 @@ export default function AdminConsole({
                             </div>
 
                             {/* Status tags */}
-                            <div className="flex items-center gap-1.5Packed">
+                            <div className="flex items-center gap-1.5">
+                              {lead.inquiry_type && (
+                                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                                  lead.inquiry_type === 'freelance_project'
+                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100/50'
+                                    : 'bg-slate-50 text-slate-550 border border-slate-100/50'
+                                }`}>
+                                  {lead.inquiry_type === 'freelance_project' ? <Briefcase className="w-2.5 h-2.5" /> : <MessageCircle className="w-2.5 h-2.5" />}
+                                  {lead.inquiry_type === 'freelance_project' ? 'Freelance / Project' : 'General'}
+                                </span>
+                              )}
                               {lead.priority && (
                                 <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md flex items-center gap-1 ${
                                   lead.priority === 'high' ? 'bg-rose-50 text-rose-600 border border-rose-100/50' :

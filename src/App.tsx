@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Header from './components/Header';
+import { Analytics } from '@vercel/analytics/react';
 import Footer from './components/Footer';
 import ResumeCenter from './components/ResumeCenter';
 import ProjectGallery from './components/ProjectGallery';
@@ -16,16 +17,17 @@ import ContactForm from './components/ContactForm';
 import AdminConsole from './components/AdminConsole';
 import QMLogo from './components/QMLogo';
 import CoreWebVitalsLab from './components/CoreWebVitalsLab';
-const rajatAvatar = '../src/assets/images/rajat_avatar_1781089080303.png';
+// @ts-expect-error - PNG files are handled natively by Vite
+import rajatAvatar from './assets/images/rajat_avatar_1781089080303.png';
 
 import {
   DEFAULT_SETTINGS,
   DEFAULT_PROJECTS,
   DEFAULT_CERTIFICATES,
-  DEFAULT_BLOGS,
-  DEFAULT_CONTACTS
+  DEFAULT_BLOGS
 } from './data';
-import { SiteSettings, Project, Blog, Certificate, Contact } from './types';
+import { SiteSettings, Project, Blog, Certificate } from './types';
+import { sanitizeHtml } from './lib/utils';
 
 const heroContainerVariants = {
   hidden: { opacity: 0 },
@@ -139,11 +141,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_CERTIFICATES;
   });
 
-  const [contacts, setContacts] = useState<Contact[]>(() => {
-    const saved = localStorage.getItem('qmlabs_portfolio_contacts');
-    return saved ? JSON.parse(saved) : DEFAULT_CONTACTS;
-  });
-
   // Client Reactions State Tracking (Bookmarked and Liked Blogs)
   const [likedBlogs, setLikedBlogs] = useState<string[]>(() => {
     const saved = localStorage.getItem('qmlabs_portfolio_liked_blogs');
@@ -164,7 +161,9 @@ export default function App() {
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-  // Sync to Storage on modifications
+  // Sync to Storage on modifications (this local cache is now just a fast-paint fallback —
+  // the KV-backed server, when configured, is the real source of truth. See the /api/content
+  // fetch below.)
   useEffect(() => {
     localStorage.setItem('qmlabs_home_mode', homeMode);
   }, [homeMode]);
@@ -186,10 +185,6 @@ export default function App() {
   }, [certificates]);
 
   useEffect(() => {
-    localStorage.setItem('qmlabs_portfolio_contacts', JSON.stringify(contacts));
-  }, [contacts]);
-
-  useEffect(() => {
     localStorage.setItem('qmlabs_portfolio_liked_blogs', JSON.stringify(likedBlogs));
   }, [likedBlogs]);
 
@@ -197,15 +192,58 @@ export default function App() {
     localStorage.setItem('qmlabs_portfolio_bookmarked_blogs', JSON.stringify(bookmarkedBlogs));
   }, [bookmarkedBlogs]);
 
-  // Handle Contact Formulation Submit
-  const handleAddNewContact = (newContact: Omit<Contact, 'id' | 'created_at'>) => {
-    const logged: Contact = {
-      ...newContact,
-      id: `cont_${Date.now()}`,
-      created_at: new Date().toISOString()
-    };
-    setContacts([logged, ...contacts]);
+  // Load live content from the server on mount. If no KV store is configured yet,
+  // storeConfigured is false and we deliberately skip overwriting the local/cached state
+  // above, so the app keeps working exactly as before until the store is provisioned.
+  useEffect(() => {
+    fetch('/api/content')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !data.storeConfigured) return;
+        setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
+        setProjects(data.projects);
+        setBlogs(data.blogs);
+        setCertificates(data.certificates);
+      })
+      .catch(err => console.error('Failed to load live site content, using cached copy:', err));
+  }, []);
+
+  // Restore admin login state from the server session cookie after a page refresh.
+  useEffect(() => {
+    fetch('/api/admin/session', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setIsAdminLoggedIn(!!data.loggedIn))
+      .catch(() => {});
+  }, []);
+
+  // Persist an admin edit to the server (in addition to the optimistic local update).
+  // fetch() only rejects on network failure, not on 4xx/5xx, so we check response.ok
+  // explicitly — otherwise a failed save (expired session, KV not configured) would
+  // look identical to a successful one.
+  const persistUpdate = <T,>(setter: (v: T) => void, endpoint: string) => (value: T) => {
+    setter(value);
+    fetch(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(value)
+    })
+      .then(async res => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Save failed (${res.status})`);
+        }
+      })
+      .catch(err => {
+        console.error(`Failed to save to ${endpoint}:`, err);
+        window.alert(`Your change didn't save to the server: ${err.message}\n\nIt's only kept locally in this browser until you retry.`);
+      });
   };
+
+  const handleUpdateSettings = persistUpdate<SiteSettings>(setSettings, '/api/admin/settings');
+  const handleUpdateProjects = persistUpdate<Project[]>(setProjects, '/api/admin/projects');
+  const handleUpdateBlogs = persistUpdate<Blog[]>(setBlogs, '/api/admin/blogs');
+  const handleUpdateCertificates = persistUpdate<Certificate[]>(setCertificates, '/api/admin/certificates');
 
   // Liking Toggle
   const handleLikeToggle = (id: string) => {
@@ -254,6 +292,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50/40 text-slate-800 font-sans flex flex-col pt-24 tech-grid-pattern selection:bg-[#0084ff]/10">
+      <Analytics />
       
       {/* GLOBAL SCROLLING HEADER NAVIGATION */}
       <Header
@@ -398,9 +437,378 @@ export default function App() {
                       <div className="absolute w-72 h-72 rounded-full bg-blue-500/5 blur-3xl" />
                       <motion.div 
                         whileHover={{ scale: 1.05 }}
-                        className="relative bg-white/80 p-6 rounded-[2.5rem] border border-blue-500/10 shadow-xl min-h-[300px] w-full flex items-center justify-center z-10 cursor-pointer overflow-visible hover:border-blue-500/30 transition-all duration-300"
+                        className="relative bg-white/95 p-6 sm:p-8 rounded-[2.5rem] border border-blue-500/15 shadow-2xl min-h-[340px] w-full flex flex-col items-center justify-between z-10 cursor-pointer overflow-hidden hover:border-blue-500/35 transition-all duration-300 group"
                       >
-                        <QMLogo size="sm" showTagline={true} interactive={true} />
+                        {/* Decorative background grid */}
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
+                        
+                        {/* Top indicator bar */}
+                        <div className="w-full flex justify-between items-center z-10 mb-2">
+                          <span className="text-[10px] font-mono text-blue-500 font-extrabold uppercase tracking-widest bg-blue-50/70 px-2.5 py-1 rounded-md">
+                            LABS SYSTEM v2.4
+                          </span>
+                          <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-500 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            OPTIMIZED
+                          </span>
+                        </div>
+
+                        {/* Core Speed & Vitals SVG Engine */}
+                        <div className="relative w-full max-w-[240px] h-[240px] z-10 my-1">
+                          <svg
+                            viewBox="0 0 220 220"
+                            className="w-full h-full"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <defs>
+                              {/* Glowing filters */}
+                              <filter id="glow-cyber" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                              </filter>
+                              <filter id="glow-seo" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="2.5" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                              </filter>
+                              
+                              {/* Linear Gradients for quadrants */}
+                              <linearGradient id="grad-webdev" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#3b82f6" />
+                                <stop offset="100%" stopColor="#06b6d4" />
+                              </linearGradient>
+                              <linearGradient id="grad-datasci" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#8b5cf6" />
+                                <stop offset="100%" stopColor="#d946ef" />
+                              </linearGradient>
+                              <linearGradient id="grad-security" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#ef4444" />
+                                <stop offset="100%" stopColor="#f97316" />
+                              </linearGradient>
+                              <linearGradient id="grad-seo" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#10b981" />
+                                <stop offset="100%" stopColor="#84cc16" />
+                              </linearGradient>
+                              <linearGradient id="grad-central" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#4f46e5" />
+                                <stop offset="100%" stopColor="#3b82f6" />
+                              </linearGradient>
+                            </defs>
+
+                            <style>{`
+                              /* Quad Animations */
+                              @keyframes centralPulse {
+                                0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(79, 70, 229, 0.2)); }
+                                50% { transform: scale(1.06); filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.5)); }
+                              }
+                              @keyframes spinSlow {
+                                from { transform: rotate(0deg); }
+                                to { transform: rotate(360deg); }
+                              }
+                              @keyframes spinReverse {
+                                from { transform: rotate(360deg); }
+                                to { transform: rotate(0deg); }
+                              }
+                              @keyframes scanline {
+                                0% { transform: translateY(-5px); opacity: 0.1; }
+                                50% { opacity: 0.8; }
+                                100% { transform: translateY(22px); opacity: 0.1; }
+                              }
+                              @keyframes blinkCode {
+                                0%, 100% { opacity: 0.3; }
+                                50% { opacity: 1; }
+                              }
+                              @keyframes flowData {
+                                0% { stroke-dashoffset: 24; }
+                                100% { stroke-dashoffset: 0; }
+                              }
+                              @keyframes pulseNode {
+                                0%, 100% { transform: scale(1); opacity: 0.7; }
+                                50% { transform: scale(1.3); opacity: 1; }
+                              }
+                              @keyframes floatIcon {
+                                0%, 100% { transform: translateY(0px); }
+                                50% { transform: translateY(-3px); }
+                              }
+
+                              .anim-central {
+                                transform-origin: 110px 110px;
+                                animation: centralPulse 4s ease-in-out infinite;
+                              }
+                              .anim-spin-slow {
+                                transform-origin: 110px 110px;
+                                animation: spinSlow 30s linear infinite;
+                              }
+                              .anim-spin-reverse {
+                                transform-origin: 110px 110px;
+                                animation: spinReverse 20s linear infinite;
+                              }
+                              .anim-scan {
+                                animation: scanline 2.5s ease-in-out infinite;
+                              }
+                              .anim-blink {
+                                animation: blinkCode 1.5s step-end infinite;
+                              }
+                              .anim-flow {
+                                stroke-dasharray: 6, 6;
+                                animation: flowData 1.8s linear infinite;
+                              }
+                              .anim-node-1 {
+                                transform-origin: 165px 55px;
+                                animation: pulseNode 2s ease-in-out infinite;
+                              }
+                              .anim-node-2 {
+                                transform-origin: 180px 40px;
+                                animation: pulseNode 2.5s ease-in-out infinite;
+                              }
+                              .anim-node-3 {
+                                transform-origin: 150px 35px;
+                                animation: pulseNode 1.8s ease-in-out infinite;
+                              }
+                              .anim-float {
+                                animation: floatIcon 4s ease-in-out infinite;
+                              }
+                            `}</style>
+
+                            {/* Background Tech Circle grids */}
+                            <circle cx="110" cy="110" r="102" fill="none" stroke="#f1f5f9" strokeWidth="1" />
+                            <circle cx="110" cy="110" r="82" fill="none" stroke="#e2e8f0" strokeWidth="0.75" strokeDasharray="3 6" />
+                            <circle cx="110" cy="110" r="48" fill="none" stroke="#e2e8f0" strokeWidth="1" />
+
+                            {/* Crosshairs split for 4 Quadrants */}
+                            <line x1="110" y1="8" x2="110" y2="212" stroke="#e2e8f0" strokeWidth="0.75" strokeDasharray="4 4" />
+                            <line x1="8" y1="110" x2="212" y2="110" stroke="#e2e8f0" strokeWidth="0.75" strokeDasharray="4 4" />
+
+                            {/* Spinning outer telemetry indicators */}
+                            <circle
+                              cx="110"
+                              cy="110"
+                              r="94"
+                              fill="none"
+                              stroke="url(#grad-central)"
+                              strokeWidth="1.25"
+                              strokeDasharray="15 45 60 30"
+                              className="anim-spin-slow"
+                              opacity="0.35"
+                            />
+                            <circle
+                              cx="110"
+                              cy="110"
+                              r="88"
+                              fill="none"
+                              stroke="url(#grad-webdev)"
+                              strokeWidth="1"
+                              strokeDasharray="4 12"
+                              className="anim-spin-reverse"
+                              opacity="0.5"
+                            />
+
+                            {/* ------------------------------------------------------------- */}
+                            {/* QUADRANT 1: WEB DEVELOPMENT (Top Left: 0-110px x & y) */}
+                            {/* ------------------------------------------------------------- */}
+                            <g transform="translate(10, 10)">
+                              {/* Quadrant boundary box */}
+                              <rect x="0" y="0" width="85" height="85" fill="none" rx="12" stroke="#f1f5f9" strokeWidth="1" />
+                              
+                              {/* Web Dev Tag Icon Bracket */}
+                              <g transform="translate(18, 12)" className="anim-float">
+                                {/* Simulated code block editor */}
+                                <rect x="0" y="0" width="50" height="32" rx="6" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+                                <circle cx="6" cy="6" r="1.5" fill="#ef4444" />
+                                <circle cx="11" cy="6" r="1.5" fill="#eab308" />
+                                <circle cx="16" cy="6" r="1.5" fill="#22c55e" />
+                                
+                                {/* </ > bracket symbols */}
+                                <path d="M 14 22 L 8 17 L 14 12" fill="none" stroke="url(#grad-webdev)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M 22 12 L 28 17 L 22 22" fill="none" stroke="url(#grad-webdev)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                                <line x1="20" y1="12" x2="16" y2="22" stroke="url(#grad-webdev)" strokeWidth="1.5" />
+                                
+                                {/* Simulated binary code lines */}
+                                <line x1="34" y1="15" x2="44" y2="15" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" />
+                                <line x1="34" y1="20" x2="42" y2="20" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" />
+                              </g>
+
+                              {/* Tech Stack Connectors */}
+                              <path d="M 43 44 C 43 55, 30 60, 25 60" fill="none" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="2 2" />
+                              <circle cx="25" cy="60" r="2.5" fill="#3b82f6" />
+                              
+                              {/* React / Browser DOM nodes representation */}
+                              <ellipse cx="43" cy="62" rx="14" ry="5" fill="none" stroke="#06b6d4" strokeWidth="0.75" transform="rotate(30, 43, 62)" opacity="0.7" />
+                              <ellipse cx="43" cy="62" rx="14" ry="5" fill="none" stroke="#06b6d4" strokeWidth="0.75" transform="rotate(-30, 43, 62)" opacity="0.7" />
+                              <circle cx="43" cy="62" r="2" fill="#06b6d4" />
+
+                              <text x="42.5" y="80" textAnchor="middle" className="text-[7.5px] font-mono font-extrabold fill-slate-500 uppercase tracking-wider">
+                                WEBDEV / FULLSTACK
+                              </text>
+                            </g>
+
+
+                            {/* ------------------------------------------------------------- */}
+                            {/* QUADRANT 2: DATA SCIENCE (Top Right: 110-220px x, 0-110px y) */}
+                            {/* ------------------------------------------------------------- */}
+                            <g transform="translate(125, 10)">
+                              {/* Quadrant boundary box */}
+                              <rect x="0" y="0" width="85" height="85" fill="none" rx="12" stroke="#f1f5f9" strokeWidth="1" />
+                              
+                              {/* Deep Neural Network / Scatter Plot model */}
+                              <g transform="translate(10, 10)">
+                                {/* Background Scatter plot grid */}
+                                <line x1="5" y1="40" x2="55" y2="40" stroke="#cbd5e1" strokeWidth="0.75" />
+                                <line x1="5" y1="5" x2="5" y2="40" stroke="#cbd5e1" strokeWidth="0.75" />
+                                
+                                {/* Regression Analysis Trend Curve */}
+                                <path d="M 5 35 Q 20 25, 35 12 T 55 5" fill="none" stroke="url(#grad-datasci)" strokeWidth="1.75" className="anim-flow" />
+                                
+                                {/* Scatter plot data points */}
+                                <circle cx="12" cy="32" r="1.5" fill="#8b5cf6" />
+                                <circle cx="22" cy="22" r="2" fill="#d946ef" />
+                                <circle cx="34" cy="24" r="1.5" fill="#c084fc" />
+                                <circle cx="42" cy="10" r="2" fill="#8b5cf6" />
+                                <circle cx="50" cy="14" r="1.5" fill="#e879f9" />
+                              </g>
+
+                              {/* Neural Connections overlaying */}
+                              <g>
+                                <line x1="30" y1="55" x2="48" y2="48" stroke="#cbd5e1" strokeWidth="0.75" />
+                                <line x1="48" y1="48" x2="62" y2="60" stroke="#cbd5e1" strokeWidth="0.75" />
+                                <line x1="30" y1="55" x2="62" y2="60" stroke="#cbd5e1" strokeWidth="0.75" />
+                                
+                                <circle cx="30" cy="55" r="3" fill="#8b5cf6" className="anim-node-3" />
+                                <circle cx="48" cy="48" r="4.5" fill="#d946ef" className="anim-node-1" />
+                                <circle cx="62" cy="60" r="3.5" fill="#3b82f6" className="anim-node-2" />
+                              </g>
+
+                              <text x="42.5" y="80" textAnchor="middle" className="text-[7.5px] font-mono font-extrabold fill-slate-500 uppercase tracking-wider">
+                                DATA SCIENCE / AI
+                              </text>
+                            </g>
+
+
+                            {/* ------------------------------------------------------------- */}
+                            {/* QUADRANT 3: CYBER SECURITY (Bottom Left: 0-110px x, 110-220px y) */}
+                            {/* ------------------------------------------------------------- */}
+                            <g transform="translate(10, 125)">
+                              {/* Quadrant boundary box */}
+                              <rect x="0" y="0" width="85" height="85" fill="none" rx="12" stroke="#f1f5f9" strokeWidth="1" />
+                              
+                              {/* Security Cryptographic Shield */}
+                              <g transform="translate(24, 10)">
+                                {/* Hex shield background */}
+                                <polygon points="18,2 36,10 36,28 18,38 0,28 0,10" fill="#fef2f2" stroke="url(#grad-security)" strokeWidth="1.5" />
+                                
+                                {/* Internal Lock core design */}
+                                <rect x="12" y="18" width="12" height="9" rx="2" fill="url(#grad-security)" />
+                                <path d="M 14 18 L 14 15 A 4 4 0 0 1 22 15 L 22 18" fill="none" stroke="url(#grad-security)" strokeWidth="1.5" />
+                                
+                                {/* Dynamic Security Scanline bar */}
+                                <line x1="-3" y1="12" x2="39" y2="12" stroke="#f97316" strokeWidth="1" className="anim-scan" filter="url(#glow-cyber)" />
+                              </g>
+
+                              {/* Security Matrix Node representation */}
+                              <g transform="translate(15, 52)">
+                                <circle cx="10" cy="10" r="2.5" fill="#ef4444" />
+                                <line x1="12.5" y1="10" x2="42.5" y2="10" stroke="#fecaca" strokeWidth="1.5" />
+                                <circle cx="45" cy="10" r="2.5" fill="#22c55e" />
+                                <path d="M 45 10 A 5 5 0 0 1 45 15" fill="none" stroke="#22c55e" strokeWidth="1" />
+                              </g>
+
+                              <text x="42.5" y="80" textAnchor="middle" className="text-[7.5px] font-mono font-extrabold fill-slate-500 uppercase tracking-wider">
+                                CYBERSECURITY / AUDIT
+                              </text>
+                            </g>
+
+
+                            {/* ------------------------------------------------------------- */}
+                            {/* QUADRANT 4: TECHNICAL SEO (Bottom Right: 110-220px x & y) */}
+                            {/* ------------------------------------------------------------- */}
+                            <g transform="translate(125, 125)">
+                              {/* Quadrant boundary box */}
+                              <rect x="0" y="0" width="85" height="85" fill="none" rx="12" stroke="#f1f5f9" strokeWidth="1" />
+                              
+                              {/* Speed dial audit + search bot spiders */}
+                              <g transform="translate(15, 10)">
+                                {/* PageSpeed Radial speed arc */}
+                                <path d="M 8 32 A 20 20 0 1 1 48 32" fill="none" stroke="#e2e8f0" strokeWidth="3" strokeLinecap="round" />
+                                <path d="M 8 32 A 20 20 0 1 1 42 16" fill="none" stroke="url(#grad-seo)" strokeWidth="3.5" strokeLinecap="round" />
+                                
+                                {/* Central SEO Score text overlay */}
+                                <text x="28" y="27" textAnchor="middle" className="text-[10px] font-sans font-black fill-slate-800">100</text>
+                                
+                                {/* Upward indexing arrow of SEO success */}
+                                <path d="M 44 26 L 52 18 M 52 18 L 47 18 M 52 18 L 52 23" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </g>
+
+                              {/* Search Crawler Spiderweb / indexing map nodes */}
+                              <g transform="translate(20, 50)">
+                                <line x1="5" y1="12" x2="22" y2="5" stroke="#cbd5e1" strokeWidth="0.75" />
+                                <line x1="22" y1="5" x2="38" y2="12" stroke="#cbd5e1" strokeWidth="0.75" />
+                                <line x1="5" y1="12" x2="38" y2="12" stroke="#cbd5e1" strokeWidth="0.75" strokeDasharray="1 2" />
+                                
+                                <circle cx="5" cy="12" r="2" fill="#10b981" />
+                                <circle cx="22" cy="5" r="2" fill="#84cc16" />
+                                <circle cx="38" cy="12" r="2" fill="#059669" />
+                                
+                                {/* Scanning Magnifier overlay */}
+                                <circle cx="28" cy="8" r="4.5" fill="none" stroke="#3b82f6" strokeWidth="1.25" opacity="0.8" />
+                                <line x1="31" y1="11" x2="35" y2="15" stroke="#3b82f6" strokeWidth="1.25" />
+                              </g>
+
+                              <text x="42.5" y="80" textAnchor="middle" className="text-[7.5px] font-mono font-extrabold fill-slate-500 uppercase tracking-wider">
+                                TECHNICAL SEO / SPEED
+                              </text>
+                            </g>
+
+
+                            {/* ------------------------------------------------------------- */}
+                            {/* CENTRAL BRIDGE CORE: THE FUSION POINT (QM CORE ENGINE) */}
+                            {/* ------------------------------------------------------------- */}
+                            <g className="anim-central">
+                              {/* Central dynamic fusion engine */}
+                              <circle
+                                cx="110"
+                                cy="110"
+                                r="22"
+                                fill="#ffffff"
+                                stroke="url(#grad-central)"
+                                strokeWidth="2.5"
+                                filter="url(#glow-seo)"
+                              />
+                              <circle
+                                cx="110"
+                                cy="110"
+                                r="17"
+                                fill="#f8fafc"
+                                stroke="#e2e8f0"
+                                strokeWidth="1"
+                              />
+                              
+                              {/* Pulsing lightning/core star emblem in exact center */}
+                              <path
+                                d="M 110 102 L 113 108 L 119 110 L 113 112 L 110 118 L 107 112 L 101 110 L 107 108 Z"
+                                fill="url(#grad-central)"
+                              />
+                            </g>
+                          </svg>
+                        </div>
+
+                        {/* Real-time Diagnostics HUD Metrics structured for portfolios & consultancy */}
+                        <div className="w-full grid grid-cols-4 gap-1 border-t border-slate-100 pt-4 z-10 text-center">
+                          <div className="space-y-0.5">
+                            <span className="block text-[7.5px] font-mono text-slate-400 font-bold uppercase tracking-wider">Web Apps</span>
+                            <span className="block text-[11px] font-black text-blue-500 font-sans">Fullstack</span>
+                          </div>
+                          <div className="space-y-0.5 border-l border-slate-100">
+                            <span className="block text-[7.5px] font-mono text-slate-400 font-bold uppercase tracking-wider">Data Engine</span>
+                            <span className="block text-[11px] font-black text-purple-500 font-sans">ML/Stats</span>
+                          </div>
+                          <div className="space-y-0.5 border-l border-slate-100">
+                            <span className="block text-[7.5px] font-mono text-slate-400 font-bold uppercase tracking-wider">Security</span>
+                            <span className="block text-[11px] font-black text-rose-500 font-sans">99.9%</span>
+                          </div>
+                          <div className="space-y-0.5 border-l border-slate-100">
+                            <span className="block text-[7.5px] font-mono text-slate-400 font-bold uppercase tracking-wider">SEO Score</span>
+                            <span className="block text-[11px] font-black text-emerald-500 font-sans">100/100</span>
+                          </div>
+                        </div>
                       </motion.div>
                     </motion.div>
                   </motion.section>
@@ -667,7 +1075,7 @@ export default function App() {
                                    [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1 [&_ol]:text-slate-600
                                    [&_blockquote]:border-l-4 [&_blockquote]:border-blue-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:bg-slate-50 [&_blockquote]:py-1 [&_blockquote]:my-2 [&_blockquote]:rounded-r-md 
                                    [&_pre]:bg-slate-950 [&_pre]:text-slate-200 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-xs [&_pre]:my-2 overflow-x-auto"
-                        dangerouslySetInnerHTML={{ __html: settings.company_about_html || "<p>At QM Labs, we design and implement enterprise-grade web applications, dynamic automation frameworks, and sophisticated uptime diagnostics.</p>" }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(settings.company_about_html || "<p>At QM Labs, we design and implement enterprise-grade web applications, dynamic automation frameworks, and sophisticated uptime diagnostics.</p>") }}
                       />
                     </div>
                   </section>
@@ -802,7 +1210,7 @@ export default function App() {
                                    [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1 [&_ol]:text-slate-650
                                    [&_blockquote]:border-l-4 [&_blockquote]:border-blue-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:bg-slate-50 [&_blockquote]:py-1 [&_blockquote]:my-2 [&_blockquote]:rounded-r-md 
                                    [&_pre]:bg-slate-950 [&_pre]:text-slate-200 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-xs [&_pre]:my-2 overflow-x-auto"
-                        dangerouslySetInnerHTML={{ __html: settings.about_text }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(settings.about_text) }}
                       />
                     </div>
                   </section>
@@ -1268,7 +1676,7 @@ export default function App() {
                       <div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Target Location</span>
                         <span className="text-xs font-semibold text-slate-800">
-                          Delhi NCR / Gunupur, India
+                          Delhi, India
                         </span>
                       </div>
                     </div>
@@ -1292,7 +1700,7 @@ export default function App() {
                 </div>
 
                 {/* Right Side: Interactive Form */}
-                <ContactForm onAddContact={handleAddNewContact} />
+                <ContactForm />
               </div>
             </motion.div>
           )}
@@ -1306,7 +1714,7 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="py-6"
             >
-              <CoreWebVitalsLab settings={settings} onAddContact={handleAddNewContact} />
+              <CoreWebVitalsLab settings={settings} />
             </motion.div>
           )}
 
@@ -1321,15 +1729,13 @@ export default function App() {
             >
               <AdminConsole
                 settings={settings}
-                onUpdateSettings={setSettingsSetState}
+                onUpdateSettings={handleUpdateSettings}
                 projects={projects}
-                onUpdateProjects={setProjects}
+                onUpdateProjects={handleUpdateProjects}
                 blogs={blogs}
-                onUpdateBlogs={setBlogs}
+                onUpdateBlogs={handleUpdateBlogs}
                 certificates={certificates}
-                onUpdateCertificates={setCertificates}
-                contacts={contacts}
-                onUpdateContacts={setContacts}
+                onUpdateCertificates={handleUpdateCertificates}
                 isAdminLoggedIn={isAdminLoggedIn}
                 onAdminLoginToggle={setIsAdminLoggedIn}
               />
@@ -1364,9 +1770,4 @@ export default function App() {
       </script>
     </div>
   );
-
-  // Helper orchestrators to set complex substates properly
-  function setSettingsSetState(val: SiteSettings) {
-    setSettings(val);
-  }
 }

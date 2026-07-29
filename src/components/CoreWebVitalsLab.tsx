@@ -8,10 +8,9 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface CoreWebVitalsLabProps {
   settings: any;
-  onAddContact?: (contact: any) => void;
 }
 
-export default function CoreWebVitalsLab({ settings, onAddContact }: CoreWebVitalsLabProps) {
+export default function CoreWebVitalsLab({ settings }: CoreWebVitalsLabProps) {
   // Lab Mode state
   const [labMode, setLabMode] = useState<'lighthouse' | 'ai-optimizer' | 'onpage-auditor' | 'sitemap-builder'>('lighthouse');
 
@@ -85,6 +84,10 @@ export default function CoreWebVitalsLab({ settings, onAddContact }: CoreWebVita
 
   // Robots.txt selected agent check
   const [selectedAgent, setSelectedAgent] = useState<'google' | 'gpt' | 'claude' | 'all'>('google');
+
+  // Speed Insights Integration Guide state
+  const [speedInsightsFramework, setSpeedInsightsFramework] = useState<'nextjs' | 'react' | 'remix' | 'sveltekit'>('nextjs');
+  const [speedInsightsPkgManager, setSpeedInsightsPkgManager] = useState<'npm' | 'yarn' | 'pnpm'>('npm');
 
   // Action: Call AI SEO Analyzer endpoint
   const runAiAnalysis = () => {
@@ -736,15 +739,6 @@ export default function CoreWebVitalsLab({ settings, onAddContact }: CoreWebVita
       return data;
     })
     .then(() => {
-      if (onAddContact) {
-        onAddContact({
-          name: `SEO Lead: ${siteHost}`,
-          email: cleanEmail,
-          message: `Unlocked and downloaded full technical SEO & Lighthouse diagnostics report for ${auditedUrl}.`,
-          status: 'unread'
-        });
-      }
-
       const htmlContent = generateHtmlReportContent();
       const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
       const downloadUrl = URL.createObjectURL(blob);
@@ -887,7 +881,8 @@ export default function CoreWebVitalsLab({ settings, onAddContact }: CoreWebVita
 
       {/* COMPONENT CONTENT GRID */}
       {labMode === 'lighthouse' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* LEFT COLUMN: URL SCAN PANEL AND CORE METRICS */}
         <div className="lg:col-span-7 space-y-6">
@@ -1291,6 +1286,210 @@ export default function CoreWebVitalsLab({ settings, onAddContact }: CoreWebVita
 
         </div>
       </div>
+
+      {/* SPEED INSIGHTS PERFORMANCE GET STARTED GUIDE */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bg-white border border-slate-150 p-6 sm:p-8 rounded-[2rem] shadow-xs space-y-6 text-left mt-8 max-w-7xl mx-auto"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div className="space-y-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 text-[#0084ff] rounded-md text-[10px] font-extrabold uppercase tracking-widest font-mono">
+              <Zap className="w-3.5 h-3.5" /> Performance Analytics
+            </span>
+            <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase">Get Started with Speed Insights</h3>
+            <p className="text-xs text-slate-500">To start collecting real-user performance metrics, follow these simple integration steps.</p>
+          </div>
+          
+          {/* Framework Switcher tabs */}
+          <div className="flex flex-wrap gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-100">
+            {[
+              { id: 'nextjs', label: 'Next.js' },
+              { id: 'react', label: 'React (Vite)' },
+              { id: 'remix', label: 'Remix' },
+              { id: 'sveltekit', label: 'SvelteKit' }
+            ].map((fw) => (
+              <button
+                key={fw.id}
+                onClick={() => setSpeedInsightsFramework(fw.id as any)}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer relative"
+              >
+                {speedInsightsFramework === fw.id && (
+                  <motion.span
+                    layoutId="activeFrameworkTab"
+                    className="absolute inset-0 bg-white border border-slate-200/80 rounded-xl shadow-xs -z-10"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className={speedInsightsFramework === fw.id ? 'text-slate-900 font-extrabold' : 'text-slate-500 hover:text-slate-850 font-semibold'}>
+                  {fw.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* STEP 1: INSTALLATION */}
+          <div className="space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="w-6 h-6 rounded-lg bg-slate-900 text-white text-xs font-mono font-black flex items-center justify-center shrink-0 mt-0.5">
+                  1
+                </span>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">Install our package</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Start by installing <code>@vercel/speed-insights</code> in your existing project using your preferred package manager.
+                  </p>
+                </div>
+              </div>
+
+              {/* Package Manager selector */}
+              <div className="flex gap-1 bg-slate-50/50 p-0.5 rounded-lg border border-slate-100/80 w-fit">
+                {['npm', 'yarn', 'pnpm'].map((pkg) => (
+                  <button
+                    key={pkg}
+                    onClick={() => setSpeedInsightsPkgManager(pkg as any)}
+                    className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-md uppercase transition-all cursor-pointer ${
+                      speedInsightsPkgManager === pkg
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {pkg}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Code Block for installation */}
+            <div className="bg-slate-950 rounded-2xl p-4 border border-slate-900 relative font-mono text-[11px] leading-relaxed text-indigo-300 mt-2 flex items-center justify-between group">
+              <code className="font-mono text-slate-100 selection:bg-indigo-500/30">
+                {speedInsightsPkgManager === 'npm' && 'npm i @vercel/speed-insights'}
+                {speedInsightsPkgManager === 'yarn' && 'yarn add @vercel/speed-insights'}
+                {speedInsightsPkgManager === 'pnpm' && 'pnpm add @vercel/speed-insights'}
+              </code>
+              <button
+                type="button"
+                onClick={() => {
+                  const cmd = speedInsightsPkgManager === 'npm' ? 'npm i @vercel/speed-insights' : (speedInsightsPkgManager === 'yarn' ? 'yarn add @vercel/speed-insights' : 'pnpm add @vercel/speed-insights');
+                  copyToClipboard(cmd, 'speed-insights-install');
+                }}
+                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                title="Copy command"
+              >
+                {copiedType === 'speed-insights-install' ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* STEP 2: MOUNT COMPONENT OR FUNCTION */}
+          <div className="space-y-4 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-start gap-3">
+                <span className="w-6 h-6 rounded-lg bg-slate-900 text-white text-xs font-mono font-black flex items-center justify-center shrink-0 mt-0.5">
+                  2
+                </span>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                    {speedInsightsFramework === 'nextjs' && 'Add the Next.js component'}
+                    {speedInsightsFramework === 'react' && 'Inject telemetry function'}
+                    {speedInsightsFramework === 'remix' && 'Add the Remix component'}
+                    {speedInsightsFramework === 'sveltekit' && 'Inject layout hook'}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {speedInsightsFramework === 'nextjs' && 'Import and use the <SpeedInsights /> Next.js component into your app\'s layout or your main file.'}
+                    {speedInsightsFramework === 'react' && 'Import and execute injectSpeedInsights() in your main React entry file.'}
+                    {speedInsightsFramework === 'remix' && 'Import and use the <SpeedInsights /> component inside your root layout route.'}
+                    {speedInsightsFramework === 'sveltekit' && 'Call injectSpeedInsights() within script tags of your root +layout.svelte file.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Code Block for step 2 */}
+            <div className="bg-slate-950 rounded-2xl p-4 border border-slate-900 relative font-mono text-[11px] leading-relaxed text-indigo-300 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  let snippet = '';
+                  if (speedInsightsFramework === 'nextjs') {
+                    snippet = `import { SpeedInsights } from "@vercel/speed-insights/next"`;
+                  } else if (speedInsightsFramework === 'react') {
+                    snippet = `import { injectSpeedInsights } from '@vercel/speed-insights';\n\ninjectSpeedInsights();`;
+                  } else if (speedInsightsFramework === 'remix') {
+                    snippet = `import { SpeedInsights } from "@vercel/speed-insights/remix"`;
+                  } else if (speedInsightsFramework === 'sveltekit') {
+                    snippet = `<script>\n  import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';\n  injectSpeedInsights();\n</script>`;
+                  }
+                  copyToClipboard(snippet, 'speed-insights-code');
+                }}
+                className="absolute top-3 right-3 p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="Copy code"
+              >
+                {copiedType === 'speed-insights-code' ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+              
+              <pre className="text-left font-mono leading-relaxed select-all overflow-x-auto text-indigo-300 max-h-44">
+                {speedInsightsFramework === 'nextjs' && (
+                  <code className="text-slate-300 font-mono">
+                    <span className="text-indigo-400">import</span> {'{'} <span className="text-emerald-400">SpeedInsights</span> {'}'} <span className="text-indigo-400">from</span> <span className="text-amber-400">"@vercel/speed-insights/next"</span>
+                  </code>
+                )}
+                {speedInsightsFramework === 'react' && (
+                  <code className="text-slate-300 font-mono">
+                    <span className="text-indigo-400">import</span> {'{'} <span className="text-emerald-400">injectSpeedInsights</span> {'}'} <span className="text-indigo-400">from</span> <span className="text-amber-400">'@vercel/speed-insights'</span>;{"\n\n"}
+                    <span className="text-slate-400">// Initialize Core Web Vitals telemetry</span>{"\n"}
+                    <span className="text-indigo-400">injectSpeedInsights</span>();
+                  </code>
+                )}
+                {speedInsightsFramework === 'remix' && (
+                  <code className="text-slate-300 font-mono">
+                    <span className="text-indigo-400">import</span> {'{'} <span className="text-emerald-400">SpeedInsights</span> {'}'} <span className="text-indigo-400">from</span> <span className="text-amber-400">"@vercel/speed-insights/remix"</span>
+                  </code>
+                )}
+                {speedInsightsFramework === 'sveltekit' && (
+                  <code className="text-slate-300 font-mono">
+                    &lt;<span className="text-[#0084ff]">script</span>&gt;{"\n"}
+                    {"  "}<span className="text-indigo-400">import</span> {'{'} <span className="text-emerald-400">injectSpeedInsights</span> {'}'} <span className="text-indigo-400">from</span> <span className="text-amber-400">'@vercel/speed-insights/sveltekit'</span>;{"\n\n"}
+                    {"  "}<span className="text-[#0084ff]">injectSpeedInsights</span>();{"\n"}
+                    &lt;/<span className="text-[#0084ff]">script</span>&gt;
+                  </code>
+                )}
+              </pre>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info link */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-medium">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Ready for production Core Web Vitals data reporting.</span>
+          </div>
+          <a
+            href="https://vercel.com/docs/speed-insights"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[#0084ff] hover:text-blue-600 transition-colors cursor-pointer group"
+          >
+            <span>For full examples and further reference, please refer to our documentation</span>
+            <ChevronRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />
+          </a>
+        </div>
+      </motion.div>
+        </>
       )}
 
       {/* 1. AI-Powered SEO Optimizer Lab */}

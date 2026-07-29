@@ -1,8 +1,13 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import DOMPurify from 'dompurify';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 }
 
 export function slugify(text: string): string {

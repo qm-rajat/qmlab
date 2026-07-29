@@ -65,4 +65,4 @@ Allow: /
 Crawl-delay: 1
 
 # Sitemap Location
-Sitemap: https://rajatkumar.dev/sitemap.xml
+Sitemap: https://qmlab-indol.vercel.app/sitemap.xml
