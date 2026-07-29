@@ -1,4 +1,4 @@
-import { SiteSettings, Project, Blog, Certificate, Contact } from './types';
+import { SiteSettings, Project, Blog, Certificate, Contact } from './types.js';
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   hero_name: "Rajat Kumar Dash",
