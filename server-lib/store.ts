@@ -4,8 +4,8 @@ import {
   DEFAULT_PROJECTS,
   DEFAULT_BLOGS,
   DEFAULT_CERTIFICATES,
-} from "../src/data";
-import { SiteSettings, Project, Blog, Certificate, Contact } from "../src/types";
+} from "../src/data.js";
+import { SiteSettings, Project, Blog, Certificate, Contact } from "../src/types.js";
 
 // Accepts whichever name the Vercel Redis integration (or a standalone Redis Cloud /
 // self-hosted instance) injects for the standard redis:// connection string.
