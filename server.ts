@@ -11,7 +11,7 @@ import {
   clearSessionCookie,
   isValidSession,
   requireAdmin,
-} from "./server-lib/auth";
+} from "./server-lib/auth.js";
 import {
   isStoreConfigured,
   getSettings,
@@ -24,14 +24,14 @@ import {
   saveCertificates,
   getContacts,
   saveContacts,
-} from "./server-lib/store";
-import { Contact } from "./src/types";
+} from "./server-lib/store.js";
+import { Contact } from "./src/types.js";
 
 // Initialize environment configuration
 dotenv.config();
 
 // Canonical site URL used in outbound email links — configurable so it doesn't go
-// stale if the deployment domain changes again.
+// stale if the deployment domain changes agai.jsn.
 const SITE_URL = process.env.SITE_URL || "https://qmlab-indol.vercel.app";
 
 // Escapes user-supplied text before it's interpolated into an HTML email body.
