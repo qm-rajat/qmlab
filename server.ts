@@ -3,7 +3,6 @@ import path from "path";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import nodemailer from "nodemailer";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import {
   isAdminAuthConfigured,
@@ -680,6 +679,12 @@ app.put("/api/admin/contacts", requireAdmin, async (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    // Imported dynamically, not at module top-level: this file also serves as the
+    // Vercel serverless function entry (via api/index.ts), and Vercel's build traces
+    // every static import when bundling the function. A static `import ... from "vite"`
+    // would pull vite's entire dependency tree (esbuild binaries, rollup natives, etc.)
+    // into that bundle even though this branch never runs in production.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
