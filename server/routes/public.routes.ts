@@ -5,7 +5,7 @@ import {
   getProjects,
   getBlogs,
   getCertificates,
-} from "../lib/store";
+} from "../lib/store.ts";
 
 const router = Router();
 

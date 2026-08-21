@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { SiteSettings, Project, Blog, Certificate, Contact } from "../../src/types";
+import { SiteSettings, Project, Blog, Certificate, Contact } from "../../src/types.ts";
 
 // Empty defaults in case Redis is completely fresh
 const EMPTY_SETTINGS: SiteSettings = {
