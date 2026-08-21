@@ -1,8 +1,8 @@
 import { Router } from "express";
-import adminRoutes from "./admin.routes.ts";
-import publicRoutes from "./public.routes.ts";
-import seoRoutes from "./seo.routes.ts";
-import contactRoutes from "./contact.routes.ts";
+import adminRoutes from "./admin.routes";
+import publicRoutes from "./public.routes";
+import seoRoutes from "./seo.routes";
+import contactRoutes from "./contact.routes";
 
 const router = Router();
 

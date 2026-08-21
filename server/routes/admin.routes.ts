@@ -9,8 +9,8 @@ import {
   clearSessionCookie,
   isValidSession,
   requireAdmin,
-} from "../lib/auth.ts";
-import { getMailTransporter, isSmtpConfigured } from "../services/mail.service.ts";
+} from "../lib/auth";
+import { getMailTransporter, isSmtpConfigured } from "../services/mail.service";
 
 const execPromise = util.promisify(exec);
 import {
@@ -20,7 +20,7 @@ import {
   saveCertificates,
   getContacts,
   saveContacts,
-} from "../lib/store.ts";
+} from "../lib/store";
 
 const router = Router();
 

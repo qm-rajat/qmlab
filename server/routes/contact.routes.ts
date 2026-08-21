@@ -5,9 +5,9 @@ import {
   escapeHtml,
   sanitizeHeaderValue,
   renderEmailFooter
-} from "../services/mail.service.ts";
-import { saveContacts, getContacts } from "../lib/store.ts";
-import { Contact } from "../../src/types.ts";
+} from "../services/mail.service";
+import { saveContacts, getContacts } from "../lib/store";
+import { Contact } from "../../src/types";
 
 const router = Router();
 const SITE_URL = process.env.SITE_URL || "https://qmlab-indol.vercel.app";

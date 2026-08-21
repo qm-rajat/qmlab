@@ -1,7 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import apiRoutes from "../server/routes/index.ts";
+import apiRoutes from "../server/routes/index";
 
 dotenv.config();
 
