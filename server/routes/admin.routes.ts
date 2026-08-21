@@ -3,12 +3,14 @@ import { exec } from "child_process";
 import util from "util";
 import {
   isAdminAuthConfigured,
-  verifyAdminCredentials,
+  sendAdminOtp,
+  verifyAdminOtp,
   issueSessionCookie,
   clearSessionCookie,
   isValidSession,
   requireAdmin,
 } from "../lib/auth";
+import { getMailTransporter, isSmtpConfigured } from "../services/mail.service";
 
 const execPromise = util.promisify(exec);
 import {
@@ -24,22 +26,44 @@ const router = Router();
 
 // Auth Endpoints
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: "Email and password are required." });
+  const { email, otp } = req.body;
+  if (!email) {
+    return res.status(400).json({ success: false, error: "Admin email is required." });
   }
   if (!isAdminAuthConfigured()) {
     return res.status(503).json({
       success: false,
-      error: "Admin auth is not configured on the server. Set ADMIN_EMAIL, ADMIN_PASSWORD_HASH, and SESSION_SECRET.",
+      error: "Admin OTP login is not configured. Set ADMIN_EMAIL, SESSION_SECRET, Redis, and SMTP variables.",
     });
   }
-  const valid = await verifyAdminCredentials(email, password);
-  if (!valid) {
-    return res.status(401).json({ success: false, error: "Invalid administrator credentials." });
+
+  try {
+    if (!otp) {
+      if (!isSmtpConfigured()) {
+        return res.status(503).json({ success: false, error: "SMTP is not configured to send the admin OTP." });
+      }
+      const code = await sendAdminOtp(email);
+      if (!code) return res.status(401).json({ success: false, error: "Use the configured administrator email." });
+      const transporter = getMailTransporter();
+      await transporter.sendMail({
+        from: `"QM Labs Admin" <${process.env.SMTP_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject: "Your QM Labs admin login code",
+        text: `Your QM Labs admin login code is ${code}. It expires in 10 minutes. If you did not request it, ignore this email.`,
+        html: `<p>Your QM Labs admin login code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p>`,
+      });
+      return res.json({ success: true, otpRequired: true });
+    }
+
+    if (!(await verifyAdminOtp(email, otp))) {
+      return res.status(401).json({ success: false, error: "Invalid or expired OTP." });
+    }
+    issueSessionCookie(res);
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error("Admin OTP login failed:", error);
+    return res.status(500).json({ success: false, error: "Unable to process admin login right now." });
   }
-  issueSessionCookie(res);
-  res.json({ success: true });
 });
 
 router.post("/logout", (req, res) => {

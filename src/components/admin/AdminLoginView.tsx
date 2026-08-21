@@ -7,7 +7,8 @@ interface AdminLoginViewProps {
 
 export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpRequested, setOtpRequested] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -20,13 +21,18 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: email.trim(), password })
+        body: JSON.stringify({ email: email.trim(), ...(otpRequested ? { otp } : {}) })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: 'The server returned an invalid response.' }));
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Invalid administrator credentials.');
+        throw new Error(data.error || 'Admin login failed.');
       }
-      setPassword('');
+      if (data.otpRequired) {
+        setOtpRequested(true);
+        setLoginError('A 5-digit OTP was sent to the configured admin email.');
+        return;
+      }
+      setOtp('');
       onLoginSuccess();
     } catch (err: any) {
       setLoginError(err.message || 'Login failed. Please try again.');
@@ -44,7 +50,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
           </div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Admin CRM Console</h2>
           <p className="text-xs text-slate-500 max-w-xs mx-auto">
-            Please authorize with developer key credentials to manage your portfolio content and read enquiries.
+            Request a one-time access code sent only to the configured administrator email.
           </p>
         </div>
 
@@ -58,7 +64,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
 
           <div className="space-y-1.5 text-left">
             <label htmlFor="admin-email-input" className="text-xs font-bold text-slate-500 uppercase tracking-widest block">
-              Console Email
+              Administrator Email
             </label>
             <input
               id="admin-email-input"
@@ -71,20 +77,23 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
             />
           </div>
 
-          <div className="space-y-1.5 font-sans text-left">
-            <label htmlFor="admin-password-input" className="text-xs font-bold text-slate-500 uppercase tracking-widest block">
-              Access Password
+          {otpRequested && <div className="space-y-1.5 font-sans text-left">
+            <label htmlFor="admin-otp-input" className="text-xs font-bold text-slate-500 uppercase tracking-widest block">
+              5-Digit OTP
             </label>
             <input
-              id="admin-password-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
+              id="admin-otp-input"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={5}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              placeholder="00000"
               className="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/30 focus:bg-white border border-slate-200 focus:border-primary focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm transition-all focus:outline-hidden text-slate-800"
               required
             />
-          </div>
+          </div>}
 
           <button
             type="submit"
@@ -92,7 +101,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
             className="w-full py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Key className="w-3.5 h-3.5" />
-            {isLoggingIn ? 'Authorizing...' : 'Authorize Credentials'}
+            {isLoggingIn ? 'Processing...' : otpRequested ? 'Verify OTP' : 'Send OTP'}
           </button>
         </form>
       </div>
