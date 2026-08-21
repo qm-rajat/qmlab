@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getGeminiClient } from "../services/ai.service";
+import { getGeminiClient } from "../services/ai.service.js";
 
 const router = Router();
 const SITE_URL = process.env.SITE_URL || "https://qmlab-indol.vercel.app";
