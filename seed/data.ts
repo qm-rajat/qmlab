@@ -1,4 +1,4 @@
-import { SiteSettings, Project, Blog, Certificate, Contact } from './types';
+import { SiteSettings, Project, Blog, Certificate, Contact } from '../src/types';
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   hero_name: "Rajat Kumar Dash",
@@ -14,64 +14,64 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       category: "Web Development",
       items: [
-        { name: "React/Next.js", proficiency: 92 },
-        { name: "Node.js", proficiency: 78 },
-        { name: "TypeScript", proficiency: 70 },
-        { name: "Tailwind CSS", proficiency: 85 },
-        { name: "Express.js", proficiency: 68 },
-        { name: "WordPress CMS", proficiency: 60 },
-        { name: "PHP", proficiency: 55 },
-        { name: "SQL", proficiency: 72 }
+        { name: "React/Next.js" },
+        { name: "Node.js" },
+        { name: "TypeScript" },
+        { name: "Tailwind CSS" },
+        { name: "Express.js" },
+        { name: "WordPress CMS" },
+        { name: "PHP" },
+        { name: "SQL" }
       ]
     },
     {
       category: "Technical SEO & Web Analytics",
       items: [
-        { name: "Core Web Vitals", proficiency: 88 },
-        { name: "Schema Markup", proficiency: 82 },
-        { name: "Sitemap & Robots.txt", proficiency: 75 },
-        { name: "Crawl Error Resolution", proficiency: 78 },
-        { name: "Ranking & Indexing", proficiency: 72 },
-        { name: "GA4 / GSC", proficiency: 80 },
-        { name: "Ahrefs / Semrush", proficiency: 74 },
-        { name: "Screaming Frog", proficiency: 70 }
+        { name: "Core Web Vitals" },
+        { name: "Schema Markup" },
+        { name: "Sitemap & Robots.txt" },
+        { name: "Crawl Error Resolution" },
+        { name: "Ranking & Indexing" },
+        { name: "GA4 / GSC" },
+        { name: "Ahrefs / Semrush" },
+        { name: "Screaming Frog" }
       ]
     },
     {
       category: "QA Automation & Scripting",
       items: [
-        { name: "Selenium WebDriver", proficiency: 80 },
-        { name: "PyTest", proficiency: 68 },
-        { name: "Functional Testing", proficiency: 72 },
-        { name: "API Integration Testing", proficiency: 75 },
-        { name: "Python Debugging", proficiency: 65 },
-        { name: "Web Scraping", proficiency: 70 },
-        { name: "Automated Scraping", proficiency: 62 }
+        { name: "Selenium WebDriver" },
+        { name: "PyTest" },
+        { name: "Functional Testing" },
+        { name: "API Integration Testing" },
+        { name: "Python Debugging" },
+        { name: "Web Scraping" },
+        { name: "Automated Scraping" }
       ]
     },
     {
       category: "Data Science & BI",
       items: [
-        { name: "Python/Pandas/NumPy", proficiency: 82 },
-        { name: "Machine Learning (scikit-learn)", proficiency: 65 },
-        { name: "Feature Engineering", proficiency: 60 },
-        { name: "Data Visualization", proficiency: 72 },
-        { name: "Microsoft Power BI", proficiency: 70 },
-        { name: "Advanced Excel", proficiency: 75 }
+        { name: "Python/Pandas/NumPy" },
+        { name: "Machine Learning (scikit-learn)" },
+        { name: "Feature Engineering" },
+        { name: "Data Visualization" },
+        { name: "Microsoft Power BI" },
+        { name: "Advanced Excel" }
       ]
     },
     {
       category: "Cybersecurity & Infrastructure",
       items: [
-        { name: "Vulnerability Assessment", proficiency: 72 },
-        { name: "Network Security Protocols", proficiency: 68 },
-        { name: "Wireshark Packet Analysis", proficiency: 70 },
-        { name: "Nmap Port Scanning", proficiency: 75 },
-        { name: "Burp Suite Proxy", proficiency: 65 },
-        { name: "Metasploit", proficiency: 60 },
-        { name: "Parrot OS / Kali Linux", proficiency: 72 },
-        { name: "DevSecOps / GitHub Lifecycle", proficiency: 65 },
-        { name: "Linux Environments", proficiency: 70 }
+        { name: "Vulnerability Assessment" },
+        { name: "Network Security Protocols" },
+        { name: "Wireshark Packet Analysis" },
+        { name: "Nmap Port Scanning" },
+        { name: "Burp Suite Proxy" },
+        { name: "Metasploit" },
+        { name: "Parrot OS / Kali Linux" },
+        { name: "DevSecOps / GitHub Lifecycle" },
+        { name: "Linux Environments" }
       ]
     }
   ],
@@ -166,10 +166,21 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   logo_url: "",
   google_maps_embed_url: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112064.93510529683!2d77.12644264663953!3d28.628929969145624!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0xd5c854199617651c!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1718018501234!5m2!1sen!2sin",
   contact_email: "rajatkudash.2004@gmail.com",
+  contact_location: "New Delhi, India",
   company_name: "QM Labs",
   company_tagline: "Quality Builds Trust. Momentum Drives Growth.",
   company_bio: "A premium software consulting and engineering lab specializing in secure web architecture, automated test infrastructures, and technical search engine optimization.",
   company_about_html: "<h3><strong>QM Labs — Engineering Digital Acceleration</strong></h3><p>We are a high-performance freelance and consulting agency delivering premium digital solutions to modern businesses. We combine full-stack programming, professional search engine optimization, and advanced automated testing into a singular, high-velocity delivery model.</p><ul><li><strong>Precision Engineering:</strong> We write component-driven React, TypeScript, Node.js, and Python systems structured for high uptime.</li><li><strong>Organic Growth Science:</strong> We translate search engine parameters into code, optimizing metadata, schema layouts, indexing pathways, and Core Web Vitals to increase visitor yield.</li><li><strong>Automated Stability:</strong> We formulate extensive regression suites and Page Object Model frameworks to verify that every user experience is flawless.</li></ul><p>We operate transparently, with code verified by modern telemetry, keeping your engineering momentum forward.</p>",
+
+  hero_stats: [
+    { label: "Experience", value: "3+ Years", subtext: "Production Eng" },
+    { label: "Delivered", value: "15+ Systems", subtext: "Full-Stack & SEO" },
+    { label: "Lighthouse", value: "100/100", subtext: "Core Web Vitals" }
+  ],
+  overview_fourth_stat: {
+    label: "TryHackMe Context Rank",
+    value: "Top 9%"
+  },
   company_services: [
     { title: "Custom Web & Full-Stack Development", description: "Design and implement robust client interfaces paired with secure, light-weight server middleware (React, TypeScript, Express).", icon_name: "Cpu" },
     { title: "Technical SEO & Web Analytics Campaigns", description: "Diagnose crawl issues, configure JSON-LD Schema structures, optimize Core Web Vitals (LCP, FID, CLS), and deploy custom GA4 telemetry.", icon_name: "TrendingUp" },
@@ -181,13 +192,34 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 export const DEFAULT_PROJECTS: Project[] = [
   {
     id: "proj_1",
-    title: "PentestSEO – Security & Analysis Framework",
+    title: "PentestSEO – Security & Vulnerability Analysis Framework",
     slug: "pentest-seo-framework",
-    description: "A custom modular testing and inspection framework built on Parrot OS. It integrates automated website security scanning, SQL injection testing, XSS scanning, with end-to-end Technical SEO health audits. It extracts header configurations, crawl pathways, SSL status, site maps, and robots.txt syntax. Secured on Git/GitHub command structures.",
-    images: ["https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=600"],
+    category: "cybersecurity",
+    description: "A custom modular penetration testing and inspection framework built on Parrot OS. Integrates automated web application vulnerability scanning, SQL injection detection, XSS vectors, and SSL/TLS header auditing with end-to-end Technical SEO health diagnostics.",
+    images: [
+      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=800"
+    ],
     technologies: ["Python", "Parrot OS", "Nmap", "Wireshark", "Technical SEO", "Security Scripting", "Shell/Bash"],
     github_url: "https://github.com/qm-rajat/PentestSEO",
     live_url: "",
+    key_metric: {
+      label: "Audit Coverage",
+      value: "50+ Vectors"
+    },
+    architecture_highlights: [
+      "Multi-threaded port enumeration and service banner grabber using custom Nmap wrappers.",
+      "Automated HTTP security header validator (CSP, HSTS, X-Frame-Options, CORS).",
+      "Dynamic XML sitemap crawler and canonical URL inconsistency detector."
+    ],
+    problem_statement: "Modern websites frequently suffer from hidden security vulnerabilities (unpatched ports, missing headers) alongside search engine crawl traps that drain crawl budget.",
+    solution_details: "Engineered an integrated CLI diagnostic tool running on Parrot OS that executes security reconnaissance and technical SEO auditing in a single automated scan cycle.",
+    features: [
+      "Automated XSS and SQL injection vulnerability testing suite",
+      "Full SSL/TLS certificate chain and cipher validation",
+      "Crawl budget efficiency calculator and robots.txt syntax parser",
+      "Exportable Markdown and JSON penetration test reports"
+    ],
     is_featured: true,
     display_order: 1,
     created_at: "2025-01-15T00:00:00Z"
@@ -196,11 +228,31 @@ export const DEFAULT_PROJECTS: Project[] = [
     id: "proj_2",
     title: "Heart Failure Prediction Model (Machine Learning)",
     slug: "heart-failure-prediction-ml",
-    description: "An analytical machine learning classification engine built on medical health parameters. Developed data cleaning pipelines, evaluated statistics, and compared Random Forest, Support Vector Machine (SVM), and Gradient Boosting algorithms. Obtained a top classification accuracy score of 92.57% utilizing Scikit-learn with rigorous GridSearchCV hyperparameter tuning.",
-    images: ["https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?auto=format&fit=crop&q=80&w=600"],
-    technologies: ["Python", "Pandas", "Scikit-Learn", "Matplotlib", "Random Forest", "GridSearchCV"],
+    category: "machine-learning",
+    description: "An analytical machine learning classification engine trained on clinical patient health records. Formulated automated data cleaning pipelines, evaluated statistical correlations, and benchmarked Random Forest, SVM, and Gradient Boosting algorithms.",
+    images: [
+      "https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800"
+    ],
+    technologies: ["Python", "Pandas", "Scikit-Learn", "Matplotlib", "Random Forest", "GridSearchCV", "Seaborn"],
     github_url: "https://github.com/qm-rajat/heart-failure-classification",
     live_url: "https://heart-prediction-demo.example.com",
+    key_metric: {
+      label: "Model Accuracy",
+      value: "92.57%"
+    },
+    architecture_highlights: [
+      "Extensive feature engineering across 12 clinical indicators (ejection fraction, serum creatinine, platelets).",
+      "GridSearchCV hyperparameter tuning optimizing n_estimators, max_depth, and min_samples_split.",
+      "Confusion matrix evaluation and ROC-AUC curve benchmarking (0.94 AUC score)."
+    ],
+    problem_statement: "Early detection of cardiovascular failure requires reliable risk stratification across multifaceted biometric variables that are difficult to evaluate manually.",
+    solution_details: "Built an end-to-end Python Scikit-Learn classification pipeline with robust outlier handling, MinMax scaling, and ensemble modeling that reliably predicts mortality risk.",
+    features: [
+      "92.57% prediction accuracy with high recall for high-risk cohorts",
+      "Feature importance ranking isolating ejection fraction and serum creatinine as primary drivers",
+      "Interactive prediction simulation interface with instant patient risk score visualization"
+    ],
     is_featured: true,
     display_order: 2,
     created_at: "2024-11-20T00:00:00Z"
@@ -209,11 +261,31 @@ export const DEFAULT_PROJECTS: Project[] = [
     id: "proj_3",
     title: "SauceDemo Automation Testing Framework",
     slug: "sauce-demo-automation-framework",
-    description: "Designed and implemented a scalable, object-oriented end-to-end automation test suite using Selenium WebDriver and PyTest. Incorporates a strict Page Object Model (POM) architecture, automated checkout loops, responsive cross-browser validation, detailed logging, and beautiful custom HTML test reports depicting pass/fail criteria.",
-    images: ["https://images.unsplash.com/photo-1516116211223-5c359a36298a?auto=format&fit=crop&q=80&w=600"],
+    category: "automation",
+    description: "A robust, object-oriented end-to-end automated test suite developed with Selenium WebDriver and PyTest. Incorporates strict Page Object Model (POM) architecture, data-driven checkout flows, responsive cross-browser assertions, and custom HTML test execution telemetry.",
+    images: [
+      "https://images.unsplash.com/photo-1516116211223-5c359a36298a?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800"
+    ],
     technologies: ["Python", "Selenium WebDriver", "PyTest", "Page Object Model (POM)", "E-commerce Testing", "HTML Reporting"],
     github_url: "https://github.com/qm-rajat/SauceDemo-Automation",
     live_url: "",
+    key_metric: {
+      label: "POM Test Coverage",
+      value: "100%"
+    },
+    architecture_highlights: [
+      "Decoupled Page Object classes separating locator selectors from procedural test logic.",
+      "PyTest fixtures providing automated browser instantiation, screenshot on failure, and clean teardowns.",
+      "Headless Chrome / Firefox execution capability integrated for CI/CD pipelines."
+    ],
+    problem_statement: "Manual regression testing across multi-step checkout funnels and dynamic shopping carts is time-intensive and error-prone.",
+    solution_details: "Created a maintainable Python testing framework covering login validation, dynamic cart state management, checkout input sanitization, and sorting edge cases.",
+    features: [
+      "Automated end-to-end checkout loop validation with parameterized negative tests",
+      "Automated failure screenshot capture with timestamped logs",
+      "Interactive HTML test execution report generation with pass/fail duration metrics"
+    ],
     is_featured: true,
     display_order: 3,
     created_at: "2024-08-10T00:00:00Z"
@@ -222,27 +294,97 @@ export const DEFAULT_PROJECTS: Project[] = [
     id: "proj_4",
     title: "Crop Disease Detection (Computer Vision)",
     slug: "crop-disease-cv",
-    description: "AI-based deep learning classifier analyzing leaf images to predict bacterial, viral, or fungal infections in crops. Leveraged OpenCV for image pre-processing, implemented data augmentation structures, and integrated real-time inference on a reactive interface, facilitating smart agronomy solutions.",
-    images: ["https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600"],
-    technologies: ["Python", "TensorFlow/Keras", "OpenCV", "Deep Learning", "Image Augmentation"],
+    category: "machine-learning",
+    description: "Deep learning convolutional neural network (CNN) model analyzing agricultural leaf images to detect bacterial, viral, or fungal infections in real-time.",
+    images: [
+      "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=800"
+    ],
+    technologies: ["Python", "TensorFlow/Keras", "OpenCV", "Deep Learning", "Image Augmentation", "NumPy"],
     github_url: "https://github.com/qm-rajat/crop-disease-detection",
     live_url: "",
+    key_metric: {
+      label: "Inference Speed",
+      value: "<45ms"
+    },
+    architecture_highlights: [
+      "Custom CNN architecture trained on augmented PlantVillage dataset (rotation, zoom, horizontal flip).",
+      "OpenCV image pre-processing pipeline standardizing color spaces and noise filtering.",
+      "Softmax multi-class classification predicting disease categories and treatment suggestions."
+    ],
+    problem_statement: "Crop pathogens cause significant crop yield losses when not diagnosed in their early stages by agrarian workers.",
+    solution_details: "Implemented a computer vision model that classifies plant pathologies instantly from standard camera captures with high diagnostic precision.",
+    features: [
+      "Multi-pathogen classification across tomato, potato, and corn crops",
+      "Real-time image pre-processing with Gaussian blur and color segmentation",
+      "Confidence scoring output with targeted intervention recommendations"
+    ],
     is_featured: false,
     display_order: 4,
     created_at: "2024-05-12T00:00:00Z"
   },
   {
     id: "proj_5",
-    title: "Interactive Car Sales Analytics Dashboard",
+    title: "Interactive Car Sales Analytics & BI Dashboard",
     slug: "car-sales-dashboard",
-    description: "An advanced business intelligence dashboard engineered in Power BI representing car sales volumes, brand market shares, geographical performance, and price segment analytics. Translates Excel databases into interactive visualizations that assist stakeholders in technical decision-making and forecasting.",
-    images: ["https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=600"],
-    technologies: ["Power BI", "Data Cleaning", "DAX Formulas", "Advanced Excel", "Business Intelligence"],
+    category: "data-bi",
+    description: "An executive business intelligence dashboard engineered in Power BI representing car sales volumes, brand market shares, regional performance, and price elasticity analytics.",
+    images: [
+      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800"
+    ],
+    technologies: ["Power BI", "Data Cleaning", "DAX Formulas", "Advanced Excel", "Business Intelligence", "ETL"],
     github_url: "",
     live_url: "https://powerbi-mock-domain.com/car-sales",
+    key_metric: {
+      label: "Data Points",
+      value: "100K+ Records"
+    },
+    architecture_highlights: [
+      "Complex DAX measures calculating Year-over-Year (YoY) revenue growth and margin variances.",
+      "Multi-dimensional drill-down hierarchies enabling exploration from national down to dealership tier.",
+      "Automated Power Query M ETL routines normalizing disparate transaction logs."
+    ],
+    problem_statement: "Dealership management lacked unified visibility into customer purchase trends, inventory aging, and regional pricing discrepancies.",
+    solution_details: "Architected a high-contrast interactive Power BI dashboard connecting automated ETL pipelines to deliver actionable operational insights.",
+    features: [
+      "Interactive KPI cards for Gross Margin, Average Unit Price, and Inventory Turnover",
+      "Dynamic filtering by vehicle segment, fuel type, transmission, and state",
+      "Predictive quarterly revenue forecasting visualizer"
+    ],
     is_featured: false,
     display_order: 5,
     created_at: "2024-03-25T00:00:00Z"
+  },
+  {
+    id: "proj_6",
+    title: "Real-Time Trader Visualizer (J.P. Morgan Perspective)",
+    slug: "jpmorgan-trader-visualizer",
+    category: "web-systems",
+    description: "High-frequency financial market streaming visualizer built with React, TypeScript, and JPMorgan Perspective library. Renders live ask/bid order books, price correlation graphs, and automated trading alerts with sub-millisecond chart re-renders.",
+    images: [
+      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800"
+    ],
+    technologies: ["React", "TypeScript", "Perspective", "WebSockets", "Financial Data", "Tailwind CSS"],
+    github_url: "https://github.com/qm-rajat/jpmc-task-3",
+    live_url: "https://trader-perspective-demo.example.com",
+    key_metric: {
+      label: "Render Latency",
+      value: "<16ms (60 FPS)"
+    },
+    architecture_highlights: [
+      "Integrated WebAssembly-backed Perspective table to stream live price updates without thread contention.",
+      "Engineered automated ratio bounds (+/- 5%) triggering historical trigger alerts for currency pairs.",
+      "Custom TypeScript interfaces enforcing strict typing across WebSocket payload streams."
+    ],
+    problem_statement: "Traders require instant visual feedback on arbitrage ratios and upper/lower bounds without UI lag or memory leaks during high-volume market hours.",
+    solution_details: "Implemented high-performance TypeScript components integrating JPMorgan Perspective's WebAssembly charting pipeline to stream live market feeds seamlessly.",
+    features: [
+      "Real-time ratio computation between paired equity tickers",
+      "Dynamic upper and lower boundary warning visualizers",
+      "Live order book telemetry stream with automatic reconnect logic"
+    ],
+    is_featured: true,
+    display_order: 6,
+    created_at: "2024-04-22T00:00:00Z"
   }
 ];
 
@@ -254,8 +396,10 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2024-11-20",
     credential_id: "UC-5bfb3e6d-2391-4d32-95f0-6126fac01a1e",
     verify_url: "https://www.udemy.com/certificate/UC-5bfb3e6d-2391-4d32-95f0-6126fac01a1e/",
-    image_url: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=600",
     category: "data-science",
+    skills: ["Python", "Pandas", "NumPy", "Data Visualization", "SQL"],
+    description: "Comprehensive data extraction, statistical aggregation, automated cleaning pipelines, and predictive exploratory data analysis.",
     is_featured: true,
     display_order: 1,
     created_at: "2024-11-20T00:00:00Z"
@@ -267,8 +411,10 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2025-02-15",
     credential_id: "IBM-SEC-99212A",
     verify_url: "https://credly.com/mock-ibm-cybersecurity",
-    image_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=600",
     category: "cybersecurity",
+    skills: ["Network Security", "Vulnerability Assessment", "Threat Modeling", "SIEM", "Incident Response"],
+    description: "Enterprise defensive architecture, reconnaissance vector mitigation, network telemetry monitoring, and OWASP Top 10 auditing.",
     is_featured: true,
     display_order: 2,
     created_at: "2025-02-15T00:00:00Z"
@@ -280,8 +426,10 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2024-10-05",
     credential_id: "CY-DEF-55120",
     verify_url: "https://cyberyaan.org/verify/CY-DEF-55120",
-    image_url: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?auto=format&fit=crop&q=80&w=600",
     category: "cybersecurity",
+    skills: ["Offensive Recon", "Nmap", "Wireshark", "Packet Analysis", "Parrot OS"],
+    description: "Hands-on penetration testing, port enumeration, SSL/TLS header auditing, and offensive vulnerability exploitation methodologies.",
     is_featured: true,
     display_order: 3,
     created_at: "2024-10-05T00:00:00Z"
@@ -293,8 +441,10 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2024-09-18",
     credential_id: "CVF-88126B",
     verify_url: "https://cybervidyapeeth.in/certificate/CVF-88126B",
-    image_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=600",
     category: "cybersecurity",
+    skills: ["Firewall Configuration", "Intrusion Detection", "Linux Hardening", "Access Control"],
+    description: "System perimeter defense, endpoint protection, bash script automation for log parsing, and active defense counter-measures.",
     is_featured: false,
     display_order: 4,
     created_at: "2024-09-18T00:00:00Z"
@@ -306,8 +456,10 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2024-07-15",
     credential_id: "UC-ab96123e-8c81",
     verify_url: "https://www.udemy.com/certificate/UC-ab96123e-8c81/",
-    image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600",
     category: "seo-digital-marketing",
+    skills: ["Technical SEO", "Growth Analytics", "Conversion Rate Optimization", "Market Research"],
+    description: "Data-driven audience acquisition, search engine crawling strategy, conversion funnel tracking, and digital market positioning.",
     is_featured: true,
     display_order: 5,
     created_at: "2024-07-15T00:00:00Z"
@@ -319,8 +471,10 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2024-06-11",
     credential_id: "UC-4927dcc8",
     verify_url: "https://www.udemy.com/certificate/UC-4927dcc8",
-    image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=600",
     category: "data-science",
+    skills: ["A/B Testing", "Statistical Inference", "P-Value Analysis", "Scipy", "Python"],
+    description: "Formulation and parametric/non-parametric hypothesis testing, ANOVA, two-sample t-tests, and experimental design validation.",
     is_featured: false,
     display_order: 6,
     created_at: "2024-06-11T00:00:00Z"
@@ -332,11 +486,28 @@ export const DEFAULT_CERTIFICATES: Certificate[] = [
     issue_date: "2024-04-20",
     credential_id: "JPMC-FORAGE-99120",
     verify_url: "https://theforage.com/verify/JPMC-FORAGE-99120",
-    image_url: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=400",
+    image_url: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=600",
     category: "web-development",
+    skills: ["React", "TypeScript", "Perspective Library", "Live Market Feeds", "Git"],
+    description: "Interfacing with real-time financial data feeds, building financial charts using JPMorgan Perspective, and fixing critical bugs in trader visualizers.",
     is_featured: true,
     display_order: 7,
     created_at: "2024-04-20T00:00:00Z"
+  },
+  {
+    id: "cert_8",
+    title: "Technical SEO & Web Crawl Optimization Certification",
+    issuer: "Google Skillshop / Digital Garage",
+    issue_date: "2024-12-08",
+    credential_id: "GOOG-SEO-88319",
+    verify_url: "https://skillshop.exceedlms.com/verify/GOOG-SEO-88319",
+    image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600",
+    category: "seo-digital-marketing",
+    skills: ["Schema Markup", "Core Web Vitals", "XML Sitemaps", "Google Search Console", "Robots.txt"],
+    description: "Search engine crawling semantics, rendering budget optimization, structured JSON-LD entity graph configuration, and CWV audits.",
+    is_featured: true,
+    display_order: 8,
+    created_at: "2024-12-08T00:00:00Z"
   }
 ];
 
@@ -430,6 +601,77 @@ class SauceLoginPage:
     created_at: "2026-01-05T09:00:00Z",
     tags: ["Data Science", "Machine Learning", "Python", "Scikit-Learn"],
     categories: ["Data Science & ML"]
+  },
+  {
+    id: "blog_4",
+    title: "Optimizing Core Web Vitals (LCP, INP, CLS) in Next.js & React Applications",
+    slug: "optimizing-core-web-vitals-react-nextjs",
+    excerpt: "Practical architectural strategies to hit a 100/100 Google Lighthouse score. Learn how to tame font flashes, optimize critical rendering paths, and minimize main-thread execution.",
+    content_html: `<h3>The Crucial Shift to Interaction to Next Paint (INP)</h3>
+<p>Google officially replaced First Input Delay (FID) with <strong>Interaction to Next Paint (INP)</strong> as a Core Web Vital metric. While FID only measured the delay of the <em>first</em> user interaction, INP evaluates all user interactions across the entire lifecycle of the page.</p>
+<blockquote>"A 200ms latency on button clicks or drawer toggles will directly degrade your SEO rank in competitive search categories."</blockquote>
+<h3>Practical LCP & CLS Remediations</h3>
+<p>Here are the highest-impact fixes applied across production clients:</p>
+<ul>
+  <li><strong>Eliminating Layout Shifts (CLS):</strong> Always declare explicit <code>aspect-ratio</code> or <code>width/height</code> attributes on media containers, iframes, and dynamic banners.</li>
+  <li><strong>Critical Resource Preloading (LCP):</strong> Preload hero image assets with <code>rel="preload"</code> and <code>fetchpriority="high"</code> to bring sub-1.2s Largest Contentful Paint times.</li>
+  <li><strong>Font Rendering Strategy:</strong> Utilize <code>font-display: optional</code> or local self-hosted variable font files to eliminate Flash of Unstyled Text (FOUT).</li>
+  <li><strong>Main Thread De-janking (INP):</strong> Offload heavy non-UI computations to Web Workers and break down long tasks using <code>scheduler.yield()</code> or <code>requestIdleCallback()</code>.</li>
+</ul>
+<p>Adopting these strategies consistently yields green 95+ Core Web Vital scores and noticeable gains in organic ranking visibility.</p>`,
+    cover_image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600",
+    status: "published",
+    read_time_mins: 6,
+    like_count: 58,
+    bookmark_count: 24,
+    view_count: 420,
+    published_at: "2026-03-25T11:00:00Z",
+    created_at: "2026-03-25T11:00:00Z",
+    tags: ["Core Web Vitals", "Next.js", "Performance", "React", "SEO"],
+    categories: ["Web Performance", "Search Engine Optimization"]
+  },
+  {
+    id: "blog_5",
+    title: "Building a Custom Modular Recon & Penetration Testing Suite with Parrot OS",
+    slug: "building-custom-pentest-suite-parrot-os",
+    excerpt: "Architecting a lightweight security auditing toolchain combining Nmap port enumeration, SSL/TLS header inspections, and OWASP vulnerability scans.",
+    content_html: `<h3>Why Custom Tooling Matters in Cybersecurity</h3>
+<p>Commercial vulnerability scanners often produce overwhelming noise and false positives. Crafting custom, modular scripts in Python and Bash on security distributions like Parrot OS or Kali Linux gives engineers precise visibility into network posture and web endpoint exposure.</p>
+<h3>Core Script Architecture</h3>
+<pre><code># PentestSEO Modular Reconnaissance Snippet
+import subprocess
+import socket
+
+def check_security_headers(target_domain):
+    import urllib.request
+    try:
+        response = urllib.request.urlopen(f"https://{target_domain}", timeout=5)
+        headers = response.info()
+        required_headers = [
+            'Strict-Transport-Security',
+            'Content-Security-Policy',
+            'X-Frame-Options',
+            'X-Content-Type-Options'
+        ]
+        audit_results = {}
+        for h in required_headers:
+            audit_results[h] = h in headers
+        return audit_results
+    except Exception as e:
+        return {"error": str(e)}
+</code></pre>
+<h3>Integrating with Technical SEO Audits</h3>
+<p>By connecting security header scans with canonical and crawl validation, we ensure that client web portals are both protected against clickjacking / MITM attacks and fully accessible to verified search engine spiders.</p>`,
+    cover_image_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=600",
+    status: "published",
+    read_time_mins: 7,
+    like_count: 39,
+    bookmark_count: 17,
+    view_count: 285,
+    published_at: "2026-02-01T14:00:00Z",
+    created_at: "2026-02-01T14:00:00Z",
+    tags: ["Cybersecurity", "Python", "Parrot OS", "Linux", "Nmap"],
+    categories: ["Cybersecurity", "Quality Assurance"]
   }
 ];
 

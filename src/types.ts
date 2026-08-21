@@ -3,10 +3,19 @@ export interface Project {
   title: string;
   slug: string;
   description: string;
+  category?: 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems';
   images: string[];         // array of image URLs
   technologies: string[];
   github_url?: string;
   live_url?: string;
+  key_metric?: {
+    label: string;
+    value: string;
+  };
+  architecture_highlights?: string[];
+  problem_statement?: string;
+  solution_details?: string;
+  features?: string[];
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string;
@@ -44,11 +53,15 @@ export interface Certificate {
   title: string;
   issuer: string;
   issue_date?: string;
+  expiry_date?: string;
   credential_id?: string;
   verify_url?: string;
   image_url?: string;
   category: 'cybersecurity' | 'web-development' | 'data-science' |
             'machine-learning' | 'seo-digital-marketing' | 'cloud' | 'other';
+  skills?: string[];
+  description?: string;
+  score_or_grade?: string;
   is_featured: boolean;
   display_order: number;
   created_at: string;
@@ -70,12 +83,11 @@ export interface Contact {
 
 export interface SkillItem {
   name: string;
-  proficiency?: number;  // 1 to 5
 }
 
 export interface Skill {
   category: string;      // e.g. "Web Development"
-  items: (string | SkillItem)[];       // e.g. ["Next.js", { name: "React", proficiency: 5 }]
+  items: (string | SkillItem)[];       // e.g. ["Next.js", { name: "React" }]
 }
 
 export interface Experience {
@@ -110,6 +122,12 @@ export interface CompanyService {
   icon_name: string;
 }
 
+export interface HeroStat {
+  label: string;
+  value: string;
+  subtext: string;
+}
+
 export interface SiteSettings {
   hero_name: string;
   hero_tagline: string;
@@ -128,11 +146,17 @@ export interface SiteSettings {
   logo_url: string;
   google_maps_embed_url: string;
   contact_email: string;
+  contact_location: string;
   company_name: string;
   company_tagline: string;
   company_bio: string;
   company_about_html: string;
   company_services?: CompanyService[];
+  hero_stats: HeroStat[];
+  overview_fourth_stat: {
+    label: string;
+    value: string;
+  };
 }
 
 export interface AnalyticsSummary {
