@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Check } from 'lucide-react';
+import { Plus, Trash2, Check, Database, RefreshCw, DownloadCloud, UploadCloud, Shield } from 'lucide-react';
 import { SiteSettings } from '../../types';
 import RichTextEditor from '../RichTextEditor';
 
@@ -12,7 +12,54 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   settings,
   onUpdateSettings,
 }) => {
-  const [settingsSubTab, setSettingsSubTab] = useState<'hero' | 'company' | 'skills' | 'socials' | 'seo'>('hero');
+  const [settingsSubTab, setSettingsSubTab] = useState<'hero' | 'company' | 'skills' | 'socials' | 'seo' | 'database'>('hero');
+  
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [sysMessage, setSysMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    setSysMessage(null);
+    try {
+      const response = await fetch('/api/admin/backup', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSysMessage({ text: 'Backup completed successfully!', type: 'success' });
+      } else {
+        setSysMessage({ text: data.error || 'Backup failed.', type: 'error' });
+      }
+    } catch (err: any) {
+      setSysMessage({ text: err.message, type: 'error' });
+    }
+    setIsBackingUp(false);
+  };
+
+  const handleRestore = async () => {
+    if (!window.confirm("⚠️ WARNING: This will overwrite your live Redis data with the contents of latest.json. Are you sure you want to proceed?")) {
+      return;
+    }
+    setIsRestoring(true);
+    setSysMessage(null);
+    try {
+      const response = await fetch('/api/admin/restore', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSysMessage({ text: 'Restore completed successfully! Refresh the page to see updated data.', type: 'success' });
+      } else {
+        setSysMessage({ text: data.error || 'Restore failed.', type: 'error' });
+      }
+    } catch (err: any) {
+      setSysMessage({ text: err.message, type: 'error' });
+    }
+    setIsRestoring(false);
+  };
 
   const handleSkillUpdate = (catIdx: number, itemIdx: number, newName: string) => {
     const nextSkills = [...settings.skills];
@@ -51,7 +98,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
           { label: 'Company Profile', value: 'company' },
           { label: 'Skills lists', value: 'skills' },
           { label: 'Social connections', value: 'socials' },
-          { label: 'Map / Meta', value: 'seo' }
+          { label: 'Map / Meta', value: 'seo' },
+          { label: 'Database & Security', value: 'database' }
         ].map((st) => (
           <button
             key={st.value}
@@ -467,6 +515,74 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               rows={3}
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono resize-none"
             />
+          </div>
+        </div>
+      )}
+      
+      {settingsSubTab === 'database' && (
+        <div className="space-y-6 animate-fade-in text-left">
+          {sysMessage && (
+            <div className={`p-4 rounded-2xl border flex items-start gap-2.5 text-xs ${
+              sysMessage.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'
+            }`}>
+              <Check className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>{sysMessage.text}</span>
+            </div>
+          )}
+
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="w-5 h-5 text-slate-600" />
+              <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Site Availability</h4>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Under Maintenance Mode</p>
+                <p className="text-xs text-slate-500">When enabled, visitors will see a maintenance page. You can still access the admin panel.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onUpdateSettings({ ...settings, is_under_maintenance: !settings.is_under_maintenance })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.is_under_maintenance ? 'bg-rose-500' : 'bg-slate-300'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.is_under_maintenance ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left">
+            <div className="flex items-center gap-2 mb-4">
+              <Database className="w-5 h-5 text-slate-600" />
+              <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Database Tools & Security</h4>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button 
+                    onClick={handleBackup} 
+                    disabled={isBackingUp || isRestoring}
+                    className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50"
+                  >
+                    {isBackingUp ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
+                    Backup Data to JSON
+                  </button>
+                  
+                  <button 
+                    onClick={handleRestore} 
+                    disabled={isBackingUp || isRestoring}
+                    className="flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50"
+                  >
+                    {isRestoring ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                    Restore from JSON
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-4 leading-relaxed max-w-2xl">
+                  <strong>Backup</strong> queries Redis and saves local JSON files to <code className="bg-slate-200 px-1 py-0.5 rounded">.data/backups/</code>.<br/>
+                  <strong>Restore</strong> reads <code className="bg-slate-200 px-1 py-0.5 rounded">latest.json</code> and forcefully overwrites your live Redis database. Use with caution.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}

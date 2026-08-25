@@ -14,8 +14,7 @@ export default function TechnicalSkillsMatrix({
   skillSearch,
   getCategoryDetails
 }: SolarSkillsMapProps) {
-  
-  // Reuse the existing config mapping but purely for colors & themes
+    // Reuse the existing config mapping but purely for colors & themes
   const orbitConfigs: OrbitConfig[] = useMemo(() => DEFAULT_ORBIT_CONFIGS, []);
 
   const getOrbitConfig = (category: string): OrbitConfig => {

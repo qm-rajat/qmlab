@@ -112,7 +112,7 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
         {/* Bottom copyright details */}
         <div className="border-t border-slate-200/50 pt-8 flex flex-col sm:flex-row items-center sm:justify-between gap-4">
           <p className="text-xs text-slate-400 tracking-wide">
-            &copy; {currentYear} Rajat Kumar Dash. All rights reserved. Powered by React, Tailwind CSS, & QM LABS.
+            © {currentYear} Rajat Kumar Dash. All rights reserved. Powered by QM LABS & fueled by excessive caffeine.
           </p>
           <div className="flex items-center gap-4">
             <button

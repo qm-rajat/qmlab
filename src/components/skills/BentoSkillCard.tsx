@@ -77,10 +77,15 @@ export const BentoSkillCard: React.FC<BentoSkillCardProps> = ({
                 hidden: { opacity: 0, scale: 0.8 },
                 visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } }
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold font-sans border transition-all duration-200 ${
+              whileHover={{ 
+                scale: 1.05, 
+                y: -4,
+                transition: { type: "spring", stiffness: 400, damping: 10 }
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold font-sans border ${
                 isDimmed 
                   ? 'opacity-25 bg-slate-50 border-slate-100 text-slate-400' 
-                  : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-2xs hover:-translate-y-0.5'
+                  : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-2xs cursor-default'
               }`}
             >
               <div 

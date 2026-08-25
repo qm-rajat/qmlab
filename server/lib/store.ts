@@ -54,7 +54,27 @@ const KEYS = {
   blogs: "qmlabs:blogs",
   certificates: "qmlabs:certificates",
   contacts: "qmlabs:contacts",
+  password: "qmlabs:admin:password",
 } as const;
+
+export async function readString(key: string): Promise<string | null> {
+  const redisClient = getClient();
+  if (redisClient) {
+    try {
+      return await redisClient.get(key);
+    } catch (error) {
+      console.error(`Redis read error for ${key}:`, error);
+    }
+  }
+  return null;
+}
+
+export async function writeString(key: string, value: string): Promise<void> {
+  const redisClient = getClient();
+  if (redisClient) {
+    await redisClient.set(key, value);
+  }
+}
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
   const redisClient = getClient();
@@ -97,4 +117,6 @@ export const saveCertificates = (value: Certificate[]) => writeJson(KEYS.certifi
 
 export const getContacts = () => readJson<Contact[]>(KEYS.contacts, []);
 export const saveContacts = (value: Contact[]) => writeJson(KEYS.contacts, value);
+export const getCustomPassword = () => readString(KEYS.password);
+export const saveCustomPassword = (value: string) => writeString(KEYS.password, value);
 

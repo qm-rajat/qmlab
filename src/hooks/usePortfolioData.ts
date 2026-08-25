@@ -17,6 +17,7 @@ const EMPTY_SETTINGS: SiteSettings = {
   social_links: {},
   resume_storage_path: "",
   logo_url: "",
+  is_under_maintenance: false,
   google_maps_embed_url: "",
   contact_email: "",
   contact_location: "",

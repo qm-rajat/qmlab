@@ -19,6 +19,8 @@ import ResumeCenter from './components/ResumeCenter';
 import CertificateGrid from './components/CertificateGrid';
 import ContactForm from './components/ContactForm';
 import AdminConsole from './components/AdminConsole';
+import NotFound from './components/NotFound';
+import GlassCursor from './components/magic/GlassCursor';
 
 // Custom Hook for State & Persistence
 import { usePortfolioData } from './hooks/usePortfolioData';
@@ -90,16 +92,32 @@ export default function App() {
       <SpeedInsights />
       
       {/* GLOBAL SCROLLING HEADER NAVIGATION */}
+      {(!settings.is_under_maintenance || path.startsWith('/admin')) && (
       <Header
         currentView={currentView}
         onViewChange={handleViewChange}
         isAdminLoggedIn={isAdminLoggedIn}
       />
+      )}
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-8">
-        <AnimatePresence mode="wait">
-          {/* @ts-expect-error React 19 types might miss key on Routes */}
-          <Routes location={location} key={location.pathname}>
+        {settings.is_under_maintenance && !path.startsWith('/admin') ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+             <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center shadow-sm">
+                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+             </div>
+             <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tight">System Update in Progress</h1>
+             <p className="text-sm text-slate-500 max-w-lg leading-relaxed">
+               The platform is currently undergoing scheduled maintenance to upgrade our infrastructure and improve performance. We'll be back online shortly.
+             </p>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {/* @ts-expect-error React 19 types might miss key on Routes */}
+            <Routes location={location} key={location.pathname}>
             <Route path="/" element={
               <OverviewView
                 settings={settings}
@@ -293,12 +311,18 @@ export default function App() {
                 />
               </motion.div>
             } />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
+        )}
       </main>
 
+      <GlassCursor />
+
       {/* GLOBAL FOOTER BRAND */}
-      <Footer settings={settings} onViewChange={handleViewChange} />
+      {(!settings.is_under_maintenance || path.startsWith('/admin')) && (
+        <Footer settings={settings} onViewChange={handleViewChange} />
+      )}
 
       {/* SEMANTIC JSON-LD SCHEMA FOR RICH GOOGLE SERP INDEXING */}
       <script type="application/ld+json">

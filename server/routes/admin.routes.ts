@@ -8,6 +8,7 @@ import {
   clearSessionCookie,
   isValidSession,
   requireAdmin,
+  hashPassword,
 } from "../lib/auth.js";
 
 const execPromise = util.promisify(exec);
@@ -19,6 +20,7 @@ import {
   saveCertificates,
   getContacts,
   saveContacts,
+  saveCustomPassword,
 } from "../lib/store.js";
 
 const router = Router();
@@ -130,6 +132,19 @@ router.post("/restore", requireAdmin, async (req, res) => {
     res.json({ success: true, message: "Restore completed successfully.", output: stdout });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Restore failed.", output: error.stdout });
+  }
+});
+
+router.post("/change-password", requireAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: "Password must be at least 8 characters long." });
+    }
+    await saveCustomPassword(hashPassword(newPassword));
+    res.json({ success: true, message: "Admin password updated successfully." });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to update password." });
   }
 });
 

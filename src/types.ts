@@ -144,6 +144,7 @@ export interface SiteSettings {
   social_links: SocialLinks;
   resume_storage_path: string;
   logo_url: string;
+  is_under_maintenance?: boolean;
   google_maps_embed_url: string;
   contact_email: string;
   contact_location: string;

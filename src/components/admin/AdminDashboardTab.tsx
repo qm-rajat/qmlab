@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
-  FileCode, BookOpen, Inbox, Award, LineChart, DollarSign, FileText, Database, DownloadCloud, UploadCloud, RefreshCw
+  FileCode, BookOpen, Inbox, Award, LineChart, IndianRupee, FileText
 } from 'lucide-react';
 import { Project, Blog, Certificate, Contact } from '../../types';
 
@@ -27,53 +27,6 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
   mockResumeDownloadsCount,
   onNavigateToContacts,
 }) => {
-  const [isBackingUp, setIsBackingUp] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [sysMessage, setSysMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
-
-  const handleBackup = async () => {
-    setIsBackingUp(true);
-    setSysMessage(null);
-    try {
-      const response = await fetch('/api/admin/backup', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.success) {
-        setSysMessage({ text: 'Backup completed successfully!', type: 'success' });
-      } else {
-        setSysMessage({ text: data.error || 'Backup failed.', type: 'error' });
-      }
-    } catch (err: any) {
-      setSysMessage({ text: err.message, type: 'error' });
-    }
-    setIsBackingUp(false);
-  };
-
-  const handleRestore = async () => {
-    if (!window.confirm("⚠️ WARNING: This will overwrite your live Redis data with the contents of latest.json. Are you sure you want to proceed?")) {
-      return;
-    }
-    setIsRestoring(true);
-    setSysMessage(null);
-    try {
-      const response = await fetch('/api/admin/restore', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.success) {
-        setSysMessage({ text: 'Restore completed successfully! Refresh the page to see updated data.', type: 'success' });
-      } else {
-        setSysMessage({ text: data.error || 'Restore failed.', type: 'error' });
-      }
-    } catch (err: any) {
-      setSysMessage({ text: err.message, type: 'error' });
-    }
-    setIsRestoring(false);
-  };
-
   return (
     <div className="space-y-8 animate-fade-in text-left">
       <div className="flex items-center justify-between">
@@ -84,43 +37,6 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
         <span className="text-[11px] font-mono bg-slate-50 border border-slate-150 px-2.5 py-1 rounded-lg">
           Updated: Today • Live Sync
         </span>
-      </div>
-
-      {sysMessage && (
-        <div className={`p-4 rounded-xl border text-sm font-bold ${sysMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-          {sysMessage.text}
-        </div>
-      )}
-
-      {/* Database Tools Section */}
-      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left">
-        <div className="flex items-center gap-2 mb-4">
-          <Database className="w-5 h-5 text-slate-600" />
-          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Database Tools</h4>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button 
-            onClick={handleBackup} 
-            disabled={isBackingUp || isRestoring}
-            className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50"
-          >
-            {isBackingUp ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
-            Backup Data to JSON
-          </button>
-          
-          <button 
-            onClick={handleRestore} 
-            disabled={isBackingUp || isRestoring}
-            className="flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50"
-          >
-            {isRestoring ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-            Restore from JSON
-          </button>
-        </div>
-        <p className="text-[10px] text-slate-500 mt-4 leading-relaxed max-w-2xl">
-          <strong>Backup</strong> queries Redis and saves local JSON files to <code className="bg-slate-200 px-1 py-0.5 rounded">.data/backups/</code>.<br/>
-          <strong>Restore</strong> reads <code className="bg-slate-200 px-1 py-0.5 rounded">latest.json</code> and forcefully overwrites your live Redis database. Use with caution.
-        </p>
       </div>
 
       {/* Counts Widgets Row */}
@@ -182,14 +98,14 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
         <div className="bg-slate-50/20 border border-slate-100 rounded-2xl p-5 flex flex-col justify-between text-left">
           <div>
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Active Pipeline
+              <IndianRupee className="w-3.5 h-3.5 text-emerald-500" /> Active Pipeline
             </h4>
             <p className="text-[11px] text-slate-400">Estimated value of active leads.</p>
           </div>
 
           <div className="py-4 space-y-1">
             <div className="text-2xl font-black text-emerald-600 tracking-tight">
-              ${activePipelineValue.toLocaleString('en-US')}
+              ₹{activePipelineValue.toLocaleString('en-IN')}
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />

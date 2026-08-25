@@ -13,51 +13,7 @@ import util from "util";
 
 // server/lib/auth.ts
 import jwt from "jsonwebtoken";
-var COOKIE_NAME = "qmlabs_admin_session";
-var SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-var getAdminPassword = () => process.env.ADMIN_PASSWORD || "";
-var getSessionSecret = () => {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("SESSION_SECRET environment variable is not configured.");
-  }
-  return secret;
-};
-var isAdminAuthConfigured = () => !!(getAdminPassword() && process.env.SESSION_SECRET);
-async function verifyAdminPassword(password) {
-  const adminPassword = getAdminPassword();
-  if (!adminPassword) return false;
-  return password === adminPassword;
-}
-function issueSessionCookie(res) {
-  const token = jwt.sign({ role: "admin" }, getSessionSecret(), { expiresIn: SESSION_TTL_SECONDS });
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: SESSION_TTL_SECONDS * 1e3,
-    path: "/"
-  });
-}
-function clearSessionCookie(res) {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
-}
-function isValidSession(req) {
-  const token = req.cookies?.[COOKIE_NAME];
-  if (!token || !process.env.SESSION_SECRET) return false;
-  try {
-    jwt.verify(token, process.env.SESSION_SECRET);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function requireAdmin(req, res, next) {
-  if (!isValidSession(req)) {
-    return res.status(401).json({ success: false, error: "Unauthorized. Please log in as admin." });
-  }
-  next();
-}
+import crypto from "crypto";
 
 // server/lib/store.ts
 import Redis from "ioredis";
@@ -105,8 +61,26 @@ var KEYS = {
   projects: "qmlabs:projects",
   blogs: "qmlabs:blogs",
   certificates: "qmlabs:certificates",
-  contacts: "qmlabs:contacts"
+  contacts: "qmlabs:contacts",
+  password: "qmlabs:admin:password"
 };
+async function readString(key) {
+  const redisClient = getClient();
+  if (redisClient) {
+    try {
+      return await redisClient.get(key);
+    } catch (error) {
+      console.error(`Redis read error for ${key}:`, error);
+    }
+  }
+  return null;
+}
+async function writeString(key, value) {
+  const redisClient = getClient();
+  if (redisClient) {
+    await redisClient.set(key, value);
+  }
+}
 async function readJson(key, fallback) {
   const redisClient = getClient();
   if (redisClient) {
@@ -139,6 +113,68 @@ var getCertificates = () => readJson(KEYS.certificates, []);
 var saveCertificates = (value) => writeJson(KEYS.certificates, value);
 var getContacts = () => readJson(KEYS.contacts, []);
 var saveContacts = (value) => writeJson(KEYS.contacts, value);
+var getCustomPassword = () => readString(KEYS.password);
+var saveCustomPassword = (value) => writeString(KEYS.password, value);
+
+// server/lib/auth.ts
+var COOKIE_NAME = "qmlabs_admin_session";
+var SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
+var getAdminPassword = () => process.env.ADMIN_PASSWORD || "";
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
+var getSessionSecret = () => {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET environment variable is not configured.");
+  }
+  return secret;
+};
+var isAdminAuthConfigured = () => !!process.env.SESSION_SECRET;
+async function verifyAdminPassword(password) {
+  const customPasswordHash = await getCustomPassword();
+  if (customPasswordHash) {
+    return hashPassword(password) === customPasswordHash;
+  }
+  const adminPassword = getAdminPassword();
+  if (!adminPassword) return false;
+  return password === adminPassword;
+}
+function issueSessionCookie(res) {
+  const token = jwt.sign({ role: "admin" }, getSessionSecret(), { expiresIn: SESSION_TTL_SECONDS });
+  res.cookie(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: true,
+    // Must be true for sameSite: "none"
+    sameSite: "none",
+    // Required for cross-origin iframes like the AI Studio preview
+    maxAge: SESSION_TTL_SECONDS * 1e3,
+    path: "/"
+  });
+}
+function clearSessionCookie(res) {
+  res.clearCookie(COOKIE_NAME, {
+    path: "/",
+    secure: true,
+    sameSite: "none"
+  });
+}
+function isValidSession(req) {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (!token || !process.env.SESSION_SECRET) return false;
+  try {
+    jwt.verify(token, process.env.SESSION_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function requireAdmin(req, res, next) {
+  if (!isValidSession(req)) {
+    return res.status(401).json({ success: false, error: "Unauthorized. Please log in as admin." });
+  }
+  next();
+}
 
 // server/routes/admin.routes.ts
 var execPromise = util.promisify(exec);
@@ -234,6 +270,18 @@ router.post("/restore", requireAdmin, async (req, res) => {
     res.json({ success: true, message: "Restore completed successfully.", output: stdout });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message || "Restore failed.", output: error.stdout });
+  }
+});
+router.post("/change-password", requireAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: "Password must be at least 8 characters long." });
+    }
+    await saveCustomPassword(hashPassword(newPassword));
+    res.json({ success: true, message: "Admin password updated successfully." });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message || "Failed to update password." });
   }
 });
 var admin_routes_default = router;

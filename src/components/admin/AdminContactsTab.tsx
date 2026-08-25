@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Search, Mail, Trash2, Sparkles, Briefcase, MessageCircle, Flame, DollarSign 
+  Search, Mail, Trash2, Sparkles, Briefcase, MessageCircle, Flame, IndianRupee 
 } from 'lucide-react';
 import { Contact } from '../../types';
 
@@ -188,8 +188,8 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                       )}
                       {lead.estimated_value && (
                         <span className="text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100/50 px-2 py-0.5 rounded-md flex items-center gap-0.5">
-                          <DollarSign className="w-2.5 h-2.5" />
-                          Value: {lead.estimated_value}
+                          <IndianRupee className="w-2.5 h-2.5" />
+                          Value: ₹{lead.estimated_value}
                         </span>
                       )}
                       <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
