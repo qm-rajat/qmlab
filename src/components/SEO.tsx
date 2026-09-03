@@ -7,10 +7,12 @@ interface SEOProps {
   url?: string;
 }
 
+const defaultSiteUrl = import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.includes('localhost') ? window.location.origin : "https://qmlab-indol.vercel.app");
+
 const SEO: React.FC<SEOProps> = ({ 
   title = "QM LABS - Full-Stack Engineering & Technical SEO", 
   description = "Explore the engineering portfolio and consultancy of Rajat Kumar Dash. Specializing in high-performance web applications, Technical SEO, and backend automation.",
-  url = "https://qmlab-indol.vercel.app"
+  url = defaultSiteUrl
 }) => {
   return (
     <Helmet>

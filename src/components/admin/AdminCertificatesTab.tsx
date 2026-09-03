@@ -181,6 +181,44 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
               />
             </div>
 
+            {/* Issue Date */}
+            <div className="space-y-1">
+              <label htmlFor="cform-issue-date" className="text-xs font-bold text-slate-505 block">Issue Date</label>
+              <input
+                id="cform-issue-date"
+                type="text"
+                value={certForm.issue_date || ''}
+                onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })}
+                placeholder="e.g., November 2024"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+
+            {/* Validated Competencies (Skills) */}
+            <div className="md:col-span-2 space-y-1">
+              <label htmlFor="cform-skills" className="text-xs font-bold text-slate-505 block">Validated Competencies (Comma separated)</label>
+              <input
+                id="cform-skills"
+                type="text"
+                value={certForm.skills?.join(', ') || ''}
+                onChange={(e) => setCertForm({ ...certForm, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                placeholder="Python, Pandas, NumPy, Data Visualization"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2 space-y-1">
+              <label htmlFor="cform-desc" className="text-xs font-bold text-slate-505 block">Description</label>
+              <textarea
+                id="cform-desc"
+                value={certForm.description || ''}
+                onChange={(e) => setCertForm({ ...certForm, description: e.target.value })}
+                placeholder="Comprehensive data extraction, statistical aggregation..."
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden min-h-[80px]"
+              />
+            </div>
+
             {/* Verify URL */}
             <div className="md:col-span-2 space-y-1">
               <label htmlFor="cform-verify" className="text-xs font-bold text-slate-505 block">Verify URL Link</label>
@@ -192,6 +230,73 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
                 placeholder="https://credly.com/verify/..."
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
+            </div>
+            
+            {/* Image URL */}
+            <div className="md:col-span-2 space-y-1">
+              <label htmlFor="cform-image" className="text-xs font-bold text-slate-505 block">Image URL</label>
+              <input
+                id="cform-image"
+                type="text"
+                value={certForm.image_url || ''}
+                onChange={(e) => setCertForm({ ...certForm, image_url: e.target.value })}
+                placeholder="https://example.com/certificate-image.png"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+            
+            {/* Expiry Date */}
+            <div className="space-y-1">
+              <label htmlFor="cform-expiry-date" className="text-xs font-bold text-slate-505 block">Expiry Date</label>
+              <input
+                id="cform-expiry-date"
+                type="text"
+                value={certForm.expiry_date || ''}
+                onChange={(e) => setCertForm({ ...certForm, expiry_date: e.target.value })}
+                placeholder="e.g., November 2027 (Optional)"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+            
+            {/* Score or Grade */}
+            <div className="space-y-1">
+              <label htmlFor="cform-score" className="text-xs font-bold text-slate-505 block">Score / Grade</label>
+              <input
+                id="cform-score"
+                type="text"
+                value={certForm.score_or_grade || ''}
+                onChange={(e) => setCertForm({ ...certForm, score_or_grade: e.target.value })}
+                placeholder="e.g., 95% or Pass"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+            
+            {/* Display Order & Featured */}
+            <div className="md:col-span-2 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-4 mt-2">
+              <div className="flex items-center gap-3">
+                <input
+                  id="cform-featured"
+                  type="checkbox"
+                  checked={certForm.is_featured || false}
+                  onChange={(e) => setCertForm({ ...certForm, is_featured: e.target.checked })}
+                  className="w-4 h-4 text-primary bg-white border-slate-300 rounded focus:ring-primary"
+                />
+                <div>
+                  <label htmlFor="cform-featured" className="text-sm font-bold text-slate-700 block cursor-pointer">Feature on Dashboard</label>
+                  <span className="text-xs text-slate-500">Pin this certificate to the top of your profile</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <label htmlFor="cform-order" className="text-sm font-bold text-slate-700">Display Order</label>
+                <input
+                  id="cform-order"
+                  type="number"
+                  min="0"
+                  value={certForm.display_order || 0}
+                  onChange={(e) => setCertForm({ ...certForm, display_order: parseInt(e.target.value) || 0 })}
+                  className="w-20 px-3 py-1.5 text-sm text-center bg-white border border-slate-200 focus:border-primary rounded-lg focus:outline-hidden"
+                />
+              </div>
             </div>
           </div>
 

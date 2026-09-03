@@ -7,6 +7,7 @@ export default function ContactForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [honeypot, setHoneypot] = useState(''); // Anti-bot honeypot field
   const [inquiryType, setInquiryType] = useState<InquiryType>('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -22,7 +23,7 @@ export default function ContactForm() {
     setSubmitStatus('idle');
     setErrorMessage('');
 
-    // Field Valildation
+    // Field Validation
     if (!name.trim()) {
       setSubmitStatus('error');
       setErrorMessage('Full name is required.');
@@ -51,7 +52,8 @@ export default function ContactForm() {
         name: name.trim(),
         email: email.trim(),
         message: message.trim(),
-        inquiry_type: inquiryType
+        inquiry_type: inquiryType,
+        honeypot: honeypot // Sent to server to filter spam bots
       })
     })
     .then(async (response) => {
@@ -68,6 +70,7 @@ export default function ContactForm() {
       setName('');
       setEmail('');
       setMessage('');
+      setHoneypot('');
       setInquiryType('general');
     })
     .catch((err: any) => {
@@ -89,7 +92,7 @@ export default function ContactForm() {
         <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col items-center text-center space-y-4 animate-[fade-in_0.4s_ease-out]">
           <CheckCircle2 className="w-12 h-12 text-emerald-500 animate-[scale_0.3s_cubic-bezier(0.34,1.56,0.64,1)]" />
           <div>
-            <h4 className="font-bold text-emerald-900 text-base">Message Logged & Sent!</h4>
+            <h4 className="font-bold text-emerald-900 text-base">Message Logged &amp; Sent!</h4>
             <p className="text-sm text-emerald-700 mt-1.5 leading-relaxed">
               {smtpStatusMsg || "Thanks! Your inquiry has been logged securely in Rajat's CRM database."}
             </p>
@@ -103,6 +106,20 @@ export default function ContactForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Invisible Honeypot Field to trap automated spam bots */}
+          <div className="hidden opacity-0 pointer-events-none absolute -left-[9999px]" aria-hidden="true">
+            <label htmlFor="website-url-field">Leave this empty</label>
+            <input
+              id="website-url-field"
+              type="text"
+              name="website_url_honey"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
+
           {/* Validation Banner */}
           {submitStatus === 'error' && (
             <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-2.5 text-xs text-rose-800 animate-slide-up">
@@ -155,6 +172,7 @@ export default function ContactForm() {
                 id="user-name-input"
                 type="text"
                 value={name}
+                maxLength={100}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Rishabh Sen"
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 focus:border-primary focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm transition-all focus:outline-hidden"
@@ -175,6 +193,7 @@ export default function ContactForm() {
                 id="user-email-input"
                 type="email"
                 value={email}
+                maxLength={150}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="rishabh.sen@corporate.com"
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 focus:border-primary focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm transition-all focus:outline-hidden"
@@ -199,6 +218,7 @@ export default function ContactForm() {
               <textarea
                 id="user-message-input"
                 value={message}
+                maxLength={5000}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Hi Rajat! I've been reviewing your automated QA test suites on SauceDemo and we would love to schedule a technical chat about our team's active pipeline..."
                 rows={5}

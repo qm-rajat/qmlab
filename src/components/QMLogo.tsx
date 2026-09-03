@@ -1,5 +1,4 @@
 import React from 'react';
-// @ts-expect-error - PNG files are natively handled by Vite bundler
 import logoImg from '../assets/images/LOGO.png';
 
 interface QMLogoProps {

@@ -116,7 +116,6 @@ export default function App() {
           </div>
         ) : (
           <AnimatePresence mode="wait">
-            {/* @ts-expect-error React 19 types might miss key on Routes */}
             <Routes location={location} key={location.pathname}>
             <Route path="/" element={
               <OverviewView
@@ -252,8 +251,8 @@ export default function App() {
                         </div>
                         <div>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Direct Coordinates</span>
-                          <a href={`mailto:${settings.contact_email}`} className="text-xs font-semibold text-slate-800 hover:text-primary transition-colors">
-                            {settings.contact_email}
+                          <a href={`mailto:${settings.contact_email || 'rajat.pilgrimpackages@gmail.com'}`} className="text-xs font-semibold text-slate-800 hover:text-primary transition-colors">
+                            {settings.contact_email || 'rajat.pilgrimpackages@gmail.com'}
                           </a>
                         </div>
                       </div>
@@ -330,14 +329,14 @@ export default function App() {
           "@context": "https://schema.org",
           "@type": "Person",
           "name": settings?.hero_name || '',
-          "url": "https://qmlab-indol.vercel.app",
+          "url": import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app",
           "jobTitle": "Full-Stack Developer & Technical SEO Expert",
           "worksFor": {
             "@type": "Organization",
             "name": settings?.company_name || 'QM Labs',
-            "url": "https://qmlab-indol.vercel.app"
+            "url": import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app"
           },
-          "image": "https://qmlab-indol.vercel.app/assets/logo.png",
+          "image": `${import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app"}/assets/logo.png`,
           "description": settings?.hero_bio || '',
           "sameAs": [
             settings?.social_links?.linkedin || '',

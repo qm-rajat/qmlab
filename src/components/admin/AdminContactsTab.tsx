@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Search, Mail, Trash2, Sparkles, Briefcase, MessageCircle, Flame, IndianRupee 
+  Search, Mail, Trash2, Sparkles, Briefcase, MessageCircle, Flame, IndianRupee, Send, ExternalLink
 } from 'lucide-react';
 import { Contact } from '../../types';
 
@@ -15,7 +15,7 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
   onUpdateContact,
   onDeleteContact,
 }) => {
-  const [contactFilter, setContactFilter] = useState<'all' | 'unread' | 'read' | 'replied' | 'archived'>('all');
+  const [contactFilter, setContactFilter] = useState<'all' | 'unread' | 'read' | 'replied' | 'archived' | 'unsubscribed'>('all');
   const [crmSearchText, setCrmSearchText] = useState('');
   const [crmSortBy, setCrmSortBy] = useState<'date_desc' | 'date_asc' | 'priority_high'>('date_desc');
   const [crmCopiedTemplateId, setCrmCopiedTemplateId] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
 
         {/* Filter bar */}
         <div className="flex flex-wrap items-center gap-1 bg-slate-50 border border-slate-100 p-1 rounded-xl">
-          {(['all', 'unread', 'read', 'replied', 'archived'] as const).map((f) => {
+          {(['all', 'unread', 'read', 'replied', 'archived', 'unsubscribed'] as const).map((f) => {
             const count = f === 'all' ? contacts.length : contacts.filter(c => c.status === f).length;
             return (
               <button
@@ -170,10 +170,14 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                         <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md flex items-center gap-1 ${
                           lead.inquiry_type === 'freelance_project'
                             ? 'bg-indigo-50 text-indigo-700 border border-indigo-100/50'
+                            : lead.inquiry_type === 'newsletter'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-100/50'
+                            : lead.inquiry_type === 'unsubscribe'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-100/50'
                             : 'bg-slate-50 text-slate-550 border border-slate-100/50'
                         }`}>
                           {lead.inquiry_type === 'freelance_project' ? <Briefcase className="w-2.5 h-2.5" /> : <MessageCircle className="w-2.5 h-2.5" />}
-                          {lead.inquiry_type === 'freelance_project' ? 'Freelance / Project' : 'General'}
+                          {lead.inquiry_type === 'freelance_project' ? 'Freelance / Project' : lead.inquiry_type === 'newsletter' ? 'Newsletter' : lead.inquiry_type === 'unsubscribe' ? 'Unsubscribe' : 'General'}
                         </span>
                       )}
                       {lead.priority && (
@@ -195,6 +199,7 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                       <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
                         lead.status === 'unread' ? 'bg-rose-500 text-white animate-pulse' :
                         lead.status === 'replied' ? 'bg-emerald-500 text-white' :
+                        lead.status === 'unsubscribed' ? 'bg-amber-600 text-white' :
                         'bg-slate-800 text-white'
                       }`}>
                         {lead.status}
@@ -224,6 +229,53 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                     />
                   </div>
 
+                  {/* CRM Grid for Pipeline tracking */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+                        Priority
+                      </label>
+                      <select
+                        value={lead.priority || 'medium'}
+                        onChange={(e) => onUpdateContact(lead.id, { priority: e.target.value as any })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50/40 hover:bg-slate-50/80 focus:bg-white border border-slate-205 focus:border-primary rounded-xl focus:outline-hidden cursor-pointer text-slate-700"
+                      >
+                        <option value="low">Low Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="high">🔥 High Priority</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+                        Inquiry Type
+                      </label>
+                      <select
+                        value={lead.inquiry_type || 'general'}
+                        onChange={(e) => onUpdateContact(lead.id, { inquiry_type: e.target.value as any })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50/40 hover:bg-slate-50/80 focus:bg-white border border-slate-205 focus:border-primary rounded-xl focus:outline-hidden cursor-pointer text-slate-700"
+                      >
+                        <option value="general">General</option>
+                        <option value="freelance_project">Freelance / Project</option>
+                        <option value="newsletter">📰 Newsletter</option>
+                        <option value="unsubscribe">🚫 Unsubscribe</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+                        Pipeline Estimated Value
+                      </label>
+                      <input
+                        type="text"
+                        value={lead.estimated_value || ''}
+                        onChange={(e) => onUpdateContact(lead.id, { estimated_value: e.target.value })}
+                        placeholder="e.g. $5,000 or ₹40,000"
+                        className="w-full px-3 py-2 text-xs bg-slate-50/40 hover:bg-slate-50/80 focus:bg-white border border-slate-205 focus:border-primary rounded-xl focus:outline-hidden text-slate-700"
+                      />
+                    </div>
+                  </div>
+
                   {/* Quick answers templates pill row */}
                   <div className="bg-blue-50/25 border border-blue-100/35 rounded-xl p-3 space-y-2">
                     <span className="text-[9.5px] font-extrabold text-blue-600 uppercase tracking-widest block flex items-center gap-1">
@@ -231,23 +283,30 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                       Canned Response Engine (Click to instant copy response)
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {[
-                        {
-                          id: 'ack',
-                          label: '📬 Acknowledge Receipt',
-                          text: `Hi ${lead.name},\n\nThank you for reaching out to Rajat / QM Labs!\n\nThis is a quick acknowledgment to confirm I have successfully received your inquiry regarding potential collaboration. I am currently evaluating the scope of work and will revert with a detailed response within 24 hours.\n\nTalk soon,\nRajat\nTechnical Expert • QM Labs\nhttps://qmlabs.tech`
-                        },
-                        {
-                          id: 'call',
-                          label: '📅 Request Discovery Call',
-                          text: `Hi ${lead.name},\n\nThank you for getting in touch!\n\nI have reviewed your message and would love to learn more. To establish technical compatibility and explore how we could work together, let's schedule a brief 10-minute discovery video call. Please feel free to reply with your preferred days/times, or use my calendar scheduler.\n\nLooking forward to speaking with you!\n\nBest regards,\nRajat`
-                        },
-                        {
-                          id: 'spec',
-                          label: '💼 Request Spec/Requirements',
-                          text: `Hi ${lead.name},\n\nThank you for getting in touch regarding your product goals!\n\nTo ensure I generate a precise technical feasibility assessment and a tailored quotation or fixed budget estimate, could you share any additional project specification documentation, UI/UX mockups, or an existing repository you want optimized?\n\nBest regards,\nRajat\nQM Labs`
-                        }
-                      ].map((tpl) => {
+                      {(() => {
+                        const leadDisplayName = lead.name && lead.name.toLowerCase() !== 'name' && !lead.name.startsWith('SEO Lead:')
+                          ? lead.name.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                          : 'there';
+                        const siteOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://qmlab-indol.vercel.app';
+
+                        return [
+                          {
+                            id: 'ack',
+                            label: '📬 Acknowledge Receipt',
+                            text: `Hi ${leadDisplayName},\n\nThank you for reaching out!\n\nThis is a quick acknowledgment to confirm I have received your inquiry regarding potential collaboration. I am currently reviewing your requirements and will revert with a detailed technical response within 24 hours.\n\nTalk soon,\nRajat Kumar Dash\nFull-Stack Developer & Technical SEO Specialist\n${siteOrigin}`
+                          },
+                          {
+                            id: 'call',
+                            label: '📅 Request Discovery Call',
+                            text: `Hi ${leadDisplayName},\n\nThank you for getting in touch!\n\nI have reviewed your message and would love to learn more about your project goals. Let's schedule a brief 15-minute discovery call to explore how we can collaborate.\n\nPlease feel free to reply with your convenient days/time slots or timezone.\n\nLooking forward to speaking with you!\n\nBest regards,\nRajat Kumar Dash\n${siteOrigin}`
+                          },
+                          {
+                            id: 'spec',
+                            label: '💼 Request Spec/Requirements',
+                            text: `Hi ${leadDisplayName},\n\nThank you for getting in touch regarding your product goals!\n\nTo ensure I generate a precise technical feasibility assessment and tailored project roadmap/estimate, could you share any additional project specification documentation, Figma mockups, or an existing repository URL?\n\nBest regards,\nRajat Kumar Dash\nFull-Stack Developer & Technical SEO Specialist\n${siteOrigin}`
+                          }
+                        ];
+                      })().map((tpl) => {
                         const isCopied = crmCopiedTemplateId === `${lead.id}-${tpl.id}`;
                         return (
                           <button
@@ -311,17 +370,45 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                         <option value="read">📖 Read</option>
                         <option value="replied">✅ Replied</option>
                         <option value="archived">📦 Archived</option>
+                        <option value="unsubscribed">🚫 Unsubscribed</option>
                       </select>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => onDeleteContact(lead.id)}
-                    className="w-full md:w-auto px-4 py-2 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer hover:bg-rose-100 transition-colors"
-                    title="Format delete lead enquiry record"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Permanent Delete
-                  </button>
+                  <div className="flex items-center gap-2 w-full md:w-auto">
+                    {(() => {
+                      const leadDisplayName = lead.name && lead.name.toLowerCase() !== 'name' && !lead.name.startsWith('SEO Lead:')
+                        ? lead.name.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                        : 'there';
+                      const siteOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://qmlab-indol.vercel.app';
+                      const replySubject = encodeURIComponent(`Re: Inquiry from ${lead.name || 'Portfolio'} [Rajat Kumar Dash]`);
+                      const replyBody = encodeURIComponent(`Hi ${leadDisplayName},\n\nThank you for getting in touch regarding potential collaboration!\n\nI have reviewed your message and would love to discuss further. Let's schedule a brief 15-minute discovery call to explore how we can work together.\n\nBest regards,\nRajat Kumar Dash\nFull-Stack Developer & Technical SEO Specialist\n${siteOrigin}`);
+                      const mailtoUrl = `mailto:${lead.email}?subject=${replySubject}&body=${replyBody}`;
+
+                      return (
+                        <a
+                          href={mailtoUrl}
+                          onClick={() => {
+                            if (lead.status === 'unread') {
+                              onUpdateContact(lead.id, { status: 'replied' });
+                            }
+                          }}
+                          className="w-full md:w-auto px-4 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-[10px] rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                          title="Open native mail client to reply"
+                        >
+                          <Send className="w-3.5 h-3.5 text-blue-600" /> Reply via Email
+                        </a>
+                      );
+                    })()}
+
+                    <button
+                      onClick={() => onDeleteContact(lead.id)}
+                      className="w-full md:w-auto px-4 py-2 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer hover:bg-rose-100 transition-colors"
+                      title="Format delete lead enquiry record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Permanent Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             );

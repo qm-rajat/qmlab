@@ -222,7 +222,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
 
     if (visibleSections.education) {
       md += `## EDUCATION\n`;
-      settings.education.forEach(edu => {
+      (settings.education || []).forEach(edu => {
         md += `- **${edu.degree} in ${edu.field}** | ${edu.institution} (${edu.start_year} – ${edu.end_year || 'Present'})\n`;
         if (edu.grade) md += `  Grade / Status: ${edu.grade}\n`;
       });
@@ -270,7 +270,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
 
     if (visibleSections.education) {
       txt += `EDUCATION\n----------------------------------------\n`;
-      settings.education.forEach(edu => {
+      (settings.education || []).forEach(edu => {
         txt += `${edu.degree} in ${edu.field} | ${edu.institution} (${edu.start_year} - ${edu.end_year || 'Present'})\n`;
       });
     }
@@ -278,9 +278,14 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
     return txt;
   };
 
+  const triggerTelemetryDownload = () => {
+    fetch('/api/telemetry/resume-download', { method: 'POST' }).catch(() => {});
+  };
+
   const handleCopyMarkdown = () => {
     navigator.clipboard.writeText(getMarkdownText());
     setCopied(true);
+    triggerTelemetryDownload();
     setTimeout(() => setCopied(false), 2200);
   };
 
@@ -296,14 +301,17 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
     downloadAnchor.remove();
     URL.revokeObjectURL(url);
     setCopiedText(true);
+    triggerTelemetryDownload();
     setTimeout(() => setCopiedText(false), 2200);
   };
 
   const handlePrint = () => {
+    triggerTelemetryDownload();
     window.print();
   };
 
   const handleDownloadJSON = () => {
+    triggerTelemetryDownload();
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       candidate: contactDetails.name,
       contact: {

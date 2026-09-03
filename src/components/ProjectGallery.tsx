@@ -395,7 +395,13 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                     {project.key_metric && (
                       <div className="absolute top-3 right-3">
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-900/90 text-emerald-400 border border-slate-700 shadow-xs backdrop-blur-xs">
-                          {project.key_metric.label}: <strong className="text-white">{project.key_metric.value}</strong>
+                          {typeof project.key_metric === 'string' ? (
+                            <strong className="text-white">{project.key_metric}</strong>
+                          ) : (
+                            <>
+                              {project.key_metric.label}: <strong className="text-white">{project.key_metric.value}</strong>
+                            </>
+                          )}
                         </span>
                       </div>
                     )}
@@ -606,11 +612,13 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                       <Sparkles className="w-5 h-5 text-amber-400" />
                       <div>
                         <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">Benchmark Outcome</span>
-                        <span className="text-sm font-bold text-white">{selectedProject.key_metric.label}</span>
+                        <span className="text-sm font-bold text-white">
+                          {typeof selectedProject.key_metric === 'string' ? 'Target Metric' : selectedProject.key_metric.label}
+                        </span>
                       </div>
                     </div>
                     <span className="text-xl font-black text-emerald-400 font-mono">
-                      {selectedProject.key_metric.value}
+                      {typeof selectedProject.key_metric === 'string' ? selectedProject.key_metric : selectedProject.key_metric.value}
                     </span>
                   </div>
                 )}

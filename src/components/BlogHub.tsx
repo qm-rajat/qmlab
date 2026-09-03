@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, BookOpen, Clock, Calendar, Eye, Heart, Bookmark, 
   ArrowRight, Sparkles, Filter, SlidersHorizontal, Tag, 
-  Share2, Check, TrendingUp, Compass, Flame, Send
+  Share2, Check, TrendingUp, Compass, Flame, Send, UserX, AlertCircle
 } from 'lucide-react';
 import { Blog, SiteSettings } from '../types';
 
@@ -31,7 +31,19 @@ export default function BlogHub({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [subscribedEmail, setSubscribedEmail] = useState('');
-  const [subscribedSuccess, setSubscribedSuccess] = useState(false);
+  const [newsletterMode, setNewsletterMode] = useState<'subscribe' | 'unsubscribe'>('subscribe');
+  const [newsletterStatus, setNewsletterStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isNewsletterLoading, setIsNewsletterLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      if (urlParams.get('action') === 'unsubscribe' || hash.includes('action=unsubscribe')) {
+        setNewsletterMode('unsubscribe');
+      }
+    }
+  }, []);
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -96,14 +108,57 @@ export default function BlogHub({
     return filteredAndSortedBlogs;
   }, [filteredAndSortedBlogs, featuredArticle, selectedCategory, searchQuery]);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subscribedEmail) return;
-    setSubscribedSuccess(true);
-    setTimeout(() => {
-      setSubscribedSuccess(false);
-      setSubscribedEmail('');
-    }, 3500);
+    if (!subscribedEmail || !subscribedEmail.includes('@')) {
+      setNewsletterStatus({ type: 'error', message: 'Please provide a valid email address.' });
+      return;
+    }
+
+    setIsNewsletterLoading(true);
+    setNewsletterStatus(null);
+
+    try {
+      if (newsletterMode === 'subscribe') {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Newsletter Subscriber',
+            email: subscribedEmail.trim(),
+            message: 'Newsletter Subscription: Subscribed to Quarterly Tech Dispatch via Blog Hub.',
+            inquiry_type: 'newsletter'
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setNewsletterStatus({ type: 'success', message: 'Subscription confirmed! Welcome aboard.' });
+          setSubscribedEmail('');
+        } else {
+          setNewsletterStatus({ type: 'error', message: data.error || 'Failed to subscribe. Please try again.' });
+        }
+      } else {
+        const res = await fetch('/api/unsubscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: subscribedEmail.trim()
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setNewsletterStatus({ type: 'success', message: 'You have been successfully unsubscribed from the newsletter.' });
+          setSubscribedEmail('');
+        } else {
+          setNewsletterStatus({ type: 'error', message: data.error || 'Failed to unsubscribe. Please try again.' });
+        }
+      }
+    } catch (err: any) {
+      console.warn('Newsletter operation error:', err);
+      setNewsletterStatus({ type: 'error', message: 'Network request error. Please try again.' });
+    } finally {
+      setIsNewsletterLoading(false);
+    }
   };
 
   const handleResetFilters = () => {
@@ -220,7 +275,7 @@ export default function BlogHub({
                     title="Like article"
                   >
                     <Heart className={`w-3.5 h-3.5 ${likedBlogs.includes(featuredArticle.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
-                    <span>{featuredArticle.like_count + (likedBlogs.includes(featuredArticle.id) ? 1 : 0)}</span>
+                    <span>{featuredArticle.like_count || 0}</span>
                   </button>
 
                   <button
@@ -442,7 +497,7 @@ export default function BlogHub({
                       title="Like article"
                     >
                       <Heart className={`w-3 h-3 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                      <span className="text-[10px]">{b.like_count + (isLiked ? 1 : 0)}</span>
+                      <span className="text-[10px]">{b.like_count || 0}</span>
                     </button>
 
                     <button
@@ -464,46 +519,116 @@ export default function BlogHub({
         </div>
       )}
 
-      {/* 5. NEWSLETTER & TECH BRIEFS SUBSCRIPTION CALLOUT */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white rounded-3xl p-8 sm:p-10 shadow-lg text-left no-print">
+      {/* 5. NEWSLETTER & TECH BRIEFS SUBSCRIPTION / UNSUBSCRIBE CALLOUT */}
+      <div id="newsletter" className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white rounded-3xl p-8 sm:p-10 shadow-lg text-left no-print border border-slate-800">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-7 space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
-              <Sparkles className="w-3 h-3" /> QUARTERLY TECH DISPATCH
+              {newsletterMode === 'subscribe' ? (
+                <>
+                  <Sparkles className="w-3 h-3" /> QUARTERLY TECH DISPATCH
+                </>
+              ) : (
+                <>
+                  <UserX className="w-3 h-3 text-rose-400" /> MANAGE SUBSCRIPTION
+                </>
+              )}
             </div>
             <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              Stay Ahead of Search Algorithms &amp; Automation
+              {newsletterMode === 'subscribe' 
+                ? 'Stay Ahead of Algorithms, Performance & Automation'
+                : 'Unsubscribe from Quarterly Tech Dispatch'}
             </h3>
             <p className="text-xs text-slate-300 max-w-lg leading-relaxed">
-              Curated engineering notes, Core Web Vitals optimization techniques, Python automation scripts, and vulnerability disclosures sent directly to your inbox. No spam.
+              {newsletterMode === 'subscribe'
+                ? 'Curated engineering notes, Core Web Vitals optimization techniques, Python automation scripts, and vulnerability disclosures sent directly to your inbox. No spam.'
+                : 'Enter your email address below to opt out. Your email will be immediately removed from all future broadcast dispatches.'}
             </p>
           </div>
 
-          <div className="lg:col-span-5">
-            <form onSubmit={handleSubscribe} className="space-y-2">
-              <div className="flex items-center gap-2">
+          <div className="lg:col-span-5 space-y-3">
+            <form onSubmit={handleNewsletterSubmit} className="space-y-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <input
                   type="email"
                   value={subscribedEmail}
                   onChange={(e) => setSubscribedEmail(e.target.value)}
-                  placeholder="Enter your email address..."
+                  placeholder={newsletterMode === 'subscribe' ? "Enter your email address..." : "Enter your email to unsubscribe..."}
                   required
                   className="flex-1 px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder:text-slate-400 focus:outline-hidden focus:border-[#0084ff] focus:bg-white/15 transition-all"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2.5 bg-[#0084ff] hover:bg-blue-600 text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/30 cursor-pointer flex-shrink-0"
+                  disabled={isNewsletterLoading}
+                  className={`px-4 py-2.5 text-white text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer flex-shrink-0 disabled:opacity-50 ${
+                    newsletterMode === 'subscribe'
+                      ? 'bg-[#0084ff] hover:bg-blue-600 shadow-blue-500/30'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/30'
+                  }`}
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  Subscribe
+                  {isNewsletterLoading ? (
+                    'Processing...'
+                  ) : newsletterMode === 'subscribe' ? (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      Subscribe
+                    </>
+                  ) : (
+                    <>
+                      <UserX className="w-3.5 h-3.5" />
+                      Unsubscribe
+                    </>
+                  )}
                 </button>
               </div>
-              {subscribedSuccess && (
-                <div className="text-xs text-emerald-400 font-mono font-bold flex items-center gap-1 animate-fadeIn">
-                  <Check className="w-3.5 h-3.5" /> Subscription confirmed! Welcome aboard.
+
+              {newsletterStatus && (
+                <div
+                  className={`text-xs font-mono font-bold flex items-center gap-1.5 animate-fadeIn ${
+                    newsletterStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {newsletterStatus.type === 'success' ? (
+                    <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  )}
+                  <span>{newsletterStatus.message}</span>
                 </div>
               )}
             </form>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-white/10">
+              {newsletterMode === 'subscribe' ? (
+                <>
+                  <span>No spam ever. 1-click unsubscribe anytime.</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewsletterMode('unsubscribe');
+                      setNewsletterStatus(null);
+                    }}
+                    className="text-slate-300 hover:text-white underline cursor-pointer transition-colors"
+                  >
+                    Unsubscribe here
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span>Want to stay subscribed instead?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewsletterMode('subscribe');
+                      setNewsletterStatus(null);
+                    }}
+                    className="text-blue-400 hover:text-blue-300 underline cursor-pointer transition-colors"
+                  >
+                    Switch to Subscribe
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

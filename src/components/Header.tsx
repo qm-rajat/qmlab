@@ -24,7 +24,6 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
     { label: 'Home', value: 'home' },
     { label: 'Projects', value: 'projects' },
     { label: 'Blog', value: 'blog' },
-    { label: 'Resume', value: 'resume' },
     { label: 'Certifications', value: 'certificates' },
     { label: 'Contact', value: 'contact' },
   ];
@@ -150,7 +149,7 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
               className="w-full text-center py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
               <FileText className="w-4 h-4" />
-              View & Export Resumes
+              Resume Hub
             </button>
           </div>
         </div>

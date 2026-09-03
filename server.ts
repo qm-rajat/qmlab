@@ -2,7 +2,9 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import apiRoutes from "./server/routes/index";
+import apiRoutes from "./server/routes/index.js";
+import rootRoutes from "./server/routes/root.routes.js";
+import { securityHeaders, corsHeaders } from "./server/lib/security.js";
 
 // Initialize environment configuration
 dotenv.config();
@@ -10,18 +12,24 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Middleware for parsing requests
-app.use(express.json());
+// Set payload limit to prevent denial of service (DoS) via huge payload memory consumption
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(cookieParser());
 
-// Mount the API router
+// Security middleware: defensive HTTP headers & CORS
+app.use(securityHeaders);
+app.use(corsHeaders);
+
+// Mount API & Root routers
+app.use("/", rootRoutes);
 app.use("/api", apiRoutes);
 
 // --- VITE DEV AND PROD MIDDLEWARE SETUP ---
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
-    // Imported dynamically to avoid pulling Vite into the production serverless bundle
+    // Dynamic import to avoid bundling Vite in production serverless builds
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },

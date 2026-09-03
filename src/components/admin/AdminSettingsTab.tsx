@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Check, Database, RefreshCw, DownloadCloud, UploadCloud, Shield } from 'lucide-react';
-import { SiteSettings } from '../../types';
+import { 
+  Plus, Trash2, Check, Database, RefreshCw, DownloadCloud, UploadCloud, 
+  Shield, Briefcase, GraduationCap, ChevronUp, ChevronDown, Calendar, MapPin, 
+  Building, BookOpen, Award, Sparkles 
+} from 'lucide-react';
+import { SiteSettings, Experience, Education } from '../../types';
 import RichTextEditor from '../RichTextEditor';
 
 interface AdminSettingsTabProps {
@@ -12,7 +16,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   settings,
   onUpdateSettings,
 }) => {
-  const [settingsSubTab, setSettingsSubTab] = useState<'hero' | 'company' | 'skills' | 'socials' | 'seo' | 'database'>('hero');
+  const [settingsSubTab, setSettingsSubTab] = useState<'hero' | 'experience' | 'education' | 'company' | 'skills' | 'socials' | 'seo' | 'database'>('hero');
   
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -61,6 +65,81 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
     setIsRestoring(false);
   };
 
+  // --- EXPERIENCE CRUD HANDLERS ---
+  const handleAddExperience = () => {
+    const nextExp: Experience[] = [
+      ...(settings.experience || []),
+      {
+        role: 'Full Stack Engineer',
+        company: 'Company Name',
+        location: 'Remote / Hybrid',
+        start_date: '2023',
+        end_date: 'Present',
+        is_current: true,
+        description: 'Engineered web applications, automated test suites, and optimized Core Web Vitals.'
+      }
+    ];
+    onUpdateSettings({ ...settings, experience: nextExp });
+  };
+
+  const handleUpdateExperience = (idx: number, updated: Partial<Experience>) => {
+    const nextExp = [...(settings.experience || [])];
+    nextExp[idx] = { ...nextExp[idx], ...updated };
+    onUpdateSettings({ ...settings, experience: nextExp });
+  };
+
+  const handleRemoveExperience = (idx: number) => {
+    const nextExp = (settings.experience || []).filter((_, i) => i !== idx);
+    onUpdateSettings({ ...settings, experience: nextExp });
+  };
+
+  const handleMoveExperience = (idx: number, direction: 'up' | 'down') => {
+    const nextExp = [...(settings.experience || [])];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= nextExp.length) return;
+    const temp = nextExp[idx];
+    nextExp[idx] = nextExp[targetIdx];
+    nextExp[targetIdx] = temp;
+    onUpdateSettings({ ...settings, experience: nextExp });
+  };
+
+  // --- EDUCATION CRUD HANDLERS ---
+  const handleAddEducation = () => {
+    const nextEdu: Education[] = [
+      ...(settings.education || []),
+      {
+        institution: 'University / College Name',
+        degree: 'B.Tech',
+        field: 'Computer Science & Engineering',
+        start_year: 2018,
+        end_year: 2022,
+        grade: '8.5 CGPA'
+      }
+    ];
+    onUpdateSettings({ ...settings, education: nextEdu });
+  };
+
+  const handleUpdateEducation = (idx: number, updated: Partial<Education>) => {
+    const nextEdu = [...(settings.education || [])];
+    nextEdu[idx] = { ...nextEdu[idx], ...updated };
+    onUpdateSettings({ ...settings, education: nextEdu });
+  };
+
+  const handleRemoveEducation = (idx: number) => {
+    const nextEdu = (settings.education || []).filter((_, i) => i !== idx);
+    onUpdateSettings({ ...settings, education: nextEdu });
+  };
+
+  const handleMoveEducation = (idx: number, direction: 'up' | 'down') => {
+    const nextEdu = [...(settings.education || [])];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= nextEdu.length) return;
+    const temp = nextEdu[idx];
+    nextEdu[idx] = nextEdu[targetIdx];
+    nextEdu[targetIdx] = temp;
+    onUpdateSettings({ ...settings, education: nextEdu });
+  };
+
   const handleSkillUpdate = (catIdx: number, itemIdx: number, newName: string) => {
     const nextSkills = [...settings.skills];
     const target = nextSkills[catIdx].items[itemIdx];
@@ -95,6 +174,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       <div className="flex flex-wrap items-center gap-1 border-b border-slate-100 pb-1.5 font-sans">
         {[
           { label: 'Hero & Summary', value: 'hero' },
+          { label: 'Work Experience', value: 'experience' },
+          { label: 'Academic History', value: 'education' },
           { label: 'Company Profile', value: 'company' },
           { label: 'Skills lists', value: 'skills' },
           { label: 'Social connections', value: 'socials' },
@@ -105,10 +186,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             key={st.value}
             type="button"
             onClick={() => setSettingsSubTab(st.value as any)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer transition-colors ${
               settingsSubTab === st.value
-                ? 'bg-primary-light text-primary font-bold'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-primary-light text-primary font-bold shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
             }`}
           >
             {st.label}
@@ -140,6 +221,45 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label htmlFor="set-profile-img" className="text-xs font-bold text-slate-505 block">Profile Image URL</label>
+              <input
+                id="set-profile-img"
+                type="text"
+                value={settings.profile_image_url || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, profile_image_url: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="set-logo-img" className="text-xs font-bold text-slate-505 block">Logo Image URL</label>
+              <input
+                id="set-logo-img"
+                type="text"
+                value={settings.logo_url || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, logo_url: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="set-resume-pdf" className="text-xs font-bold text-slate-505 block">Resume PDF Link</label>
+              <input
+                id="set-resume-pdf"
+                type="text"
+                value={settings.resume_storage_path || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, resume_storage_path: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                placeholder="https://.../resume.pdf"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label htmlFor="set-location" className="text-xs font-bold text-slate-505 block">Base Location</label>
               <input
@@ -252,6 +372,375 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         </div>
       )}
 
+      {/* Settings Sub-Tab: Work Experience Timeline */}
+      {settingsSubTab === 'experience' && (
+        <div className="space-y-5 animate-fade-in text-left font-sans">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
+            <div>
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-primary" />
+                <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Work Experience Timeline</h4>
+                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  {(settings.experience || []).length} Recorded
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Positions and roles configured here dynamically sync across the Overview timeline, Resume Hub document, and ATS exports.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddExperience}
+              className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+            >
+              <Plus className="w-4 h-4" /> Add Experience
+            </button>
+          </div>
+
+          {(!settings.experience || settings.experience.length === 0) ? (
+            <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
+              <Briefcase className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="text-xs text-slate-500 font-medium">No work experience entries configured yet.</p>
+              <button
+                type="button"
+                onClick={handleAddExperience}
+                className="px-3 py-1.5 text-xs font-bold text-primary bg-primary-light rounded-lg hover:bg-blue-100 cursor-pointer inline-flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add First Experience Record
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {settings.experience.map((exp, idx) => (
+                <div key={idx} className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4 relative group/exp hover:border-slate-300 transition-all">
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <h5 className="text-xs font-black text-slate-900 truncate">
+                        {exp.role || 'Untitled Role'} <span className="text-slate-400 font-normal">at</span> {exp.company || 'Untitled Company'}
+                      </h5>
+                      {exp.is_current && (
+                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
+                          Current Role
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveExperience(idx, 'up')}
+                        disabled={idx === 0}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        title="Move Up"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveExperience(idx, 'down')}
+                        disabled={idx === settings.experience.length - 1}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        title="Move Down"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExperience(idx)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+                        title="Delete Experience"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Input Form Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Role / Designation
+                      </label>
+                      <input
+                        type="text"
+                        value={exp.role}
+                        placeholder="e.g. Full Stack Developer"
+                        onChange={(e) => handleUpdateExperience(idx, { role: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-semibold"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Company / Organization
+                      </label>
+                      <input
+                        type="text"
+                        value={exp.company}
+                        placeholder="e.g. QM Labs"
+                        onChange={(e) => handleUpdateExperience(idx, { company: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={exp.location}
+                        placeholder="e.g. Bhubaneswar, India / Remote"
+                        onChange={(e) => handleUpdateExperience(idx, { location: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Start Date
+                      </label>
+                      <input
+                        type="text"
+                        value={exp.start_date}
+                        placeholder="e.g. Jan 2023 or 2022"
+                        onChange={(e) => handleUpdateExperience(idx, { start_date: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        End Date
+                      </label>
+                      <input
+                        type="text"
+                        value={exp.is_current ? 'Present' : (exp.end_date || '')}
+                        disabled={exp.is_current}
+                        placeholder="e.g. Dec 2024"
+                        onChange={(e) => handleUpdateExperience(idx, { end_date: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono disabled:opacity-60 disabled:bg-slate-100"
+                      />
+                    </div>
+
+                    <div className="pb-2">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={!!exp.is_current}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            handleUpdateExperience(idx, {
+                              is_current: checked,
+                              end_date: checked ? 'Present' : (exp.end_date === 'Present' ? '' : exp.end_date)
+                            });
+                          }}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-700">Currently Working Here</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                      Description & Key Contributions
+                    </label>
+                    <textarea
+                      value={exp.description}
+                      rows={2}
+                      placeholder="Detail major architectural achievements, metrics, team scope, technologies used..."
+                      onChange={(e) => handleUpdateExperience(idx, { description: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 leading-relaxed resize-none"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Settings Sub-Tab: Academic History & Foundations */}
+      {settingsSubTab === 'education' && (
+        <div className="space-y-5 animate-fade-in text-left font-sans">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
+            <div>
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Academic Background & Education</h4>
+                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  {(settings.education || []).length} Degrees
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Degrees, fields of study, institutions, and grades displayed on the Overview Academic Timeline and Resume Hub.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddEducation}
+              className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+            >
+              <Plus className="w-4 h-4" /> Add Academic Record
+            </button>
+          </div>
+
+          {(!settings.education || settings.education.length === 0) ? (
+            <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
+              <GraduationCap className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="text-xs text-slate-500 font-medium">No education records configured yet.</p>
+              <button
+                type="button"
+                onClick={handleAddEducation}
+                className="px-3 py-1.5 text-xs font-bold text-primary bg-primary-light rounded-lg hover:bg-blue-100 cursor-pointer inline-flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add First Academic Record
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {settings.education.map((edu, idx) => (
+                <div key={idx} className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4 relative group/edu hover:border-slate-300 transition-all">
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <h5 className="text-xs font-black text-slate-900 truncate">
+                        {edu.degree || 'Degree'} in {edu.field || 'Field of Study'}
+                      </h5>
+                      <span className="text-[10px] font-mono text-slate-500">
+                        ({edu.start_year}{edu.end_year ? ` – ${edu.end_year}` : ' – Present'})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveEducation(idx, 'up')}
+                        disabled={idx === 0}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        title="Move Up"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveEducation(idx, 'down')}
+                        disabled={idx === settings.education.length - 1}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        title="Move Down"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEducation(idx)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+                        title="Delete Academic Record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Input Form Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Degree / Credential
+                      </label>
+                      <input
+                        type="text"
+                        value={edu.degree}
+                        placeholder="e.g. B.Tech, M.S., B.Sc"
+                        onChange={(e) => handleUpdateEducation(idx, { degree: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-semibold"
+                      />
+                    </div>
+
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Field of Study / Specialization
+                      </label>
+                      <input
+                        type="text"
+                        value={edu.field}
+                        placeholder="e.g. Computer Science & Engineering"
+                        onChange={(e) => handleUpdateEducation(idx, { field: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                      Institution / University / School
+                    </label>
+                    <input
+                      type="text"
+                      value={edu.institution}
+                      placeholder="e.g. Silicon Institute of Technology, Bhubaneswar"
+                      onChange={(e) => handleUpdateEducation(idx, { institution: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Start Year
+                      </label>
+                      <input
+                        type="number"
+                        value={edu.start_year || ''}
+                        placeholder="e.g. 2018"
+                        onChange={(e) => handleUpdateEducation(idx, { start_year: parseInt(e.target.value, 10) || 0 })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        End Year (Optional / Blank if Ongoing)
+                      </label>
+                      <input
+                        type="number"
+                        value={edu.end_year || ''}
+                        placeholder="e.g. 2022"
+                        onChange={(e) => handleUpdateEducation(idx, { end_year: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Grade / CGPA / Value
+                      </label>
+                      <input
+                        type="text"
+                        value={edu.grade || ''}
+                        placeholder="e.g. 8.4 CGPA or First Class"
+                        onChange={(e) => handleUpdateEducation(idx, { grade: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Settings Sub-Tab: Company Profile */}
       {settingsSubTab === 'company' && (
         <div className="space-y-5 animate-fade-in text-left font-sans">
@@ -283,6 +772,17 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               onChange={(e) => onUpdateSettings({ ...settings, company_bio: e.target.value })}
               rows={2}
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+            />
+          </div>
+
+          <div className="space-y-1 text-left">
+            <label className="text-xs font-bold text-slate-500 block">Public Contact Email</label>
+            <input
+              type="text"
+              value={settings.contact_email || ''}
+              onChange={(e) => onUpdateSettings({ ...settings, contact_email: e.target.value })}
+              placeholder="e.g. hello@qmlabs.com"
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
             />
           </div>
 
@@ -500,8 +1000,41 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             <input
               id="seo-title-field"
               type="text"
-              value={settings.seo_home_title}
+              value={settings.seo_home_title || ''}
               onChange={(e) => onUpdateSettings({ ...settings, seo_home_title: e.target.value })}
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="seo-desc-field" className="text-xs font-bold text-slate-550 block">Home SEO Description</label>
+            <textarea
+              id="seo-desc-field"
+              value={settings.seo_home_description || ''}
+              onChange={(e) => onUpdateSettings({ ...settings, seo_home_description: e.target.value })}
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="seo-keys-field" className="text-xs font-bold text-slate-550 block">Home SEO Keywords (Comma Separated)</label>
+            <input
+              id="seo-keys-field"
+              type="text"
+              value={settings.seo_home_keywords || ''}
+              onChange={(e) => onUpdateSettings({ ...settings, seo_home_keywords: e.target.value })}
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="seo-og-field" className="text-xs font-bold text-slate-550 block">Global OG Image URL (Social Share)</label>
+            <input
+              id="seo-og-field"
+              type="text"
+              value={settings.seo_og_image_url || ''}
+              onChange={(e) => onUpdateSettings({ ...settings, seo_og_image_url: e.target.value })}
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
             />
           </div>

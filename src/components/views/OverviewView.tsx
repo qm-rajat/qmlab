@@ -10,7 +10,6 @@ import QMLogo from '../QMLogo';
 import TechnicalSkillsMatrix from '../TechnicalSkillsMatrix';
 import TypewriterRoles from '../TypewriterRoles';
 import FeaturedProjects from '../FeaturedProjects';
-// @ts-expect-error - PNG files are handled natively by Vite
 import rajatAvatar from '../../assets/images/rajat_avatar_1781089080303.png';
 
 const heroContainerVariants = {
@@ -29,7 +28,7 @@ const heroItemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 90, damping: 14 }
+    transition: { type: 'spring' as const, stiffness: 90, damping: 14 }
   }
 };
 
@@ -406,20 +405,31 @@ export default function OverviewView({
             <GraduationCap className="w-4 h-4 text-[#0084ff]" /> ACADEMIC TIMELINE
           </h4>
           <div className="relative pl-6 border-l border-slate-200 space-y-6 py-2">
-            {settings.education.map((edu, idx) => (
-              <div key={idx} className="relative">
-                <div className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#0084ff] border-2 border-white shadow-xs" />
-                <h5 className="font-extrabold text-slate-800 text-xs sm:text-sm">
-                  {edu.degree} — {edu.field}
-                </h5>
-                <p className="text-xs text-slate-500">{edu.institution}</p>
-                {edu.grade && (
-                  <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0084ff] border border-blue-100 px-2 py-0.5 rounded-md mt-1.5 inline-block">
-                    Value: {edu.grade}
-                  </span>
-                )}
-              </div>
-            ))}
+            {(settings.education && settings.education.length > 0) ? (
+              settings.education.map((edu, idx) => (
+                <div key={idx} className="relative space-y-1">
+                  <div className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#0084ff] border-2 border-white shadow-xs" />
+                  <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+                    <h5 className="font-extrabold text-slate-800 text-xs sm:text-sm">
+                      {edu.degree} — {edu.field}
+                    </h5>
+                    {(edu.start_year || edu.end_year) && (
+                      <span className="text-[10px] font-mono font-bold text-slate-400">
+                        {edu.start_year}{edu.end_year ? ` – ${edu.end_year}` : ' – Present'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">{edu.institution}</p>
+                  {edu.grade && (
+                    <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0084ff] border border-blue-100 px-2 py-0.5 rounded-md mt-1.5 inline-block">
+                      Value: {edu.grade}
+                    </span>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 italic">No academic history records configured yet.</p>
+            )}
           </div>
         </div>
 
@@ -429,17 +439,33 @@ export default function OverviewView({
             <Briefcase className="w-4 h-4 text-[#0084ff]" /> WORK EXPERIENCE TIMELINE
           </h4>
           <div className="relative pl-6 border-l border-slate-200 space-y-6 py-2">
-            {settings.experience.slice(0, 3).map((exp, idx) => (
-              <div key={idx} className="relative">
-                <div className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-white shadow-xs" />
-                <h5 className="font-extrabold text-slate-800 text-xs sm:text-sm">
-                  {exp.role}
-                </h5>
-                <div className="text-[11px] text-[#0084ff] font-semibold mt-0.5">
-                  {exp.company} <span className="text-slate-400">• {exp.location}</span>
+            {(settings.experience && settings.experience.length > 0) ? (
+              settings.experience.map((exp, idx) => (
+                <div key={idx} className="relative space-y-1">
+                  <div className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-white shadow-xs" />
+                  <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+                    <h5 className="font-extrabold text-slate-800 text-xs sm:text-sm">
+                      {exp.role}
+                    </h5>
+                    {(exp.start_date || exp.end_date || exp.is_current) && (
+                      <span className="text-[10px] font-mono font-bold text-slate-400">
+                        {exp.start_date} – {exp.is_current ? 'Present' : (exp.end_date || 'Present')}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-[#0084ff] font-semibold">
+                    {exp.company} {exp.location && <span className="text-slate-400">• {exp.location}</span>}
+                  </div>
+                  {exp.description && (
+                    <p className="text-xs text-slate-600 leading-relaxed pt-0.5">
+                      {exp.description}
+                    </p>
+                  )}
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 italic">No experience records configured yet.</p>
+            )}
           </div>
         </div>
       </section>

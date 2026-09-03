@@ -244,8 +244,55 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                 id="pform-image"
                 type="text"
                 value={projectForm.images?.[0] || ''}
-                onChange={(e) => setProjectForm({ ...projectForm, images: [e.target.value] })}
+                onChange={(e) => {
+                  const currentImages = projectForm.images || [];
+                  const newImages = [e.target.value, ...currentImages.slice(1)];
+                  setProjectForm({ ...projectForm, images: newImages.filter(Boolean) });
+                }}
                 placeholder="https://images.unsplash.com/..."
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+
+            {/* Secondary Images Link */}
+            <div className="space-y-1">
+              <label htmlFor="pform-secondary-images" className="text-xs font-bold text-slate-505 block">Secondary Images URLs (Comma Separated)</label>
+              <input
+                id="pform-secondary-images"
+                type="text"
+                value={projectForm.images?.slice(1).join(', ') || ''}
+                onChange={(e) => {
+                  const primaryImage = projectForm.images?.[0] || '';
+                  const secondaryImages = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                  setProjectForm({ ...projectForm, images: [primaryImage, ...secondaryImages].filter(Boolean) });
+                }}
+                placeholder="https://images.unsplash.com/..., https://..."
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-1">
+              <label htmlFor="pform-category" className="text-xs font-bold text-slate-505 block">Category</label>
+              <input
+                id="pform-category"
+                type="text"
+                value={projectForm.category || ''}
+                onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
+                placeholder="e.g., Automation, ML, Cybersecurity"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
+            </div>
+
+            {/* Key Metric */}
+            <div className="space-y-1">
+              <label htmlFor="pform-key-metric" className="text-xs font-bold text-slate-505 block">Key Metric</label>
+              <input
+                id="pform-key-metric"
+                type="text"
+                value={typeof projectForm.key_metric === 'string' ? projectForm.key_metric : (projectForm.key_metric?.value || '')}
+                onChange={(e) => setProjectForm({ ...projectForm, key_metric: e.target.value })}
+                placeholder="e.g., +40% efficiency"
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
             </div>
@@ -316,6 +363,98 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
               placeholder="Provide full description..."
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden resize-none"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Problem Statement */}
+            <div className="space-y-1">
+              <label htmlFor="pform-problem" className="text-xs font-bold text-slate-505 block">Problem Statement</label>
+              <textarea
+                id="pform-problem"
+                value={projectForm.problem_statement || ''}
+                onChange={(e) => setProjectForm({ ...projectForm, problem_statement: e.target.value })}
+                rows={3}
+                placeholder="What was the core problem..."
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden resize-none"
+              />
+            </div>
+
+            {/* Solution Details */}
+            <div className="space-y-1">
+              <label htmlFor="pform-solution" className="text-xs font-bold text-slate-505 block">Solution Details</label>
+              <textarea
+                id="pform-solution"
+                value={projectForm.solution_details || ''}
+                onChange={(e) => setProjectForm({ ...projectForm, solution_details: e.target.value })}
+                rows={3}
+                placeholder="How was it solved..."
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="pform-features" className="text-xs font-bold text-slate-505 block">Core Features (Comma Separated)</label>
+            <input
+              id="pform-features"
+              type="text"
+              value={projectForm.features?.join(', ') || ''}
+              onChange={(e) => setProjectForm({ ...projectForm, features: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              placeholder="Real-time syncing, OAuth, Analytics Dashboard"
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="pform-architecture" className="text-xs font-bold text-slate-505 block">Architecture Highlights (Comma Separated)</label>
+            <input
+              id="pform-architecture"
+              type="text"
+              value={projectForm.architecture_highlights?.join(', ') || ''}
+              onChange={(e) => setProjectForm({ ...projectForm, architecture_highlights: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              placeholder="Microservices, Serverless, Event-Driven"
+              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+            />
+          </div>
+
+          {/* SEO Section */}
+          <div className="mt-4">
+            <h4 className="text-sm font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2">SEO Meta</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label htmlFor="pform-seo-title" className="text-xs font-bold text-slate-505 block">SEO Title</label>
+                <input
+                  id="pform-seo-title"
+                  type="text"
+                  value={projectForm.seo_title || ''}
+                  onChange={(e) => setProjectForm({ ...projectForm, seo_title: e.target.value })}
+                  placeholder="Title for search engines"
+                  className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="pform-seo-desc" className="text-xs font-bold text-slate-505 block">SEO Description</label>
+                <input
+                  id="pform-seo-desc"
+                  type="text"
+                  value={projectForm.seo_description || ''}
+                  onChange={(e) => setProjectForm({ ...projectForm, seo_description: e.target.value })}
+                  placeholder="Meta description"
+                  className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                />
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label htmlFor="pform-seo-keys" className="text-xs font-bold text-slate-505 block">SEO Keywords</label>
+                <input
+                  id="pform-seo-keys"
+                  type="text"
+                  value={projectForm.seo_keywords || ''}
+                  onChange={(e) => setProjectForm({ ...projectForm, seo_keywords: e.target.value })}
+                  placeholder="keyword1, keyword2"
+                  className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                />
+              </div>
+            </div>
           </div>
 
           <button

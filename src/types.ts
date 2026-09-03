@@ -3,15 +3,16 @@ export interface Project {
   title: string;
   slug: string;
   description: string;
-  category?: 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems';
+  category?: 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems' | string;
   images: string[];         // array of image URLs
+  image_url?: string;
   technologies: string[];
   github_url?: string;
   live_url?: string;
   key_metric?: {
     label: string;
     value: string;
-  };
+  } | string;
   architecture_highlights?: string[];
   problem_statement?: string;
   solution_details?: string;
@@ -72,13 +73,13 @@ export interface Contact {
   name: string;
   email: string;
   message: string;
-  status: 'unread' | 'read' | 'replied' | 'archived';
+  status: 'unread' | 'read' | 'replied' | 'archived' | 'unsubscribed';
   ip_hash?: string;
   created_at: string;
   priority?: 'low' | 'medium' | 'high';
   notes?: string;
   estimated_value?: string;
-  inquiry_type?: 'freelance_project' | 'general';
+  inquiry_type?: 'freelance_project' | 'general' | 'newsletter' | 'unsubscribe';
 }
 
 export interface SkillItem {

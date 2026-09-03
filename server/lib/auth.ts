@@ -6,38 +6,106 @@ import { getCustomPassword } from "./store.js";
 const COOKIE_NAME = "qmlabs_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
+// Brute-force protection: Lockout tracking per IP
+interface LoginAttempt {
+  count: number;
+  lockedUntil: number;
+  lastAttempt: number;
+}
+
+const loginAttempts = new Map<string, LoginAttempt>();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+export function checkLoginLockout(ip: string): { isLocked: boolean; remainingMinutes: number } {
+  const record = loginAttempts.get(ip);
+  if (!record) return { isLocked: false, remainingMinutes: 0 };
+
+  const now = Date.now();
+  if (record.lockedUntil > now) {
+    const remainingMinutes = Math.ceil((record.lockedUntil - now) / 60000);
+    return { isLocked: true, remainingMinutes };
+  }
+
+  // If lockout has passed, reset count
+  if (record.lockedUntil > 0 && record.lockedUntil <= now) {
+    loginAttempts.delete(ip);
+  }
+
+  return { isLocked: false, remainingMinutes: 0 };
+}
+
+export function recordFailedLogin(ip: string): { attemptsLeft: number; isLockedNow: boolean } {
+  const now = Date.now();
+  const record = loginAttempts.get(ip) || { count: 0, lockedUntil: 0, lastAttempt: now };
+
+  record.count += 1;
+  record.lastAttempt = now;
+
+  if (record.count >= MAX_FAILED_ATTEMPTS) {
+    record.lockedUntil = now + LOCKOUT_DURATION_MS;
+    loginAttempts.set(ip, record);
+    return { attemptsLeft: 0, isLockedNow: true };
+  }
+
+  loginAttempts.set(ip, record);
+  return { attemptsLeft: MAX_FAILED_ATTEMPTS - record.count, isLockedNow: false };
+}
+
+export function resetLoginAttempts(ip: string): void {
+  loginAttempts.delete(ip);
+}
+
 const getAdminPassword = (): string => process.env.ADMIN_PASSWORD || "";
 
 export function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+/**
+ * Constant-time string comparison to prevent timing side-channel attacks
+ */
+function timingSafeEqualStrings(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    // Perform dummy timing calculation to avoid leaking length
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 const getSessionSecret = (): string => {
   const secret = process.env.SESSION_SECRET;
   if (!secret) {
-    throw new Error("SESSION_SECRET environment variable is not configured.");
+    // If no session secret is configured in env, fallback to a persistent hash of ADMIN_PASSWORD + salt
+    const adminPass = process.env.ADMIN_PASSWORD || "fallback_salt_key_123";
+    return crypto.createHash("sha256").update(`session_${adminPass}`).digest("hex");
   }
   return secret;
 };
 
 export const isAdminAuthConfigured = (): boolean =>
-  !!process.env.SESSION_SECRET; // The password could be in the database, so just checking secret is enough now
+  !!(process.env.ADMIN_PASSWORD || process.env.SESSION_SECRET);
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const customPasswordHash = await getCustomPassword();
   
   if (customPasswordHash) {
-    return hashPassword(password) === customPasswordHash;
+    const inputHash = hashPassword(password);
+    return timingSafeEqualStrings(inputHash, customPasswordHash);
   }
   
   // Fallback to Env Var
   const adminPassword = getAdminPassword();
   if (!adminPassword) return false;
-  return password === adminPassword;
+  return timingSafeEqualStrings(password, adminPassword);
 }
 
 export function issueSessionCookie(res: Response): void {
-  const token = jwt.sign({ role: "admin" }, getSessionSecret(), { expiresIn: SESSION_TTL_SECONDS });
+  const token = jwt.sign({ role: "admin", iat: Math.floor(Date.now() / 1000) }, getSessionSecret(), { expiresIn: SESSION_TTL_SECONDS });
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     secure: true, // Must be true for sameSite: "none"
@@ -56,12 +124,17 @@ export function clearSessionCookie(res: Response): void {
 }
 
 export function isValidSession(req: Request): boolean {
-  const token = req.cookies?.[COOKIE_NAME];
-  if (!token || !process.env.SESSION_SECRET) return false;
+  // Check cookie or Bearer Authorization header
+  let token = req.cookies?.[COOKIE_NAME];
+  if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.slice(7);
+  }
+
+  if (!token) return false;
 
   try {
-    jwt.verify(token, process.env.SESSION_SECRET);
-    return true;
+    const decoded = jwt.verify(token, getSessionSecret()) as { role?: string };
+    return decoded && decoded.role === "admin";
   } catch {
     return false;
   }

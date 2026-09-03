@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Save } from 'lucide-react';
 import { Blog } from '../../types';
-import { sanitizeHtml } from '../../lib/utils';
+import MarkdownEditor from './MarkdownEditor';
 
 interface AdminBlogsTabProps {
   blogs: Blog[];
@@ -16,7 +16,6 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
 }) => {
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [blogForm, setBlogForm] = useState<Partial<Blog>>({});
-  const [blogMode, setBlogMode] = useState<'text' | 'preview'>('text');
 
   const handleBlogEditStart = (blog?: Blog) => {
     if (blog) {
@@ -196,48 +195,120 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                 className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
             </div>
-          </div>
-
-          {/* Rich Text Editor Simulation */}
-          <div className="space-y-1 flex flex-col">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-505 block">Main Content (supports Markdown rendering)</label>
-              <div className="flex gap-1 bg-slate-50 border border-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => setBlogMode('text')}
-                  className={`px-3 py-1 rounded-md cursor-pointer ${blogMode === 'text' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}
-                >
-                  Markdown text
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!blogForm.content_html?.trim()) return;
-                    setBlogMode('preview');
-                  }}
-                  className={`px-3 py-1 rounded-md cursor-pointer ${blogMode === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}
-                >
-                  Prose Previews
-                </button>
-              </div>
+            
+            {/* Cover Image URL */}
+            <div className="md:col-span-3 space-y-1">
+              <label htmlFor="bform-image" className="text-xs font-bold text-slate-505 block">Cover Image URL</label>
+              <input
+                id="bform-image"
+                type="text"
+                value={blogForm.cover_image_url || ''}
+                onChange={(e) => setBlogForm({ ...blogForm, cover_image_url: e.target.value })}
+                placeholder="https://images.unsplash.com/photo-..."
+                className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+              />
             </div>
 
-            {blogMode === 'text' ? (
-              <textarea
-                value={blogForm.content_html || ''}
-                onChange={(e) => setBlogForm({ ...blogForm, content_html: e.target.value })}
-                rows={10}
-                required
-                placeholder="Write standard HTML template or tags: <h3>Subhead</h3> <p>Paragraph text</p> <blockquote>Quote</blockquote> ..."
-                className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden font-mono text-slate-700"
+            {/* Tags */}
+            <div className="md:col-span-3 space-y-1">
+              <label htmlFor="bform-tags" className="text-xs font-bold text-slate-505 block">Tags (Comma separated)</label>
+              <input
+                id="bform-tags"
+                type="text"
+                value={blogForm.tags?.join(', ') || ''}
+                onChange={(e) => setBlogForm({ ...blogForm, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                placeholder="SEO, React, Node.js"
+                className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
-            ) : (
-              <div
-                className="p-5 border border-slate-150 rounded-xl bg-slate-50/50 blog-prose min-h-[250px]"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(blogForm.content_html || '') }}
+            </div>
+            
+            {/* Categories */}
+            <div className="md:col-span-3 space-y-1">
+              <label htmlFor="bform-categories" className="text-xs font-bold text-slate-505 block">Categories (Comma separated)</label>
+              <input
+                id="bform-categories"
+                type="text"
+                value={blogForm.categories?.join(', ') || ''}
+                onChange={(e) => setBlogForm({ ...blogForm, categories: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                placeholder="General Web, DevOps"
+                className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
-            )}
+            </div>
+            
+            {/* SEO Section */}
+            <div className="md:col-span-3 mt-4">
+              <h4 className="text-sm font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2">SEO & Social Meta</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label htmlFor="bform-seo-title" className="text-xs font-bold text-slate-505 block">SEO Title</label>
+                  <input
+                    id="bform-seo-title"
+                    type="text"
+                    value={blogForm.seo_title || ''}
+                    onChange={(e) => setBlogForm({ ...blogForm, seo_title: e.target.value })}
+                    placeholder="Title for search engines"
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="bform-seo-desc" className="text-xs font-bold text-slate-505 block">SEO Description</label>
+                  <input
+                    id="bform-seo-desc"
+                    type="text"
+                    value={blogForm.seo_description || ''}
+                    onChange={(e) => setBlogForm({ ...blogForm, seo_description: e.target.value })}
+                    placeholder="Meta description"
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="bform-seo-keys" className="text-xs font-bold text-slate-505 block">SEO Keywords</label>
+                  <input
+                    id="bform-seo-keys"
+                    type="text"
+                    value={blogForm.seo_keywords || ''}
+                    onChange={(e) => setBlogForm({ ...blogForm, seo_keywords: e.target.value })}
+                    placeholder="keyword1, keyword2"
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="bform-og-image" className="text-xs font-bold text-slate-505 block">Social Image (OG)</label>
+                  <input
+                    id="bform-og-image"
+                    type="text"
+                    value={blogForm.og_image_url || ''}
+                    onChange={(e) => setBlogForm({ ...blogForm, og_image_url: e.target.value })}
+                    placeholder="https://... (defaults to cover image)"
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-1">
+                  <label htmlFor="bform-canonical" className="text-xs font-bold text-slate-505 block">Canonical URL</label>
+                  <input
+                    id="bform-canonical"
+                    type="text"
+                    value={blogForm.canonical_url || ''}
+                    onChange={(e) => setBlogForm({ ...blogForm, canonical_url: e.target.value })}
+                    placeholder="https://medium.com/@you/original-post"
+                    className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Markdown Content Editor */}
+          <div className="space-y-1.5 flex flex-col">
+            <label className="text-xs font-bold text-slate-700 block">
+              Article Content (Full Markdown &amp; HTML Support)
+            </label>
+            <MarkdownEditor
+              value={blogForm.content_html || ''}
+              onChange={(val) => setBlogForm({ ...blogForm, content_html: val })}
+              placeholder="# Write your article in Markdown..."
+              minHeight="360px"
+            />
           </div>
 
           <button

@@ -71,7 +71,7 @@ export function usePortfolioData() {
   });
 
   // Navigation & Active Item State
-  const [currentView, setCurrentView] = useState('home'); // home, projects, blog, certificates, contact, resume, vitals, admin
+  const [currentView, setCurrentView] = useState('home'); // home, projects, blog, certificates, contact, resume, admin
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
@@ -154,15 +154,38 @@ export function usePortfolioData() {
   const handleUpdateBlogs = persistUpdate<Blog[]>(setBlogs, '/api/admin/blogs');
   const handleUpdateCertificates = persistUpdate<Certificate[]>(setCertificates, '/api/admin/certificates');
 
-  // Liking Toggle
+  // Route Telemetry Tracking: record real page views
+  useEffect(() => {
+    const routePath = currentView === 'home' ? '/' : `/${currentView}`;
+    fetch('/api/telemetry/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: routePath, referrer: document.referrer || '' })
+    }).catch(() => {});
+  }, [currentView]);
+
+  // Liking Toggle with Real Server Sync
   const handleLikeToggle = (id: string) => {
-    if (likedBlogs.includes(id)) {
-      setLikedBlogs(likedBlogs.filter(bId => bId !== id));
-      setBlogs(blogs.map(b => b.id === id ? { ...b, like_count: Math.max(0, b.like_count - 1) } : b));
-    } else {
-      setLikedBlogs([...likedBlogs, id]);
-      setBlogs(blogs.map(b => b.id === id ? { ...b, like_count: b.like_count + 1 } : b));
-    }
+    const isCurrentlyLiked = likedBlogs.includes(id);
+    const newLikedList = isCurrentlyLiked
+      ? likedBlogs.filter(bId => bId !== id)
+      : [...likedBlogs, id];
+    
+    setLikedBlogs(newLikedList);
+    setBlogs(blogs.map(b => b.id === id ? { ...b, like_count: Math.max(0, (b.like_count || 0) + (isCurrentlyLiked ? -1 : 1)) } : b));
+
+    fetch(`/api/blogs/${id}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ increment: !isCurrentlyLiked })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && typeof data.like_count === 'number') {
+          setBlogs(prev => prev.map(b => b.id === id ? { ...b, like_count: data.like_count } : b));
+        }
+      })
+      .catch(() => {});
   };
 
   // Bookmarking Toggle
@@ -174,12 +197,31 @@ export function usePortfolioData() {
     }
   };
 
-  // Trigger telemetry views on reading a blog post
+  // Trigger telemetry views on reading a blog post with real server recording
   const handleReadBlog = (blog: Blog) => {
     setSelectedBlog(blog);
     setCurrentView('blog_post');
-    setBlogs(blogs.map(b => b.id === blog.id ? { ...b, view_count: b.view_count + 1 } : b));
+    const newViewCount = (blog.view_count || 0) + 1;
+    setBlogs(blogs.map(b => b.id === blog.id ? { ...b, view_count: newViewCount } : b));
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    fetch(`/api/blogs/${blog.id}/view`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && typeof data.view_count === 'number') {
+          setBlogs(prev => prev.map(b => b.id === blog.id ? { ...b, view_count: data.view_count } : b));
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/telemetry/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: `/blog/${blog.slug || blog.id}` })
+    }).catch(() => {});
   };
 
   const uniqueBlogCats = Array.from(new Set(blogs.flatMap(b => b.categories || [])));

@@ -12,6 +12,8 @@ import { AdminContactsTab } from './admin/AdminContactsTab';
 import { AdminSmtpTab } from './admin/AdminSmtpTab';
 import { AdminSettingsTab } from './admin/AdminSettingsTab';
 import { AdminDeleteModal } from './admin/AdminDeleteModal';
+import AdminAnalyticsTab from './admin/AdminAnalyticsTab';
+import { BarChart2 } from 'lucide-react';
 
 interface AdminConsoleProps {
   settings: SiteSettings;
@@ -26,7 +28,7 @@ interface AdminConsoleProps {
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
 
-type AdminTab = 'dashboard' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'settings' | 'smtp';
+type AdminTab = 'dashboard' | 'analytics' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'settings' | 'smtp';
 
 export default function AdminConsole({
   settings,
@@ -141,7 +143,19 @@ export default function AdminConsole({
   const taggedActiveLeads = activeLeads.filter(c => c.estimated_value && ESTIMATED_VALUE_MIDPOINTS[c.estimated_value] !== undefined);
   const activePipelineValue = taggedActiveLeads.reduce((sum, c) => sum + ESTIMATED_VALUE_MIDPOINTS[c.estimated_value!], 0);
   const untaggedActiveLeadCount = activeLeads.length - taggedActiveLeads.length;
-  const mockResumeDownloadsCount = 67;
+  const [realResumeDownloadsCount, setRealResumeDownloadsCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAdminLoggedIn) return;
+    fetch('/api/admin/traffic-stats', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.summary?.resumeDownloads !== undefined) {
+          setRealResumeDownloadsCount(data.summary.resumeDownloads);
+        }
+      })
+      .catch(() => {});
+  }, [isAdminLoggedIn, activeTab]);
 
   if (!isAdminLoggedIn) {
     return (
@@ -171,6 +185,7 @@ export default function AdminConsole({
 
           {[
             { label: 'Admin Metrics', value: 'dashboard', icon: LayoutDashboard, alert: unreadContactCount > 0 ? `${unreadContactCount}` : null },
+            { label: 'Traffic Analytics', value: 'analytics', icon: BarChart2 },
             { label: 'Project Portfolio', value: 'projects', icon: FileCode },
             { label: 'Technical Blogs', value: 'blogs', icon: BookOpen },
             { label: 'Certifications', value: 'certs', icon: Award },
@@ -225,9 +240,13 @@ export default function AdminConsole({
               unreadContactCount={unreadContactCount}
               activePipelineValue={activePipelineValue}
               untaggedActiveLeadCount={untaggedActiveLeadCount}
-              mockResumeDownloadsCount={mockResumeDownloadsCount}
+              resumeDownloadsCount={realResumeDownloadsCount}
               onNavigateToContacts={() => setActiveTab('contacts')}
             />
+          )}
+
+          {activeTab === 'analytics' && (
+            <AdminAnalyticsTab />
           )}
 
           {activeTab === 'projects' && (

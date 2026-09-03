@@ -177,7 +177,9 @@ export default function GlassCursor() {
                   marginLeft: -size / 2,
                   marginTop: -size / 2,
                 }}
-                ref={(el) => (trailRefs.current[i] = el)}
+                ref={(el) => {
+                  trailRefs.current[i] = el;
+                }}
               />
             );
           })}

@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import { Blog, SiteSettings } from '../types';
 import { sanitizeHtml } from '../lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface BlogPostProps {
   blog: Blog;
@@ -172,7 +175,7 @@ export default function BlogPost({
           <span className="text-slate-300">•</span>
           <span className="flex items-center gap-1">
             <Eye className="w-3.5 h-3.5 text-slate-400" />
-            {blog.view_count + 1} tracked impressions
+            {blog.view_count || 0} views
           </span>
         </div>
       </div>
@@ -204,6 +207,30 @@ export default function BlogPost({
         </p>
       </div>
 
+      {/* 7. ARTICLE HTML CONTENT (PROSE) */}
+      <div className="blog-prose mb-10 text-left">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+        >
+          {blog.content_html || ''}
+        </ReactMarkdown>
+      </div>
+
+      {/* 8. TAGS CLOUD */}
+      {blog.tags && blog.tags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-6 mb-8 text-left">
+          <span className="text-xs font-mono font-bold text-slate-400 mr-2 flex items-center gap-1">
+            <Tag className="w-3 h-3" /> Tags:
+          </span>
+          {blog.tags.map((tag) => (
+            <span key={tag} className="text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200/60 rounded-lg px-2.5 py-1">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* 6. AUTHOR SIGNATURE CARD */}
       <div className="flex items-center gap-4 p-5 rounded-3xl bg-white border border-slate-200/80 shadow-2xs mb-8 text-left">
         <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
@@ -222,26 +249,6 @@ export default function BlogPost({
           </p>
         </div>
       </div>
-
-      {/* 7. ARTICLE HTML CONTENT (PROSE) */}
-      <div
-        className="blog-prose mb-10 text-left"
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content_html || '') }}
-      />
-
-      {/* 8. TAGS CLOUD */}
-      {blog.tags && blog.tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-6 mb-8 text-left">
-          <span className="text-xs font-mono font-bold text-slate-400 mr-2 flex items-center gap-1">
-            <Tag className="w-3 h-3" /> Tags:
-          </span>
-          {blog.tags.map((tag) => (
-            <span key={tag} className="text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200/60 rounded-lg px-2.5 py-1">
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* 9. INTERACTIVE DEVELOPER SCRATCHPAD / READING NOTES */}
       <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 mb-10 text-left space-y-4">
