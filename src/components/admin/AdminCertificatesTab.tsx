@@ -15,11 +15,13 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
 }) => {
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [certForm, setCertForm] = useState<Partial<Certificate>>({});
+  const [skillsInput, setSkillsInput] = useState<string>('');
 
   const handleCertEditStart = (cert?: Certificate) => {
     if (cert) {
       setEditingCertId(cert.id);
       setCertForm(cert);
+      setSkillsInput(cert.skills?.join(', ') || '');
     } else {
       setEditingCertId('new');
       setCertForm({
@@ -30,6 +32,7 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
         verify_url: '',
         issue_date: new Date().toISOString().split('T')[0]
       });
+      setSkillsInput('');
     }
   };
 
@@ -37,18 +40,29 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
     e.preventDefault();
     if (!certForm.title?.trim() || !certForm.issuer?.trim()) return;
 
+    const parsedSkills = skillsInput
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const payload: Certificate = {
+      ...(certForm as Certificate),
+      skills: parsedSkills
+    };
+
     if (editingCertId === 'new') {
       const newCert: Certificate = {
-        ...(certForm as Certificate),
+        ...payload,
         id: `cert_${Date.now()}`
       };
       onUpdateCertificates([newCert, ...certificates]);
     } else {
-      const updated = certificates.map(c => c.id === editingCertId ? { ...(certForm as Certificate) } : c);
+      const updated = certificates.map(c => c.id === editingCertId ? { ...payload } : c);
       onUpdateCertificates(updated);
     }
     setEditingCertId(null);
     setCertForm({});
+    setSkillsInput('');
   };
 
   return (
@@ -200,8 +214,8 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
               <input
                 id="cform-skills"
                 type="text"
-                value={certForm.skills?.join(', ') || ''}
-                onChange={(e) => setCertForm({ ...certForm, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                value={skillsInput}
+                onChange={(e) => setSkillsInput(e.target.value)}
                 placeholder="Python, Pandas, NumPy, Data Visualization"
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />

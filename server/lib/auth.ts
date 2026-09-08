@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
-import { getCustomPassword } from "./store.js";
+import { getCustomPassword, getStoredAiApiKey, getSettings } from "./store.js";
 
 const COOKIE_NAME = "qmlabs_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
@@ -146,3 +146,50 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   }
   next();
 }
+
+export async function getActiveAiApiKey(): Promise<string> {
+  const storedKey = await getStoredAiApiKey();
+  if (storedKey && storedKey.trim()) return storedKey.trim();
+
+  const settings = await getSettings();
+  if (settings.ai_api_key && settings.ai_api_key.trim()) return settings.ai_api_key.trim();
+
+  if (process.env.AI_API_KEY && process.env.AI_API_KEY.trim()) return process.env.AI_API_KEY.trim();
+
+  const adminPass = process.env.ADMIN_PASSWORD || "qmlabs_portfolio_key";
+  return `qm_ai_${crypto.createHash("sha256").update(`ai_key_${adminPass}`).digest("hex").slice(0, 32)}`;
+}
+
+export async function verifyAiOrAdminAuth(req: Request): Promise<boolean> {
+  if (isValidSession(req)) return true;
+
+  const headerKey = (req.headers["x-api-key"] as string) ||
+                    (req.headers["api-key"] as string) ||
+                    (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : "");
+
+  const queryKey = (req.query.api_key as string) || (req.query.key as string) || "";
+  const providedKey = (headerKey || queryKey || "").trim();
+
+  if (!providedKey) return false;
+
+  const expectedKey = await getActiveAiApiKey();
+  if (timingSafeEqualStrings(providedKey, expectedKey)) return true;
+
+  const isValidAdminPass = await verifyAdminPassword(providedKey);
+  if (isValidAdminPass) return true;
+
+  return false;
+}
+
+export async function requireAiOrAdminAuth(req: Request, res: Response, next: NextFunction) {
+  const isAuthorized = await verifyAiOrAdminAuth(req);
+  if (!isAuthorized) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized AI / Admin request. Please provide a valid 'x-api-key' or Bearer token.",
+      help: "You can generate or view your AI API Key in your Admin Console -> AI & ChatGPT Integrations."
+    });
+  }
+  next();
+}
+

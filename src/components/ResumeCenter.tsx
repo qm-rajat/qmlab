@@ -46,6 +46,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
   // Custom persona titles & summaries
   const [customTitles, setCustomTitles] = useState<Record<ResumePersona, string>>({
     general: PERSONA_META.general.title,
+    product: PERSONA_META.product.title,
     seo: PERSONA_META.seo.title,
     data: PERSONA_META.data.title,
     qa: PERSONA_META.qa.title,
@@ -54,6 +55,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
 
   const [customSummaries, setCustomSummaries] = useState<Record<ResumePersona, string>>({
     general: PERSONA_META.general.summary,
+    product: PERSONA_META.product.summary,
     seo: PERSONA_META.seo.summary,
     data: PERSONA_META.data.summary,
     qa: PERSONA_META.qa.summary,
@@ -83,6 +85,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
     setDisabledSkills([]);
     setCustomTitles({
       general: PERSONA_META.general.title,
+      product: PERSONA_META.product.title,
       seo: PERSONA_META.seo.title,
       data: PERSONA_META.data.title,
       qa: PERSONA_META.qa.title,
@@ -90,6 +93,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
     });
     setCustomSummaries({
       general: PERSONA_META.general.summary,
+      product: PERSONA_META.product.summary,
       seo: PERSONA_META.seo.summary,
       data: PERSONA_META.data.summary,
       qa: PERSONA_META.qa.summary,

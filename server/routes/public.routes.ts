@@ -10,8 +10,29 @@ import {
 import { recordPageView, recordResumeDownload, getResumeDownloads } from "../services/telemetry.service.js";
 import { recordBotCrawl, identifyBot } from "../services/crawler.service.js";
 import { rateLimiter } from "../lib/rateLimit.js";
+import { resolveBaseUrl, resolveHost } from "../lib/domain.js";
 
 const router = Router();
+
+// Dynamic SEO info endpoint
+router.get("/seo-info", async (req, res) => {
+  try {
+    const settings = await getSettings().catch(() => null);
+    const baseUrl = resolveBaseUrl(req, settings);
+    const host = resolveHost(req, settings);
+    res.json({
+      success: true,
+      baseUrl,
+      host,
+      sitemapUrl: `${baseUrl}/sitemap.xml`,
+      robotsUrl: `${baseUrl}/robots.txt`,
+      customDomainConfigured: Boolean(settings?.custom_domain),
+      customDomain: settings?.custom_domain || null,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // Rate limit telemetry endpoints to avoid log flooding
 const telemetryRateLimiter = rateLimiter("telemetry", {

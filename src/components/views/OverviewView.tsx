@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   Sparkles, FileText, Mail, ArrowUpRight, Briefcase, 
   Layers, Zap, TrendingUp, Cpu, CheckCircle, BookOpen, 
-  GraduationCap, Code, Globe, Database, ShieldCheck, Terminal
+  GraduationCap, Code, Globe, Database, ShieldCheck, Terminal,
+  Target
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings, Project } from '../../types';
@@ -34,6 +35,16 @@ const heroItemVariants = {
 
 export const getCategoryDetails = (category: string) => {
   const norm = category.toLowerCase();
+  if (norm.includes('product') || norm.includes('pm') || norm.includes('strategy') || norm.includes('management')) {
+    return {
+      icon: Target,
+      bgColor: 'bg-[#FFF7ED]',
+      barColor: 'bg-[#EA580C]',
+      textColor: 'text-[#9A3412]',
+      accentColor: '#C2410C',
+      desc: 'Product discovery, PRD drafting, Agile sprint execution, customer journey mapping, and metric-driven GTM roadmaps.'
+    };
+  }
   if (norm.includes('web') || norm.includes('dev') || norm.includes('front') || norm.includes('back') || norm.includes('react') || norm.includes('full')) {
     return {
       icon: Code,
@@ -406,27 +417,37 @@ export default function OverviewView({
           </h4>
           <div className="relative pl-6 border-l border-slate-200 space-y-6 py-2">
             {(settings.education && settings.education.length > 0) ? (
-              settings.education.map((edu, idx) => (
-                <div key={idx} className="relative space-y-1">
-                  <div className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#0084ff] border-2 border-white shadow-xs" />
-                  <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
-                    <h5 className="font-extrabold text-slate-800 text-xs sm:text-sm">
-                      {edu.degree} — {edu.field}
-                    </h5>
-                    {(edu.start_year || edu.end_year) && (
-                      <span className="text-[10px] font-mono font-bold text-slate-400">
-                        {edu.start_year}{edu.end_year ? ` – ${edu.end_year}` : ' – Present'}
+              settings.education.map((edu, idx) => {
+                const isMBA = edu.degree?.toLowerCase().includes('mba') || edu.field?.toLowerCase().includes('product');
+                return (
+                  <div key={idx} className="relative space-y-1">
+                    <div className={`absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full ${isMBA ? 'bg-amber-500 ring-4 ring-amber-100' : 'bg-[#0084ff]'} border-2 border-white shadow-xs`} />
+                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h5 className="font-extrabold text-slate-800 text-xs sm:text-sm">
+                          {edu.degree} — {edu.field}
+                        </h5>
+                        {isMBA && (
+                          <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded border border-amber-300">
+                            Active Specialization
+                          </span>
+                        )}
+                      </div>
+                      {(edu.start_year || edu.end_year) && (
+                        <span className="text-[10px] font-mono font-bold text-slate-400">
+                          {edu.start_year}{edu.end_year ? ` – ${edu.end_year}` : ' – Present'}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500">{edu.institution}</p>
+                    {edu.grade && (
+                      <span className={`text-[10px] font-mono font-bold ${isMBA ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-blue-50 text-[#0084ff] border-blue-100'} border px-2 py-0.5 rounded-md mt-1.5 inline-block`}>
+                        {edu.grade}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500">{edu.institution}</p>
-                  {edu.grade && (
-                    <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0084ff] border border-blue-100 px-2 py-0.5 rounded-md mt-1.5 inline-block">
-                      Value: {edu.grade}
-                    </span>
-                  )}
-                </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-xs text-slate-400 italic">No academic history records configured yet.</p>
             )}

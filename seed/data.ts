@@ -2,15 +2,28 @@ import { SiteSettings, Project, Blog, Certificate, Contact } from '../src/types'
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   hero_name: "Rajat Kumar Dash",
-  hero_tagline: "Full-Stack Developer · Technical SEO Expert · QA Automation Engineer",
-  hero_bio: "A technology-driven Computer Science graduate specializing in full-stack web applications, advanced data analytics, Python automation workflows, and high-performance technical SEO architectures.",
+  hero_tagline: "Technical Product Manager · Full-Stack Developer · Technical SEO & Analytics",
+  hero_bio: "A technology-driven Computer Science graduate pursuing an MBA in Product Management. Specializing in technical product management, PRD drafting, sprint roadmapping, full-stack web architectures, and quantifiable growth analytics.",
   profile_image_url: "", // will fall back to beautiful circular SVG or letter badge if blank
-  about_text: "I am a multidisciplinary computer science professional with deep expertise spanning across full-stack development, technical search engine optimization (SEO), data science modeling, automation testing, and cybersecurity. Currently performing as a Digital Marketing Executive specializing in Technical SEO & Web Analytics, I drive organic growth, optimize core web vitals, and coordinate secure technical web deployments. My analytical background enables me to build automated data pipelines, predictive machine learning models, and complex test architectures that ensure software stability and optimal performance.",
-  seo_home_title: "Rajat Kumar Dash | Portfolio & CRM Console",
-  seo_home_description: "Professional portfolio and content management dashboard for Rajat Kumar Dash — Computer Science graduate, developer, Technical SEO executive and analyst.",
-  seo_home_keywords: "Rajat Kumar Dash, full stack developer, technical SEO, data analytics, QA automation, cybersecurity, React, Python, portfolio",
+  about_text: "I am a multidisciplinary engineer and aspiring Technical Product Manager (TPM) currently pursuing an MBA with a specialization in Product Management. With a strong Computer Science foundation, I bridge business objectives, customer discovery, and engineering execution. My background spans technical search engine optimization (SEO), data science modeling, full-stack software development, and quality automation. As an MBA candidate, I leverage RICE prioritization, Agile sprint management, user journey mapping, and metric-driven PRDs to deliver high-velocity digital products that solve real customer problems and deliver measurable ROI.",
+  seo_home_title: "Rajat Kumar Dash | Technical Product Manager & Software Engineer",
+  seo_home_description: "Professional portfolio and CRM console for Rajat Kumar Dash — Technical Product Manager (MBA Candidate), Computer Science graduate, developer, and analytics strategist.",
+  seo_home_keywords: "Rajat Kumar Dash, technical product manager, MBA product management, PRD, product strategy, full stack developer, technical SEO, data analytics, QA automation, React, Python, portfolio",
   seo_og_image_url: "",
   skills: [
+    {
+      category: "Product Management & Strategy",
+      items: [
+        { name: "Product Requirements (PRD)" },
+        { name: "Agile & Scrum Sprints" },
+        { name: "Roadmap Prioritization (RICE)" },
+        { name: "User Research & Discovery" },
+        { name: "Go-to-Market (GTM) Strategy" },
+        { name: "Product Analytics (GA4 / Mixpanel)" },
+        { name: "Wireframing & Journey Mapping" },
+        { name: "Stakeholder Management" }
+      ]
+    },
     {
       category: "Web Development",
       items: [
@@ -132,6 +145,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   ],
   education: [
     {
+      institution: "Amity University / Online Business School",
+      degree: "MBA",
+      field: "Product Management & Digital Strategy",
+      start_year: 2025,
+      end_year: 2027,
+      grade: "Specialization: Product Management (Enrolled)"
+    },
+    {
       institution: "Gandhi Institute of Engineering and Technology (GIET University)",
       degree: "B.Tech",
       field: "Computer Science & Engineering",
@@ -190,6 +211,42 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export const DEFAULT_PROJECTS: Project[] = [
+  {
+    id: "proj_pm_1",
+    title: "SaaS Onboarding & Activation Redesign (PRD & Case Study)",
+    slug: "saas-onboarding-prd-case-study",
+    category: "product-management",
+    description: "End-to-end Product Requirement Document (PRD) and product growth case study redesigning user activation and time-to-first-value (TTFV) for a B2B SaaS workflow. Integrated customer journey discovery, user personas, RICE prioritization, and Figma prototypes, yielding a projected 34% reduction in initial churn.",
+    images: [
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800"
+    ],
+    technologies: ["Product Management", "PRD Drafting", "RICE Prioritization", "Agile Sprints", "User Journey Mapping", "Figma", "Mixpanel Analytics"],
+    github_url: "https://github.com/qm-rajat/product-management-case-studies",
+    live_url: "https://rajatkumar.dev/case-studies/activation-prd",
+    prd_url: "https://github.com/qm-rajat/product-management-case-studies/blob/main/PRD_User_Activation.md",
+    target_audience: "B2B SaaS Growth & Engineering Teams",
+    key_metric: {
+      label: "Activation Lift",
+      value: "+34% TTFV"
+    },
+    architecture_highlights: [
+      "Authored 14-page comprehensive PRD with detailed user stories, edge cases, acceptance criteria, and KPI definitions.",
+      "Conducted 18 customer discovery interviews identifying friction in workspace invitation and API credential setup.",
+      "Formulated RICE prioritization matrix evaluating 22 feature backlog candidates across 3 engineering sprints."
+    ],
+    problem_statement: "First-week user drop-off averaged 58% due to an overcomplicated 7-step onboarding modal and lack of empty-state guidance for newly created workspaces.",
+    solution_details: "Engineered a progressive disclosure onboarding roadmap featuring contextual tooltips, interactive sample templates, and self-serve checklist milestones reducing time-to-first-value.",
+    features: [
+      "Comprehensive Product Requirements Document (PRD) with user personas and technical constraints",
+      "RICE Prioritization Matrix & sprint backlog estimations",
+      "Interactive high-fidelity Figma prototype with usability testing protocols",
+      "Product analytics telemetry plan tracking step-by-step funnel conversion in Mixpanel & GA4"
+    ],
+    is_featured: true,
+    display_order: 1,
+    created_at: "2025-02-10T00:00:00Z"
+  },
   {
     id: "proj_1",
     title: "PentestSEO – Security & Vulnerability Analysis Framework",

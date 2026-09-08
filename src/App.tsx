@@ -9,6 +9,13 @@ import { Routes, Route, useLocation, useNavigate, useParams } from 'react-router
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SEO from './components/SEO';
+import {
+  getClientBaseUrl,
+  generatePersonSchema,
+  generateWebSiteSchema,
+  generateProfilePageSchema,
+  generateBlogPostingSchema,
+} from './lib/seo';
 
 // Views
 import OverviewView from './components/views/OverviewView';
@@ -60,25 +67,35 @@ export default function App() {
   else if (path.startsWith('/contact')) currentView = 'contact';
   else if (path.startsWith('/admin')) currentView = 'admin';
 
-  let seoTitle = "QM LABS - Full-Stack Engineering & Technical SEO";
-  let seoDesc = "Explore the engineering portfolio and consultancy of Rajat Kumar Dash. Specializing in high-performance web applications, Technical SEO, and backend automation.";
+  const baseUrl = getClientBaseUrl(settings);
+  const heroName = settings.hero_name || "Rajat Kumar Dash";
+  const brandName = settings.company_name || "QM Labs";
+
+  let seoTitle = `${heroName} | Technical Product Manager & Software Engineer`;
+  let seoDesc = settings.seo_home_description || "Technical Product Manager (MBA Candidate) & Full-Stack Software Engineer. Specializing in PRD strategy, sprint execution, web scalability, and product analytics.";
   
   if (currentView === 'blog') {
-    seoTitle = "Blog & Technical Notes - QM LABS";
-    seoDesc = "Read deep-dive articles on full-stack development, Technical SEO, Node.js architecture, and React performance optimization.";
+    seoTitle = `Engineering & Product Strategy Blog | ${brandName}`;
+    seoDesc = "Deep-dive articles on Technical Product Management, PRD blueprints, full-stack architecture, and technical SEO performance.";
   } else if (currentView === 'projects') {
-    seoTitle = "Projects & Prototypes - QM LABS";
-    seoDesc = "Discover a catalog of full-stack data dashboards, scalable API infrastructures, and modern React web applications.";
+    seoTitle = `Case Studies & Projects | ${heroName}`;
+    seoDesc = "Explore software engineering builds, product requirement documents (PRD), agile sprints, and automated test architectures.";
   } else if (currentView === 'resume') {
-    seoTitle = "Rajat Kumar Dash - Resume & CV";
-    seoDesc = "View the interactive engineering resume of Rajat Kumar Dash, detailing experience in MERN stack development and Technical SEO.";
+    seoTitle = `Interactive Resume & Career Path | ${heroName}`;
+    seoDesc = "Explore the verified career trajectory, MBA in Product Management specialization, technical competencies, and achievements of Rajat Kumar Dash.";
   } else if (currentView === 'contact') {
-    seoTitle = "Contact Rajat Kumar Dash - QM LABS";
-    seoDesc = "Get in touch for freelance full-stack development, technical SEO audits, or consulting opportunities.";
+    seoTitle = `Contact & Project Inquiries | ${heroName}`;
+    seoDesc = "Get in touch for technical product management leadership, consulting sprints, full-stack development, or advisory roles.";
   } else if (currentView === 'certificates') {
-    seoTitle = "Professional Certifications - QM LABS";
-    seoDesc = "A verification center for data modeling, software engineering, and web development certifications.";
+    seoTitle = `Verified Credentials & Degrees | ${heroName}`;
+    seoDesc = "Official verification hub for academic degrees, MBA Product Management coursework, and professional engineering certifications.";
   }
+
+  const rootSchemas = [
+    generatePersonSchema(settings, baseUrl),
+    generateWebSiteSchema(settings, baseUrl),
+    generateProfilePageSchema(settings, baseUrl)
+  ];
 
   const handleViewChange = (v: string) => {
     if (v === 'home') navigate('/');
@@ -87,7 +104,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50/40 text-slate-800 font-sans flex flex-col pt-16 tech-grid-pattern selection:bg-[#0084ff]/10">
-      <SEO title={seoTitle} description={seoDesc} />
+      <SEO title={seoTitle} description={seoDesc} settings={settings} schemaData={rootSchemas} />
       <Analytics />
       <SpeedInsights />
       
@@ -322,28 +339,6 @@ export default function App() {
       {(!settings.is_under_maintenance || path.startsWith('/admin')) && (
         <Footer settings={settings} onViewChange={handleViewChange} />
       )}
-
-      {/* SEMANTIC JSON-LD SCHEMA FOR RICH GOOGLE SERP INDEXING */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Person",
-          "name": settings?.hero_name || '',
-          "url": import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app",
-          "jobTitle": "Full-Stack Developer & Technical SEO Expert",
-          "worksFor": {
-            "@type": "Organization",
-            "name": settings?.company_name || 'QM Labs',
-            "url": import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app"
-          },
-          "image": `${import.meta.env.SITE_URL || import.meta.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app"}/assets/logo.png`,
-          "description": settings?.hero_bio || '',
-          "sameAs": [
-            settings?.social_links?.linkedin || '',
-            settings?.social_links?.github || ''
-          ]
-        })}
-      </script>
     </div>
   );
 }
@@ -371,9 +366,19 @@ function BlogPostRouteWrapper({
     );
   }
 
+  const blogBaseUrl = getClientBaseUrl(settings);
+  const blogSchema = generateBlogPostingSchema(selectedBlog, settings, blogBaseUrl);
+
   return (
     <>
-      <SEO title={`${selectedBlog.title} - QM LABS`} description={selectedBlog.excerpt} />
+      <SEO 
+        title={`${selectedBlog.title} | ${settings?.company_name || 'QM Labs'}`} 
+        description={selectedBlog.excerpt || selectedBlog.seo_description}
+        image={selectedBlog.cover_image_url || selectedBlog.og_image_url}
+        type="article"
+        settings={settings}
+        schemaData={blogSchema}
+      />
       <BlogPost
         blog={selectedBlog}
         settings={settings}

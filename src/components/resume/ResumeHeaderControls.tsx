@@ -159,7 +159,17 @@ export const ResumeHeaderControls: React.FC<ResumeHeaderControlsProps> = ({
             >
               <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#0084ff]' : 'text-slate-400'}`} />
               <span>
-                {key === 'general' ? 'Full-Stack Developer' : key === 'seo' ? 'Technical SEO & Analytics' : key === 'data' ? 'Data Science & ML' : key === 'qa' ? 'QA & Automation' : 'Cybersecurity'}
+                {key === 'general' 
+                  ? 'Full-Stack Developer' 
+                  : key === 'product'
+                  ? 'Product Manager (TPM)'
+                  : key === 'seo' 
+                  ? 'Technical SEO & Analytics' 
+                  : key === 'data' 
+                  ? 'Data Science & ML' 
+                  : key === 'qa' 
+                  ? 'QA & Automation' 
+                  : 'Cybersecurity'}
               </span>
             </button>
           );

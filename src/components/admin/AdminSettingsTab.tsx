@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { 
   Plus, Trash2, Check, Database, RefreshCw, DownloadCloud, UploadCloud, 
   Shield, Briefcase, GraduationCap, ChevronUp, ChevronDown, Calendar, MapPin, 
-  Building, BookOpen, Award, Sparkles 
+  Building, BookOpen, Award, Sparkles, Globe, ExternalLink, FileCode, Search 
 } from 'lucide-react';
 import { SiteSettings, Experience, Education } from '../../types';
 import RichTextEditor from '../RichTextEditor';
+import { getClientBaseUrl } from '../../lib/seo';
 
 interface AdminSettingsTabProps {
   settings: SiteSettings;
@@ -179,7 +180,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
           { label: 'Company Profile', value: 'company' },
           { label: 'Skills lists', value: 'skills' },
           { label: 'Social connections', value: 'socials' },
-          { label: 'Map / Meta', value: 'seo' },
+          { label: 'Domain & SEO', value: 'seo' },
           { label: 'Database & Security', value: 'database' }
         ].map((st) => (
           <button
@@ -994,7 +995,100 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
       {/* Settings Sub-Tab: Maps & Index */}
       {settingsSubTab === 'seo' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-6 animate-fade-in text-left">
+          {/* DYNAMIC DOMAIN & SEO INFRASTRUCTURE CARD */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 border border-slate-700 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white tracking-wide">Dynamic Domain & SEO Engine</h4>
+                  <p className="text-xs text-slate-400">Configure your upcoming custom domain. Robots, Sitemap, and Schema adapt automatically.</p>
+                </div>
+              </div>
+              <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1.5 ${
+                settings.custom_domain
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${settings.custom_domain ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`} />
+                {settings.custom_domain ? 'Custom Domain Set' : 'Auto-Resolving Host'}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 pt-2">
+              <label htmlFor="custom-domain-field" className="text-xs font-bold text-slate-300 block">
+                Primary Custom Domain
+              </label>
+              <div className="relative">
+                <input
+                  id="custom-domain-field"
+                  type="text"
+                  placeholder="e.g. rajatkumar.dev or rajatdash.com"
+                  value={settings.custom_domain || ''}
+                  onChange={(e) => onUpdateSettings({ ...settings, custom_domain: e.target.value })}
+                  className="w-full pl-9 pr-3.5 py-2.5 text-sm bg-slate-800/80 border border-slate-600 focus:border-blue-400 rounded-xl focus:outline-hidden text-white font-mono placeholder:text-slate-500"
+                />
+                <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                When you purchase your domain, enter it here (e.g. <code>rajatkumar.dev</code>). The backend immediately serves all canonical links, <code>sitemap.xml</code>, <code>robots.txt</code>, and Schema.org JSON-LD under your new domain with zero downtime.
+              </p>
+            </div>
+
+            {/* LIVE URL DIAGNOSTICS & VERIFICATION */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 space-y-1">
+                <div className="flex items-center justify-between text-slate-400 text-[11px] font-semibold">
+                  <span>Resolved Base URL</span>
+                  <Globe className="w-3.5 h-3.5 text-blue-400" />
+                </div>
+                <div className="text-xs font-mono text-white truncate" title={getClientBaseUrl(settings)}>
+                  {getClientBaseUrl(settings)}
+                </div>
+              </div>
+
+              <a
+                href={`${getClientBaseUrl(settings)}/sitemap.xml`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-slate-800/60 hover:bg-slate-700/60 transition border border-slate-700/80 rounded-xl p-3 space-y-1 group block"
+              >
+                <div className="flex items-center justify-between text-slate-400 text-[11px] font-semibold">
+                  <span>Dynamic Sitemap</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                </div>
+                <div className="text-xs font-mono text-blue-400 truncate">
+                  /sitemap.xml
+                </div>
+              </a>
+
+              <a
+                href={`${getClientBaseUrl(settings)}/robots.txt`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-slate-800/60 hover:bg-slate-700/60 transition border border-slate-700/80 rounded-xl p-3 space-y-1 group block"
+              >
+                <div className="flex items-center justify-between text-slate-400 text-[11px] font-semibold">
+                  <span>Dynamic Robots</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                </div>
+                <div className="text-xs font-mono text-blue-400 truncate">
+                  /robots.txt
+                </div>
+              </a>
+            </div>
+
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex items-start gap-2 text-[11px] text-slate-300">
+              <FileCode className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <strong>Dynamic JSON-LD Schema:</strong> Auto-generates structured microdata for <code>Person</code> (including MBA in Product Management &amp; B.Tech Computer Science), <code>WebSite</code>, <code>ProfilePage</code>, and <code>BlogPosting</code> for Google Rich Snippets.
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-1">
             <label htmlFor="seo-title-field" className="text-xs font-bold text-slate-550 block">Canonical Home Title</label>
             <input

@@ -1,0 +1,143 @@
+# Product Technical Specification & Architecture
+
+**Document Version:** v2.3.0  
+**Authors:** Rajat (Lead Product Engineer & Architect)  
+**Target System:** Full-Stack Node.js / Express + React 18 + Model Context Protocol (MCP)  
+
+---
+
+## 1. System Architecture Overview
+
+```
+                      ┌──────────────────────────────────────────┐
+                      │              CLIENT LAYER                │
+                      │  • React 18 + Tailwind CSS SPA          │
+                      │  • OpenAI ChatGPT / Claude Desktop Agent │
+                      │  • Cursor IDE / LangChain MCP Clients    │
+                      └────────────────────┬─────────────────────┘
+                                           │
+                    HTTPS / TLS (Port 3000 / Reverse Proxy)
+                                           │
+                      ┌────────────────────▼─────────────────────┐
+                      │             EXPRESS SERVER               │
+                      │  • Helmet & CSP Security Middleware      │
+                      │  • Token Bucket Rate Limiting (IP Hash)  │
+                      │  • Session Authentication Guard          │
+                      ├────────────────────┬─────────────────────┤
+                      │   REST API ROUTES  │  MCP JSON-RPC 2.0   │
+                      │   • /api/content   │  • /api/mcp (HTTP)  │
+                      │   • /api/contact   │  • /api/sse (Stream)│
+                      │   • /api/admin/*   │  • 18+ Tool Handlers│
+                      └──────────────┬─────┴──────────────┬──────┘
+                                     │                    │
+                      ┌──────────────▼────────────────────▼──────┐
+                      │         STORAGE & SERVICE LAYER          │
+                      │  • Dual-Persistence (Redis + JSON store) │
+                      │  • SMTP Mailer Service (Nodemailer)      │
+                      │  • Telemetry & Analytics Aggregator      │
+                      └──────────────────────────────────────────┘
+```
+
+---
+
+## 2. Core Data Models (`src/types.ts`)
+
+### 2.1 Project Schema
+```typescript
+interface Project {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  category?: 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems' | 'product-management' | string;
+  images: string[];
+  image_url?: string;
+  technologies: string[];
+  github_url?: string;
+  live_url?: string;
+  prd_url?: string;
+  target_audience?: string;
+  key_metric?: { label: string; value: string } | string;
+  architecture_highlights?: string[];
+  problem_statement?: string;
+  solution_details?: string;
+  features?: string[];
+  is_featured: boolean;
+  display_order: number;
+  created_at: string;
+  project_type?: 'company' | 'portfolio' | 'both';
+}
+```
+
+### 2.2 Site Settings Schema
+```typescript
+interface SiteSettings {
+  hero_name: string;
+  hero_tagline: string;
+  hero_bio: string;
+  profile_image_url: string;
+  about_text: string;
+  seo_home_title: string;
+  seo_home_description: string;
+  seo_home_keywords: string;
+  skills: Skill[];
+  experience: Experience[];
+  education: Education[];
+  social_links: SocialLinks;
+  contact_email: string;
+  contact_location: string;
+  hero_stats: HeroStat[];
+  overview_fourth_stat: { label: string; value: string };
+}
+```
+
+---
+
+## 3. Model Context Protocol (MCP) Contract
+
+### 3.1 JSON-RPC 2.0 Ingress Specification
+- **Endpoint:** `POST /api/mcp`
+- **Headers:** `Content-Type: application/json`
+- **Supported Methods:** `initialize`, `ping`, `tools/list`, `tools/call`
+
+#### Example `tools/call` Payload:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "req_1710002",
+  "method": "tools/call",
+  "params": {
+    "name": "list_projects",
+    "arguments": {
+      "category": "product-management"
+    }
+  }
+}
+```
+
+#### Example Response Payload:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "req_1710002",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Found 4 projects in category 'product-management'..."
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 4. Security & Performance Directives
+
+1. **Strict Input Sanitization:** All markdown inputs processed through unified DOMPurify pipelines.
+2. **Rate Limiting:**
+   - General API: 120 requests / minute per IP.
+   - Admin Login & Contact Form: 5 requests / minute per IP.
+3. **Session Integrity:** Cryptographically secure session tokens stored with HttpOnly, SameSite=Lax flags.
+4. **Zero Client Secrets:** All Gemini API keys, SMTP credentials, and database secrets remain strictly server-side.

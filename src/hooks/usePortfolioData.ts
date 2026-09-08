@@ -108,16 +108,40 @@ export function usePortfolioData() {
 
   // Load live content from the server on mount (if KV store configured)
   useEffect(() => {
-    fetch('/api/content')
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success || !data.storeConfigured) return;
-        setSettings({ ...EMPTY_SETTINGS, ...data.settings });
-        setProjects(data.projects || []);
-        setBlogs(data.blogs || []);
-        setCertificates(data.certificates || []);
-      })
-      .catch(err => console.error('Failed to load live site content, using cached copy:', err));
+    let isMounted = true;
+    let retries = 0;
+    const maxRetries = 3;
+
+    const loadContent = () => {
+      fetch('/api/content')
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          if (!isMounted) return;
+          if (!data.success || !data.storeConfigured) return;
+          setSettings({ ...EMPTY_SETTINGS, ...data.settings });
+          setProjects(data.projects || []);
+          setBlogs(data.blogs || []);
+          setCertificates(data.certificates || []);
+        })
+        .catch(err => {
+          if (!isMounted) return;
+          if (retries < maxRetries) {
+            retries++;
+            setTimeout(loadContent, 1200 * retries);
+          } else {
+            console.warn('Live content server not reachable, using cached copy:', err?.message || err);
+          }
+        });
+    };
+
+    loadContent();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Restore admin login state from the server session cookie after a page refresh.

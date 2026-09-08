@@ -3,7 +3,8 @@ import {
   Github, ExternalLink, X, ChevronLeft, ChevronRight, 
   Code, Tag, Layers, Search, Star, Globe, Cpu, 
   ShieldCheck, CheckCircle2, Sparkles, Copy, Check,
-  Terminal, BarChart3, Bot, Network, ArrowUpRight
+  Terminal, BarChart3, Bot, Network, ArrowUpRight,
+  Target, Briefcase, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Project } from '../types';
@@ -12,7 +13,7 @@ interface ProjectGalleryProps {
   projects: Project[];
 }
 
-type CategoryFilter = 'all' | 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems';
+type CategoryFilter = 'all' | 'product-management' | 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems';
 type SortOption = 'featured' | 'newest' | 'alphabetical';
 
 export default function ProjectGallery({ projects }: ProjectGalleryProps) {
@@ -29,6 +30,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
   // Category naming map
   const categoryLabels: Record<CategoryFilter, string> = {
     all: 'All Systems',
+    'product-management': 'Product Strategy & Case Studies',
     automation: 'QA Automation & Testing',
     'machine-learning': 'AI & Machine Learning',
     cybersecurity: 'Cybersecurity & Pentesting',
@@ -38,6 +40,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
 
   const getCategoryTheme = (cat?: string) => {
     switch (cat) {
+      case 'product-management': return 'bg-amber-50 border-amber-200 text-amber-700';
       case 'automation': return 'bg-blue-50 border-blue-200 text-[#0084ff]';
       case 'machine-learning': return 'bg-purple-50 border-purple-200 text-purple-600';
       case 'cybersecurity': return 'bg-rose-50 border-rose-200 text-rose-600';
@@ -49,6 +52,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
 
   const getCategoryIcon = (cat?: string) => {
     switch (cat) {
+      case 'product-management': return <Target className="w-3.5 h-3.5" />;
       case 'automation': return <CheckCircle2 className="w-3.5 h-3.5" />;
       case 'machine-learning': return <Bot className="w-3.5 h-3.5" />;
       case 'cybersecurity': return <ShieldCheck className="w-3.5 h-3.5" />;
@@ -65,6 +69,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
       if (categoryFilter !== 'all' && p.category !== categoryFilter) {
         // Fallback matching if legacy data doesn't have explicit category
         const searchString = [p.title, p.description, ...p.technologies].join(' ').toLowerCase();
+        if (categoryFilter === 'product-management' && !searchString.includes('prd') && !searchString.includes('product') && !searchString.includes('strategy') && !searchString.includes('agile') && !searchString.includes('case study')) return false;
         if (categoryFilter === 'automation' && !searchString.includes('pytest') && !searchString.includes('selenium') && !searchString.includes('automation')) return false;
         if (categoryFilter === 'machine-learning' && !searchString.includes('learning') && !searchString.includes('scikit') && !searchString.includes('vision')) return false;
         if (categoryFilter === 'cybersecurity' && !searchString.includes('security') && !searchString.includes('pentest') && !searchString.includes('nmap')) return false;
@@ -629,7 +634,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                     {selectedProject.problem_statement && (
                       <div className="p-4 bg-rose-50/70 border border-rose-100 rounded-2xl space-y-1">
                         <span className="text-[10px] font-mono font-bold text-rose-700 uppercase tracking-widest block">
-                          Engineering Problem
+                          {selectedProject.category === 'product-management' ? 'Customer & Market Problem' : 'Engineering Problem'}
                         </span>
                         <p className="text-xs text-rose-900 leading-relaxed">
                           {selectedProject.problem_statement}
@@ -639,7 +644,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                     {selectedProject.solution_details && (
                       <div className="p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl space-y-1">
                         <span className="text-[10px] font-mono font-bold text-emerald-700 uppercase tracking-widest block">
-                          Architectural Solution
+                          {selectedProject.category === 'product-management' ? 'Product Strategy & PRD Scope' : 'Architectural Solution'}
                         </span>
                         <p className="text-xs text-emerald-900 leading-relaxed">
                           {selectedProject.solution_details}
@@ -653,7 +658,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                 {selectedProject.architecture_highlights && selectedProject.architecture_highlights.length > 0 && (
                   <div className="space-y-2">
                     <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-[#0084ff]" /> Technical Architecture Highlights
+                      <Layers className="w-3.5 h-3.5 text-[#0084ff]" /> {selectedProject.category === 'product-management' ? 'Product Strategy & Execution Highlights' : 'Technical Architecture Highlights'}
                     </h5>
                     <div className="space-y-1.5">
                       {selectedProject.architecture_highlights.map((h, i) => (
@@ -731,7 +736,17 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                 Logged • {new Date(selectedProject.created_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
               </span>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {selectedProject.prd_url && (
+                  <a
+                    href={selectedProject.prd_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20"
+                  >
+                    <FileText className="w-4 h-4" /> View PRD Document
+                  </a>
+                )}
                 {selectedProject.github_url && (
                   <a
                     href={selectedProject.github_url}

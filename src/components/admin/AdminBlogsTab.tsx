@@ -16,11 +16,15 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
 }) => {
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [blogForm, setBlogForm] = useState<Partial<Blog>>({});
+  const [tagsInput, setTagsInput] = useState<string>('');
+  const [categoriesInput, setCategoriesInput] = useState<string>('');
 
   const handleBlogEditStart = (blog?: Blog) => {
     if (blog) {
       setEditingBlogId(blog.id);
       setBlogForm(blog);
+      setTagsInput(blog.tags?.join(', ') || '');
+      setCategoriesInput(blog.categories?.join(', ') || '');
     } else {
       setEditingBlogId('new');
       setBlogForm({
@@ -37,6 +41,8 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
         tags: [],
         categories: ['General Web']
       });
+      setTagsInput('');
+      setCategoriesInput('General Web');
     }
   };
 
@@ -45,26 +51,35 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
     if (!blogForm.title?.trim() || !blogForm.content_html?.trim()) return;
 
     const finalSlug = blogForm.slug?.trim() || blogForm.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const parsedTags = tagsInput.split(',').map(s => s.trim()).filter(Boolean);
+    const parsedCategories = categoriesInput.split(',').map(s => s.trim()).filter(Boolean);
+
+    const payload: Blog = {
+      ...(blogForm as Blog),
+      tags: parsedTags,
+      categories: parsedCategories.length > 0 ? parsedCategories : ['General Web'],
+      slug: finalSlug,
+    };
 
     if (editingBlogId === 'new') {
       const newBlog: Blog = {
-        ...(blogForm as Blog),
+        ...payload,
         id: `blog_${Date.now()}`,
-        slug: finalSlug,
         published_at: blogForm.status === 'published' ? new Date().toISOString() : undefined,
         created_at: new Date().toISOString()
       };
       onUpdateBlogs([newBlog, ...blogs]);
     } else {
       const updated = blogs.map(b => b.id === editingBlogId ? {
-        ...(blogForm as Blog),
-        slug: finalSlug,
+        ...payload,
         published_at: b.published_at || (blogForm.status === 'published' ? new Date().toISOString() : undefined)
       } : b);
       onUpdateBlogs(updated);
     }
     setEditingBlogId(null);
     setBlogForm({});
+    setTagsInput('');
+    setCategoriesInput('');
   };
 
   return (
@@ -215,8 +230,8 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
               <input
                 id="bform-tags"
                 type="text"
-                value={blogForm.tags?.join(', ') || ''}
-                onChange={(e) => setBlogForm({ ...blogForm, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="SEO, React, Node.js"
                 className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
@@ -228,8 +243,8 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
               <input
                 id="bform-categories"
                 type="text"
-                value={blogForm.categories?.join(', ') || ''}
-                onChange={(e) => setBlogForm({ ...blogForm, categories: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                value={categoriesInput}
+                onChange={(e) => setCategoriesInput(e.target.value)}
                 placeholder="General Web, DevOps"
                 className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />

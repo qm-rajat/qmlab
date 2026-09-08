@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Shield, LayoutDashboard, FileCode, Award, Inbox, Settings, LogOut, Mail, BookOpen
+  Shield, LayoutDashboard, FileCode, Award, Inbox, Settings, LogOut, Mail, BookOpen, Bot, Sparkles, BarChart2
 } from 'lucide-react';
 import { Project, Blog, Certificate, Contact, SiteSettings } from '../types';
 import { AdminLoginView } from './admin/AdminLoginView';
@@ -11,9 +11,9 @@ import { AdminCertificatesTab } from './admin/AdminCertificatesTab';
 import { AdminContactsTab } from './admin/AdminContactsTab';
 import { AdminSmtpTab } from './admin/AdminSmtpTab';
 import { AdminSettingsTab } from './admin/AdminSettingsTab';
+import { AdminAiTab } from './admin/AdminAiTab';
 import { AdminDeleteModal } from './admin/AdminDeleteModal';
 import AdminAnalyticsTab from './admin/AdminAnalyticsTab';
-import { BarChart2 } from 'lucide-react';
 
 interface AdminConsoleProps {
   settings: SiteSettings;
@@ -28,7 +28,7 @@ interface AdminConsoleProps {
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
 
-type AdminTab = 'dashboard' | 'analytics' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'settings' | 'smtp';
+type AdminTab = 'dashboard' | 'analytics' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'ai' | 'smtp' | 'settings';
 
 export default function AdminConsole({
   settings,
@@ -190,6 +190,7 @@ export default function AdminConsole({
             { label: 'Technical Blogs', value: 'blogs', icon: BookOpen },
             { label: 'Certifications', value: 'certs', icon: Award },
             { label: 'Contacts Enquiries', value: 'contacts', icon: Inbox, alert: unreadContactCount > 0 ? `${unreadContactCount}` : null },
+            { label: 'MCP Server', value: 'ai', icon: Bot },
             { label: 'SMTP Connection', value: 'smtp', icon: Mail },
             { label: 'Site settings', value: 'settings', icon: Settings },
           ].map((tab) => {
@@ -278,6 +279,19 @@ export default function AdminConsole({
               contacts={contacts}
               onUpdateContact={handleUpdateContact}
               onDeleteContact={handleDeleteContact}
+            />
+          )}
+
+          {activeTab === 'ai' && (
+            <AdminAiTab
+              settings={settings}
+              projects={projects}
+              blogs={blogs}
+              certificates={certificates}
+              onRefreshAll={() => {
+                // Trigger reload of data
+                window.location.reload();
+              }}
             />
           )}
 

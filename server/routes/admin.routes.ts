@@ -9,7 +9,8 @@ import {
   hashPassword,
   checkLoginLockout,
   recordFailedLogin,
-  resetLoginAttempts
+  resetLoginAttempts,
+  getActiveAiApiKey
 } from "../lib/auth.js";
 import { rateLimiter } from "../lib/rateLimit.js";
 import {
@@ -20,7 +21,9 @@ import {
   getContacts,
   saveContacts,
   saveCustomPassword,
+  saveStoredAiApiKey,
 } from "../lib/store.js";
+import crypto from "crypto";
 import { getBotTelemetry, recordBotCrawl } from "../services/crawler.service.js";
 import { getTrafficTelemetry } from "../services/telemetry.service.js";
 
@@ -216,6 +219,41 @@ router.post("/bot-ping", requireAdmin, async (req, res) => {
     res.json({ success: true, message: `Simulated crawler hit from ${botName} to ${path}` });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Failed to simulate bot hit." });
+  }
+});
+
+// AI Key Management
+router.get("/ai-key", requireAdmin, async (req, res) => {
+  try {
+    const apiKey = await getActiveAiApiKey();
+    res.json({ success: true, apiKey });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to fetch AI key." });
+  }
+});
+
+router.post("/ai-key/generate", requireAdmin, async (req, res) => {
+  try {
+    const randomHex = crypto.randomBytes(16).toString("hex");
+    const newApiKey = `qm_ai_${randomHex}`;
+    await saveStoredAiApiKey(newApiKey);
+    res.json({ success: true, apiKey: newApiKey, message: "New AI key generated successfully." });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to generate AI key." });
+  }
+});
+
+router.post("/ai-key/set", requireAdmin, async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    if (!apiKey || typeof apiKey !== "string" || apiKey.trim().length < 8) {
+      return res.status(400).json({ success: false, error: "API key must be at least 8 characters." });
+    }
+    const cleanKey = apiKey.trim();
+    await saveStoredAiApiKey(cleanKey);
+    res.json({ success: true, apiKey: cleanKey, message: "AI API key saved successfully." });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to save AI key." });
   }
 });
 

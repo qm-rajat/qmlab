@@ -1,8 +1,8 @@
-import { Code2, Search, Database, Briefcase, ShieldAlert } from 'lucide-react';
+import { Code2, Search, Database, Briefcase, ShieldAlert, Target } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 import { SiteSettings, Project, Certificate } from '../../types';
 
-export type ResumePersona = 'general' | 'seo' | 'data' | 'qa' | 'security';
+export type ResumePersona = 'general' | 'product' | 'seo' | 'data' | 'qa' | 'security';
 export type ResumeTheme = 'sans' | 'serif' | 'mono';
 export type ResumeAccent = 'blue' | 'indigo' | 'emerald' | 'slate';
 
@@ -21,6 +21,13 @@ export const PERSONA_META: Record<ResumePersona, PersonaMetadata> = {
     icon: Code2,
     accentColor: 'border-blue-600 text-blue-600',
     badgeColor: 'bg-blue-50 border-blue-200 text-blue-700'
+  },
+  product: {
+    title: 'Technical Product Manager & Product Strategist',
+    summary: 'Strategic and technically grounded Product Manager (MBA candidate in Product Management) with a solid Computer Science and engineering foundation. Adept at bridging technical feasibility, customer research, and commercial value. Proven expertise in authoring comprehensive PRDs, mapping user journeys, running Agile sprints, and prioritizing features through RICE and OKR frameworks to accelerate product delivery.',
+    icon: Target,
+    accentColor: 'border-amber-600 text-amber-600',
+    badgeColor: 'bg-amber-50 border-amber-200 text-amber-700'
   },
   seo: {
     title: 'Technical SEO Specialist & Web Analytics Engineer',

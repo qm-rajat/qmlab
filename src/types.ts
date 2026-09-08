@@ -3,12 +3,14 @@ export interface Project {
   title: string;
   slug: string;
   description: string;
-  category?: 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems' | string;
+  category?: 'automation' | 'machine-learning' | 'cybersecurity' | 'data-bi' | 'web-systems' | 'product-management' | string;
   images: string[];         // array of image URLs
   image_url?: string;
   technologies: string[];
   github_url?: string;
   live_url?: string;
+  prd_url?: string;
+  target_audience?: string;
   key_metric?: {
     label: string;
     value: string;
@@ -139,6 +141,8 @@ export interface SiteSettings {
   seo_home_description: string;
   seo_home_keywords: string;
   seo_og_image_url: string;
+  custom_domain?: string;
+  ai_api_key?: string;
   skills: Skill[];
   experience: Experience[];
   education: Education[];

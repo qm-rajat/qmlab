@@ -51,9 +51,9 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({
             <div className="space-y-4">
               {/* Project Image Header */}
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-150">
-                {proj.image_url ? (
+                {(proj.image_url || (proj.images && proj.images[0])) ? (
                   <img
-                    src={proj.image_url}
+                    src={proj.image_url || proj.images[0]}
                     alt={proj.title}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

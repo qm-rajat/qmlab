@@ -7,7 +7,8 @@ import {
   Webhook, Wrench, FileSearch, Bot, BrainCircuit,
   SlidersHorizontal, PieChart, LayoutDashboard, Table,
   ShieldAlert, Lock, Eye, Crosshair, TerminalSquare,
-  GitBranch, LucideIcon
+  GitBranch, Target, Briefcase, Kanban, Users, Workflow,
+  LucideIcon
 } from 'lucide-react';
 import { SiteSettings } from '../../types';
 
@@ -60,6 +61,16 @@ export interface SolarSkillsMapProps {
 }
 
 export const DEFAULT_ORBIT_CONFIGS: OrbitConfig[] = [
+  {
+    categoryName: "Product Management & Strategy",
+    radius: 45,
+    speedMultiplier: 1.4,
+    color: "from-amber-500 to-orange-500",
+    borderColor: "border-amber-500/30",
+    glowColor: "rgba(245, 158, 11, 0.4)",
+    accentHex: "#f59e0b",
+    bgGlow: "bg-amber-500/10"
+  },
   {
     categoryName: "Web Development",
     radius: 65,
@@ -116,6 +127,15 @@ export const DEFAULT_ORBIT_CONFIGS: OrbitConfig[] = [
 export const getSkillIcon = (name: string, category?: string): LucideIcon => {
   const norm = name.toLowerCase();
   
+  // Product Management & Strategy
+  if (norm.includes('prd') || norm.includes('spec') || norm.includes('requirement')) return FileCode;
+  if (norm.includes('agile') || norm.includes('scrum') || norm.includes('sprint') || norm.includes('jira')) return Kanban;
+  if (norm.includes('roadmap') || norm.includes('priorit') || norm.includes('rice') || norm.includes('moscow')) return Compass;
+  if (norm.includes('discovery') || norm.includes('user research') || norm.includes('persona') || norm.includes('stakeholder')) return Users;
+  if (norm.includes('gtm') || norm.includes('go-to-market') || norm.includes('market')) return Target;
+  if (norm.includes('hypothesis') || norm.includes('a/b test')) return CheckSquare;
+  if (norm.includes('strategy') || norm.includes('lifecycle')) return Workflow;
+
   // Web Dev
   if (norm.includes('react') || norm.includes('next')) return Atom;
   if (norm.includes('node')) return Server;
@@ -167,6 +187,7 @@ export const getSkillIcon = (name: string, category?: string): LucideIcon => {
   // Category fallback
   if (category) {
     const cNorm = category.toLowerCase();
+    if (cNorm.includes('product') || cNorm.includes('pm') || cNorm.includes('strategy') || cNorm.includes('management')) return Target;
     if (cNorm.includes('web')) return Code;
     if (cNorm.includes('seo') || cNorm.includes('analytics')) return Globe;
     if (cNorm.includes('qa') || cNorm.includes('scripting')) return Cpu;

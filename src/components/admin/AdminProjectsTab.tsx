@@ -15,11 +15,19 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 }) => {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState<Partial<Project>>({});
+  const [techInput, setTechInput] = useState<string>('');
+  const [featuresInput, setFeaturesInput] = useState<string>('');
+  const [archInput, setArchInput] = useState<string>('');
+  const [secondaryImagesInput, setSecondaryImagesInput] = useState<string>('');
 
   const handleProjectEditStart = (proj?: Project) => {
     if (proj) {
       setEditingProjectId(proj.id);
       setProjectForm(proj);
+      setTechInput(proj.technologies?.join(', ') || '');
+      setFeaturesInput(proj.features?.join(', ') || '');
+      setArchInput(proj.architecture_highlights?.join(', ') || '');
+      setSecondaryImagesInput(proj.images?.slice(1).join(', ') || '');
     } else {
       setEditingProjectId('new');
       setProjectForm({
@@ -34,6 +42,10 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
         display_order: projects.length + 1,
         project_type: 'both'
       });
+      setTechInput('');
+      setFeaturesInput('');
+      setArchInput('');
+      setSecondaryImagesInput('');
     }
   };
 
@@ -43,20 +55,40 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
     const finalSlug = projectForm.slug?.trim() || projectForm.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
+    const primaryImg = projectForm.images?.[0] || '';
+    const extraImgs = secondaryImagesInput.split(',').map(s => s.trim()).filter(Boolean);
+    const finalImages = [primaryImg, ...extraImgs].filter(Boolean);
+
+    const parsedTech = techInput.split(',').map(s => s.trim()).filter(Boolean);
+    const parsedFeatures = featuresInput.split(',').map(s => s.trim()).filter(Boolean);
+    const parsedArch = archInput.split(',').map(s => s.trim()).filter(Boolean);
+
+    const payload: Project = {
+      ...(projectForm as Project),
+      images: finalImages,
+      technologies: parsedTech,
+      features: parsedFeatures,
+      architecture_highlights: parsedArch,
+      slug: finalSlug,
+    };
+
     if (editingProjectId === 'new') {
       const newProj: Project = {
-        ...(projectForm as Project),
+        ...payload,
         id: `proj_${Date.now()}`,
-        slug: finalSlug,
         created_at: new Date().toISOString()
       };
       onUpdateProjects([newProj, ...projects]);
     } else {
-      const updated = projects.map(p => p.id === editingProjectId ? { ...(projectForm as Project), slug: finalSlug } : p);
+      const updated = projects.map(p => p.id === editingProjectId ? { ...payload } : p);
       onUpdateProjects(updated);
     }
     setEditingProjectId(null);
     setProjectForm({});
+    setTechInput('');
+    setFeaturesInput('');
+    setArchInput('');
+    setSecondaryImagesInput('');
   };
 
   return (
@@ -260,12 +292,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
               <input
                 id="pform-secondary-images"
                 type="text"
-                value={projectForm.images?.slice(1).join(', ') || ''}
-                onChange={(e) => {
-                  const primaryImage = projectForm.images?.[0] || '';
-                  const secondaryImages = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                  setProjectForm({ ...projectForm, images: [primaryImage, ...secondaryImages].filter(Boolean) });
-                }}
+                value={secondaryImagesInput}
+                onChange={(e) => setSecondaryImagesInput(e.target.value)}
                 placeholder="https://images.unsplash.com/..., https://..."
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
               />
@@ -344,8 +372,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             <input
               id="pform-tech"
               type="text"
-              value={projectForm.technologies?.join(', ') || ''}
-              onChange={(e) => setProjectForm({ ...projectForm, technologies: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              value={techInput}
+              onChange={(e) => setTechInput(e.target.value)}
               placeholder="Python, OpenCV, TensorFlow, Deep Learning"
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
             />
@@ -398,8 +426,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             <input
               id="pform-features"
               type="text"
-              value={projectForm.features?.join(', ') || ''}
-              onChange={(e) => setProjectForm({ ...projectForm, features: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              value={featuresInput}
+              onChange={(e) => setFeaturesInput(e.target.value)}
               placeholder="Real-time syncing, OAuth, Analytics Dashboard"
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
             />
@@ -410,8 +438,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             <input
               id="pform-architecture"
               type="text"
-              value={projectForm.architecture_highlights?.join(', ') || ''}
-              onChange={(e) => setProjectForm({ ...projectForm, architecture_highlights: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              value={archInput}
+              onChange={(e) => setArchInput(e.target.value)}
               placeholder="Microservices, Serverless, Event-Driven"
               className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
             />

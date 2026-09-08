@@ -9,6 +9,11 @@ interface TypewriterRole {
 
 const ROLES: TypewriterRole[] = [
   {
+    title: "Technical Product Manager",
+    colorClass: "from-amber-500 via-orange-500 to-rose-500",
+    accentHex: "#d97706"
+  },
+  {
     title: "Full-Stack Developer",
     colorClass: "from-blue-600 to-indigo-600",
     accentHex: "#2563eb"

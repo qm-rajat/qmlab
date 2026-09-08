@@ -55,6 +55,7 @@ const KEYS = {
   certificates: "qmlabs:certificates",
   contacts: "qmlabs:contacts",
   password: "qmlabs:admin:password",
+  aiApiKey: "qmlabs:ai:api_key",
 } as const;
 
 export async function readString(key: string): Promise<string | null> {
@@ -119,4 +120,8 @@ export const getContacts = () => readJson<Contact[]>(KEYS.contacts, []);
 export const saveContacts = (value: Contact[]) => writeJson(KEYS.contacts, value);
 export const getCustomPassword = () => readString(KEYS.password);
 export const saveCustomPassword = (value: string) => writeString(KEYS.password, value);
+
+export const getStoredAiApiKey = () => readString(KEYS.aiApiKey);
+export const saveStoredAiApiKey = (value: string) => writeString(KEYS.aiApiKey, value);
+
 

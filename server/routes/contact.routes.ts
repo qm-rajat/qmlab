@@ -7,12 +7,16 @@ import {
   formatContactName,
   renderEmailFooter
 } from "../services/mail.service.js";
-import { saveContacts, getContacts } from "../lib/store.js";
+import { saveContacts, getContacts, getSettings } from "../lib/store.js";
 import { Contact } from "../../src/types.js";
 import { rateLimiter } from "../lib/rateLimit.js";
+import { resolveBaseUrl } from "../lib/domain.js";
 
 const router = Router();
-const SITE_URL = process.env.SITE_URL || process.env.VITE_SITE_URL || "https://qmlab-indol.vercel.app";
+const getDynamicSiteUrl = async (req: any) => {
+  const settings = await getSettings().catch(() => null);
+  return resolveBaseUrl(req, settings);
+};
 
 // Strict rate limiters for contact submissions & SMTP diagnostics to stop spam and mail-bombing
 const contactRateLimiter = rateLimiter("contact-submit", {
@@ -64,6 +68,7 @@ router.post("/test-smtp", smtpTestRateLimiter, async (req, res) => {
     const recipient = process.env.SMTP_TO || process.env.SMTP_USER!;
     const senderName = process.env.SMTP_SENDER_NAME || "Rajat Kumar Dash";
 
+    const dynamicSiteUrl = await getDynamicSiteUrl(req);
     const mailOptions = {
       from: `"${senderName} SMTP Test" <${process.env.SMTP_USER}>`,
       to: recipient,
@@ -85,7 +90,7 @@ router.post("/test-smtp", smtpTestRateLimiter, async (req, res) => {
               This diagnostic ping was dispatched automatically from your full-stack applet container server.
             </p>
           </div>
-          ${renderEmailFooter(senderName, SITE_URL)}
+          ${renderEmailFooter(senderName, dynamicSiteUrl)}
         </div>
       `,
     };
@@ -137,6 +142,7 @@ router.post("/unsubscribe", unsubscribeRateLimiter, async (req, res) => {
       try {
         const transporter = getMailTransporter();
         const senderName = process.env.SMTP_SENDER_NAME || "Rajat Kumar Dash";
+        const dynamicSiteUrl = await getDynamicSiteUrl(req);
         await transporter.sendMail({
           from: `"${senderName}" <${process.env.SMTP_USER}>`,
           to: normalizedEmail,
@@ -149,9 +155,9 @@ router.post("/unsubscribe", unsubscribeRateLimiter, async (req, res) => {
               <div style="padding: 25px; color: #334155; font-size: 14px; line-height: 1.6;">
                 <p>Hello,</p>
                 <p>You have been successfully unsubscribed from the <strong>Quarterly Tech Dispatch</strong>. You will no longer receive newsletter broadcasts to <code>${escapeHtml(normalizedEmail)}</code>.</p>
-                <p style="font-size: 13px; color: #64748b; margin-top: 20px;">If this was done by mistake, you can always re-subscribe anytime directly on the <a href="${SITE_URL}/#blog" style="color: #2563eb; font-weight: 600;">Blog Hub</a>.</p>
+                <p style="font-size: 13px; color: #64748b; margin-top: 20px;">If this was done by mistake, you can always re-subscribe anytime directly on the <a href="${dynamicSiteUrl}/#blog" style="color: #2563eb; font-weight: 600;">Blog Hub</a>.</p>
               </div>
-              ${renderEmailFooter(senderName, SITE_URL, false)}
+              ${renderEmailFooter(senderName, dynamicSiteUrl, false)}
             </div>
           `
         });
@@ -264,6 +270,7 @@ router.post("/contact", contactRateLimiter, async (req, res) => {
       const transporter = getMailTransporter();
       const adminRecipient = process.env.SMTP_TO || process.env.SMTP_USER!;
       const senderName = process.env.SMTP_SENDER_NAME || "Rajat Kumar Dash";
+      const dynamicSiteUrl = await getDynamicSiteUrl(req);
 
       const safeName = escapeHtml(name.trim());
       const formattedRecipientName = escapeHtml(formatContactName(name));
@@ -322,7 +329,7 @@ router.post("/contact", contactRateLimiter, async (req, res) => {
               </div>
 
               <div style="margin-top: 25px; text-align: center;">
-                <a href="${SITE_URL}/#admin" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-size: 12px; font-weight: bold; text-transform: uppercase; display: inline-block;">Open CRM Console</a>
+                <a href="${dynamicSiteUrl}/#admin" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-size: 12px; font-weight: bold; text-transform: uppercase; display: inline-block;">Open CRM Console</a>
               </div>
             </div>
             <div style="background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0;">
@@ -359,13 +366,13 @@ router.post("/contact", contactRateLimiter, async (req, res) => {
                   <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">🛠️ Explore Portfolio &amp; Insights:</h4>
                   <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px;">💻 <a href="${SITE_URL}/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Portfolio Home</a></td>
+                      <td style="padding: 6px 0; font-size: 13px;">💻 <a href="${dynamicSiteUrl}/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Portfolio Home</a></td>
                     </tr>
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px;">📝 <a href="${SITE_URL}/#blog" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Blog &amp; Articles</a></td>
+                      <td style="padding: 6px 0; font-size: 13px;">📝 <a href="${dynamicSiteUrl}/#blog" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Blog &amp; Articles</a></td>
                     </tr>
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px;">🛠️ <a href="${SITE_URL}/#projects" style="color: #2563eb; text-decoration: none; font-weight: 600;">Engineered Projects &amp; Case Studies</a></td>
+                      <td style="padding: 6px 0; font-size: 13px;">🛠️ <a href="${dynamicSiteUrl}/#projects" style="color: #2563eb; text-decoration: none; font-weight: 600;">Engineered Projects &amp; Case Studies</a></td>
                     </tr>
                   </table>
                 </div>
@@ -374,7 +381,7 @@ router.post("/contact", contactRateLimiter, async (req, res) => {
                   No spam ever. If you ever wish to unsubscribe, you can do so anytime with 1 click using the link in the footer below.
                 </p>
               </div>
-              ${renderEmailFooter(senderName, SITE_URL, true)}
+              ${renderEmailFooter(senderName, dynamicSiteUrl, true)}
             </div>
           `,
         };
@@ -420,13 +427,13 @@ router.post("/contact", contactRateLimiter, async (req, res) => {
                   <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">In the meantime, explore my engineering works:</h4>
                   <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px;">💻 <a href="${SITE_URL}/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Portfolio Home</a></td>
+                      <td style="padding: 6px 0; font-size: 13px;">💻 <a href="${dynamicSiteUrl}/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Portfolio Home</a></td>
                     </tr>
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px;">🛠️ <a href="${SITE_URL}/#projects" style="color: #2563eb; text-decoration: none; font-weight: 600;">QA Test Suites &amp; Case Studies</a></td>
+                      <td style="padding: 6px 0; font-size: 13px;">🛠️ <a href="${dynamicSiteUrl}/#projects" style="color: #2563eb; text-decoration: none; font-weight: 600;">QA Test Suites &amp; Case Studies</a></td>
                     </tr>
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px;">📝 <a href="${SITE_URL}/#blog" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Blog &amp; Insights</a></td>
+                      <td style="padding: 6px 0; font-size: 13px;">📝 <a href="${dynamicSiteUrl}/#blog" style="color: #2563eb; text-decoration: none; font-weight: 600;">Technical Blog &amp; Insights</a></td>
                     </tr>
                   </table>
                 </div>
@@ -435,7 +442,7 @@ router.post("/contact", contactRateLimiter, async (req, res) => {
                   Note: This was dispatched from my automated SMTP integration. If you want to append additional specifications, designs, or files, please feel free to reply directly to this email!
                 </p>
               </div>
-              ${renderEmailFooter(senderName, SITE_URL, false)}
+              ${renderEmailFooter(senderName, dynamicSiteUrl, false)}
             </div>
           `,
         };
