@@ -37,7 +37,9 @@ var EMPTY_SETTINGS = {
   company_name: "",
   company_tagline: "",
   hero_stats: [],
-  overview_fourth_stat: { label: "", value: "" }
+  overview_fourth_stat: { label: "", value: "" },
+  overview_fifth_stat: { label: "", value: "" },
+  overview_sixth_stat: { label: "", value: "" }
 };
 var getConnectionString = () => process.env.REDIS_URL || process.env.KV_URL || process.env.REDIS_CONNECTION_STRING;
 var isStoreConfigured = () => true;
@@ -1884,6 +1886,11 @@ var aiTools = {
       overview_fourth_stat: {
         ...settings.overview_fourth_stat,
         ...updates.overview_fourth_stat || {}
+      },
+      // Deep merge resume contact details if provided
+      resume_contact_details: {
+        ...settings.resume_contact_details || {},
+        ...updates.resume_contact_details || {}
       }
     };
     await saveSettings(merged);
@@ -2401,6 +2408,9 @@ function generateOpenApiSpec(req) {
                     contact_location: { type: "string" },
                     seo_home_title: { type: "string" },
                     seo_home_description: { type: "string" },
+                    resume_custom_titles: { type: "object", additionalProperties: { type: "string" }, description: "Custom resume persona titles keyed by persona ID" },
+                    resume_custom_summaries: { type: "object", additionalProperties: { type: "string" }, description: "Custom resume persona summaries keyed by persona ID" },
+                    resume_custom_categories: { type: "object", additionalProperties: { type: "string" }, description: "Custom technical skill category names" },
                     seo_home_keywords: { type: "string" },
                     custom_domain: { type: "string" },
                     social_links: {
@@ -3131,7 +3141,10 @@ var MCP_TOOLS_CATALOG = [
         contact_email: { type: "string" },
         contact_location: { type: "string" },
         seo_home_title: { type: "string" },
-        seo_home_description: { type: "string" }
+        seo_home_description: { type: "string" },
+        resume_custom_titles: { type: "object", additionalProperties: { type: "string" }, description: "Custom resume persona titles keyed by persona ID" },
+        resume_custom_summaries: { type: "object", additionalProperties: { type: "string" }, description: "Custom resume persona summaries keyed by persona ID" },
+        resume_custom_categories: { type: "object", additionalProperties: { type: "string" }, description: "Custom technical skill category names" }
       }
     }
   }

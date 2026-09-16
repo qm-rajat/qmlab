@@ -24,7 +24,9 @@ const EMPTY_SETTINGS: SiteSettings = {
   company_name: "",
   company_tagline: "",
   hero_stats: [],
-  overview_fourth_stat: { label: "", value: "" }
+  overview_fourth_stat: { label: "", value: "" },
+  overview_fifth_stat: { label: "", value: "" },
+  overview_sixth_stat: { label: "", value: "" }
 };
 
 export function usePortfolioData() {

@@ -896,33 +896,90 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               ))}
             </div>
             
-            <h4 className="text-xs font-bold text-slate-700 mt-4">Overview Bottom Stat (Fourth slot)</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg">
+            <h4 className="text-xs font-bold text-slate-700 mt-4">Overview Bottom Stat</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl space-y-2">
-                  <input
-                    type="text"
-                    value={settings.overview_fourth_stat?.label || ''}
-                    placeholder="Label (e.g. TryHackMe Context Rank)"
-                    onChange={(e) => {
-                      onUpdateSettings({ 
-                        ...settings, 
-                        overview_fourth_stat: { ...settings.overview_fourth_stat, label: e.target.value }
-                      });
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs"
-                  />
-                  <input
-                    type="text"
-                    value={settings.overview_fourth_stat?.value || ''}
-                    placeholder="Value (e.g. Top 9%)"
-                    onChange={(e) => {
-                      onUpdateSettings({ 
-                        ...settings, 
-                        overview_fourth_stat: { ...settings.overview_fourth_stat, value: e.target.value }
-                      });
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-black"
-                  />
+                <span className="text-[10px] font-bold text-slate-400 block">Stat #4</span>
+                <input
+                  type="text"
+                  value={settings.overview_fourth_stat?.label || ''}
+                  placeholder="Label (e.g. TryHackMe Context Rank)"
+                  onChange={(e) => {
+                    onUpdateSettings({ 
+                      ...settings, 
+                      overview_fourth_stat: { ...settings.overview_fourth_stat, label: e.target.value }
+                    });
+                  }}
+                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs"
+                />
+                <input
+                  type="text"
+                  value={settings.overview_fourth_stat?.value || ''}
+                  placeholder="Value (e.g. Top 9%)"
+                  onChange={(e) => {
+                    onUpdateSettings({ 
+                      ...settings, 
+                      overview_fourth_stat: { ...settings.overview_fourth_stat, value: e.target.value }
+                    });
+                  }}
+                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-black"
+                />
+              </div>
+
+              <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 block">Stat #5</span>
+                <input
+                  type="text"
+                  value={settings.overview_fifth_stat?.label || ''}
+                  placeholder="Label (e.g. System Uptime)"
+                  onChange={(e) => {
+                    onUpdateSettings({ 
+                      ...settings, 
+                      overview_fifth_stat: { ...settings.overview_fifth_stat, label: e.target.value }
+                    });
+                  }}
+                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs"
+                />
+                <input
+                  type="text"
+                  value={settings.overview_fifth_stat?.value || ''}
+                  placeholder="Value (e.g. 99.99%)"
+                  onChange={(e) => {
+                    onUpdateSettings({ 
+                      ...settings, 
+                      overview_fifth_stat: { ...settings.overview_fifth_stat, value: e.target.value }
+                    });
+                  }}
+                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-black"
+                />
+              </div>
+
+              <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 block">Stat #6</span>
+                <input
+                  type="text"
+                  value={settings.overview_sixth_stat?.label || ''}
+                  placeholder="Label (e.g. Cloud Security)"
+                  onChange={(e) => {
+                    onUpdateSettings({ 
+                      ...settings, 
+                      overview_sixth_stat: { ...settings.overview_sixth_stat, label: e.target.value }
+                    });
+                  }}
+                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs"
+                />
+                <input
+                  type="text"
+                  value={settings.overview_sixth_stat?.value || ''}
+                  placeholder="Value (e.g. Zero Trust)"
+                  onChange={(e) => {
+                    onUpdateSettings({ 
+                      ...settings, 
+                      overview_sixth_stat: { ...settings.overview_sixth_stat, value: e.target.value }
+                    });
+                  }}
+                  className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-black"
+                />
               </div>
             </div>
           </div>

@@ -178,6 +178,14 @@ export interface SiteSettings {
     label: string;
     value: string;
   };
+  overview_fifth_stat: {
+    label: string;
+    value: string;
+  };
+  overview_sixth_stat: {
+    label: string;
+    value: string;
+  };
 }
 
 export interface AnalyticsSummary {

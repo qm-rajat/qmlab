@@ -169,7 +169,7 @@ export default function OverviewView({
           {/* Majestic Heading & Signature Presentation */}
           <div className="space-y-3">
             <motion.div variants={heroItemVariants}>
-              <span className="text-xs font-black uppercase tracking-[0.3em] font-mono text-slate-450 block mb-1">WELCOME TO THE PORTFOLIO</span>
+              <span className="text-xs font-black uppercase tracking-[0.3em] font-mono text-slate-900 dark:text-slate-100 block mb-1">WELCOME TO MY PORTFOLIO</span>
             </motion.div>
             
             <motion.h1 
@@ -218,11 +218,11 @@ export default function OverviewView({
 
             <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-3 shadow-2xs hover:border-purple-500/30 transition-all">
               <div className="flex items-center gap-1.5 text-purple-600 mb-1">
-                <Zap className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">{settings.hero_stats?.[2]?.label || "Lighthouse"}</span>
+                <Code className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">{settings.hero_stats?.[2]?.label || "Code Quality"}</span>
               </div>
-              <div className="text-base sm:text-lg font-black text-slate-900 font-sans tracking-tight">{settings.hero_stats?.[2]?.value || "100/100"}</div>
-              <div className="text-[10px] text-slate-500 font-medium">{settings.hero_stats?.[2]?.subtext || "Core Web Vitals"}</div>
+              <div className="text-base sm:text-lg font-black text-slate-900 font-sans tracking-tight">{settings.hero_stats?.[2]?.value || "Clean Architecture"}</div>
+              <div className="text-[10px] text-slate-500 font-medium">{settings.hero_stats?.[2]?.subtext || "Scalable & Secure"}</div>
             </div>
           </motion.div>
 
@@ -300,8 +300,8 @@ export default function OverviewView({
                 <TrendingUp className="w-4 h-4 animate-pulse" />
               </div>
               <div className="text-left font-sans">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">SEO Score</span>
-                <span className="text-[10px] font-extrabold text-slate-800 font-mono">99% LCP PASS</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">{settings.overview_fourth_stat?.label || "SEO Score"}</span>
+                <span className="text-[10px] font-extrabold text-slate-800 font-mono">{settings.overview_fourth_stat?.value || "99% LCP PASS"}</span>
               </div>
             </motion.div>
 
@@ -315,8 +315,8 @@ export default function OverviewView({
                 <Cpu className="w-4 h-4 animate-[spin_4s_linear_infinite]" />
               </div>
               <div className="text-left font-sans">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Dev Stack</span>
-                <span className="text-[10px] font-extrabold text-slate-805 font-mono">REACT & PYTHON</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">{settings.overview_fifth_stat?.label || "Dev Stack"}</span>
+                <span className="text-[10px] font-extrabold text-slate-805 font-mono">{settings.overview_fifth_stat?.value || "REACT & PYTHON"}</span>
               </div>
             </motion.div>
 
@@ -326,12 +326,12 @@ export default function OverviewView({
               transition={{ repeat: Infinity, duration: 3.8, ease: "easeInOut", delay: 0.5 }}
               className="absolute -bottom-6 -right-6 bg-white/95 border border-slate-150 p-2.5 rounded-2xl shadow-lg flex items-center gap-2 max-w-[165px] z-20 backdrop-blur-xs hover:border-emerald-500 transition-colors"
             >
-              <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-605 flex items-center justify-center flex-shrink-0 border border-sky-100">
+              <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-650 flex items-center justify-center flex-shrink-0 border border-sky-100">
                 <CheckCircle className="w-4 h-4" />
               </div>
               <div className="text-left font-sans">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">QA Suites</span>
-                <span className="text-[10px] font-extrabold text-slate-850 font-mono">100% SUCCESS</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">{settings.overview_sixth_stat?.label || "QA Suites"}</span>
+                <span className="text-[10px] font-extrabold text-slate-900 font-mono">{settings.overview_sixth_stat?.value || "100% SUCCESS"}</span>
               </div>
             </motion.div>
           </motion.div>

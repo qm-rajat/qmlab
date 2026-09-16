@@ -103,7 +103,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/40 text-slate-800 font-sans flex flex-col pt-16 tech-grid-pattern selection:bg-[#0084ff]/10">
+    <div className="min-h-screen bg-slate-50/40 text-slate-800 font-sans flex flex-col pt-24 sm:pt-28 tech-grid-pattern selection:bg-[#0084ff]/10">
       <SEO title={seoTitle} description={seoDesc} settings={settings} schemaData={rootSchemas} />
       <Analytics />
       <SpeedInsights />

@@ -24,7 +24,9 @@ const EMPTY_SETTINGS: SiteSettings = {
   company_name: "",
   company_tagline: "",
   hero_stats: [],
-  overview_fourth_stat: { label: "", value: "" }
+  overview_fourth_stat: { label: "", value: "" },
+  overview_fifth_stat: { label: "", value: "" },
+  overview_sixth_stat: { label: "", value: "" }
 };
 
 // Accepts whichever name the Vercel Redis integration (or a standalone Redis Cloud) injects for the standard redis:// connection string.

@@ -14,29 +14,29 @@ export const ROLES: TypewriterRole[] = [
     title: "Technical Product Manager",
     shortLabel: "Product Manager",
     abbreviation: "PM",
-    colorClass: "from-amber-500 via-orange-500 to-rose-500",
-    accentHex: "#d97706"
+    colorClass: "from-lime-400 via-emerald-500 to-teal-600 shadow-emerald-500/20",
+    accentHex: "#10b981"
   },
   {
     title: "Full-Stack Developer",
     shortLabel: "Full-Stack Dev",
     abbreviation: "DEV",
-    colorClass: "from-blue-600 to-indigo-600",
-    accentHex: "#2563eb"
+    colorClass: "from-cyan-400 via-teal-500 to-emerald-600 shadow-cyan-500/20",
+    accentHex: "#06b6d4"
   },
   {
     title: "Technical SEO Expert",
     shortLabel: "Technical SEO",
     abbreviation: "SEO",
-    colorClass: "from-emerald-600 to-teal-600",
-    accentHex: "#059669"
+    colorClass: "from-emerald-400 via-teal-500 to-cyan-600 shadow-emerald-500/20",
+    accentHex: "#10b981"
   },
   {
     title: "IT Support | Application Support Engineer",
     shortLabel: "IT Support | App Engineer",
     abbreviation: "Support Engineer",
-    colorClass: "from-purple-600 to-pink-600",
-    accentHex: "#9333ea"
+    colorClass: "from-teal-400 via-emerald-500 to-lime-500 shadow-teal-500/20",
+    accentHex: "#14b8a6"
   }
 ];
 
