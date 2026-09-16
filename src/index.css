@@ -423,9 +423,11 @@
   html {
     @apply font-sans;
   }
-}/* Global Cursor Hide */
-*,
-*::before,
-*::after {
-  cursor: none !important;
+}/* Global Cursor Hide only on desktop fine pointer devices */
+@media (pointer: fine) {
+  *,
+  *::before,
+  *::after {
+    cursor: none !important;
+  }
 }
