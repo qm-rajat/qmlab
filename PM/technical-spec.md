@@ -73,7 +73,7 @@ interface Project {
 ```typescript
 interface SiteSettings {
   hero_name: string;
-  hero_tagline: string;
+  hero_tagline: string; // Comma-separated roles fed to animated TypewriterRoles (e.g. "Technical Product Manager, Full-Stack Developer, Technical SEO, IT Support")
   hero_bio: string;
   profile_image_url: string;
   about_text: string;
@@ -91,9 +91,32 @@ interface SiteSettings {
 }
 ```
 
+### 2.3 Career Profile Schema (`CareerProfile`)
+```typescript
+interface CareerProfile {
+  id: string; // e.g. 'product', 'general', 'seo', 'qa', 'cybersecurity'
+  name: string; // e.g. 'Product Manager (TPM)'
+  title: string; // e.g. 'Technical Product Manager & Product Strategist'
+  summary: string;
+  icon_name: string; // Lucide icon mapping e.g. 'Target', 'Code2', 'Search'
+  accent_color: string; // 'amber' | 'blue' | 'indigo' | 'emerald' | 'purple'
+  skills_categories: string[];
+  is_default: boolean; // Defaults to true for 'product'
+}
+```
+
 ---
 
-## 3. Model Context Protocol (MCP) Contract
+## 3. High-Fidelity Resume Print Engine
+- **Media Query:** Dedicated `@media print` layout rules inside `src/index.css`.
+- **Page Geometry:** `@page { size: A4 portrait; margin: 12mm 14mm; }` with exact background graphic color fidelity (`-webkit-print-color-adjust: exact`).
+- **Print Shielding:** All interactive navigation (`header`, `footer`, `nav`, `.no-print`, hero cursor, action toolbars) are suppressed.
+- **Break Avoidance:** `break-inside: avoid` and `break-after: avoid` rules prevent ugly splits across job experiences and headings.
+- **Link Formatter:** Raw contact URLs rendered in clean, printable monospace text.
+
+---
+
+## 4. Model Context Protocol (MCP) Contract
 
 ### 3.1 JSON-RPC 2.0 Ingress Specification
 - **Endpoint:** `POST /api/mcp`

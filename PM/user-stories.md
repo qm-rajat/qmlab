@@ -81,6 +81,20 @@
   And the changes should reflect on the public frontend instantly on next view
   ```
 
+#### US-2.3: Dynamic Homepage Tagline & Typewriter Control
+- **As the** Admin,
+- **I want to** configure comma-separated roles in the Admin Settings "Display Tagline" field (`#set-tagline`),
+- **So that** the homepage animated typewriter dynamically rotates through my selected professional personas (e.g. Technical Product Manager, Full-Stack Developer, Technical SEO, IT Support).
+- **Priority:** Should Have (P1) | **Points:** 3
+- **Acceptance Criteria (Gherkin):**
+  ```gherkin
+  Given I am in Admin Settings > General Settings
+  When I enter a comma-separated list of roles in "Display Tagline" (e.g., "Technical Product Manager, Full-Stack Developer, Technical SEO, IT Support")
+  And I save the settings
+  Then the homepage typewriter component parses the roles
+  And dynamically rotates through each title with smooth type/delete transitions
+  ```
+
 ---
 
 ### EPIC-3: Model Context Protocol (MCP) AI Interoperability
@@ -116,14 +130,19 @@
 
 #### US-4.1: Interactive Resume Tailoring & PDF Export
 - **As a** Recruiter or Hiring Manager,
-- **I want to** view work experience, MBA/B.Tech education, and download a tailored print-ready PDF resume,
+- **I want to** select professional personas (defaulting to Technical Product Manager), view work experience, MBA/B.Tech education, and download a tailored print-ready PDF resume,
 - **So that** I can share Rajat's profile with executive hiring committees.
 - **Priority:** Must Have (P0) | **Points:** 3
 - **Acceptance Criteria (Gherkin):**
   ```gherkin
   Given I am on the Resume view
-  When I click "Download PDF"
-  Then a clean, ATS-optimized print layout should trigger with all job histories and skill taxonomies rendered
+  Then the active persona should default to "Product Manager (TPM)"
+  When I switch between available personas (e.g. Full-Stack, Technical SEO, QA, Cybersecurity)
+  Then the summary, core competencies, and emphasized highlights should dynamically adjust
+  When I click "Print / Save PDF"
+  Then the browser print dialog opens with A4 page sizing
+  And all navigation bars, footers, control buttons, and banners are hidden via `.no-print`
+  And contact hyperlinks are converted to clean, printable profile URLs
   ```
 
 #### US-4.2: Verified Credential Badge Inspection

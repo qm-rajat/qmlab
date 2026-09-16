@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ResumePersona, ResumeTheme, ResumeAccent, VisibleSections, 
   EditableContactDetails, PERSONA_META, ResumeCenterProps 
@@ -6,10 +6,49 @@ import {
 import { ResumeHeaderControls } from './resume/ResumeHeaderControls';
 import { ResumeConfigPanel } from './resume/ResumeConfigPanel';
 import { ResumeDocumentView } from './resume/ResumeDocumentView';
-import { Skill, Project } from '../types';
+import { Skill, Project, DomainProfile, SiteSettings } from '../types';
+import { DEFAULT_PROFILES } from './admin/AdminProfilesTab';
 
-export default function ResumeCenter({ settings, projects = [], certificates = [] }: ResumeCenterProps) {
-  const [selectedPersona, setSelectedPersona] = useState<ResumePersona>('general');
+export default function ResumeCenter({ 
+  settings, 
+  projects = [], 
+  certificates = [],
+  isAdminLoggedIn = false,
+  onUpdateSettings
+}: ResumeCenterProps) {
+  // Helper to extract clean display domain/handle from URLs for resume rendering
+  const cleanDisplayUrl = (url?: string, fallback: string = '') => {
+    if (!url) return fallback;
+    return url.replace(/^https?:\/\//i, '').replace(/\/$/, '').trim() || fallback;
+  };
+
+  // Dynamically resolve contact information from site settings and custom overrides
+  const resolveContactDetails = (s: SiteSettings): EditableContactDetails => {
+    const custom = s.resume_contact_details || {};
+    return {
+      name: custom.name || s.hero_name || 'Rajat Kumar Dash',
+      phone: custom.phone || s.contact_phone || '+91 8984550754',
+      email: custom.email || s.contact_email || 'rajat.pilgrimpackages@gmail.com',
+      location: custom.location || s.contact_location || 'New Delhi, India',
+      github: custom.github || cleanDisplayUrl(s.social_links?.github, 'github.com/qm-rajat'),
+      linkedin: custom.linkedin || cleanDisplayUrl(s.social_links?.linkedin, 'linkedin.com/in/rajatkudash'),
+      portfolio: custom.portfolio || cleanDisplayUrl(s.custom_domain, 'qmlab-indol.vercel.app'),
+    };
+  };
+
+  const allProfiles: DomainProfile[] = useMemo(() => {
+    if (settings.profiles && settings.profiles.length > 0) {
+      return settings.profiles;
+    }
+    return DEFAULT_PROFILES;
+  }, [settings.profiles]);
+
+  const defaultProfileId = useMemo(() => {
+    const def = allProfiles.find(p => p.is_default);
+    return def ? def.id : (allProfiles[0]?.id || 'product');
+  }, [allProfiles]);
+
+  const [selectedPersona, setSelectedPersona] = useState<ResumePersona>(defaultProfileId);
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   
@@ -32,73 +71,62 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
   // Excluded individual/category-level skills for custom targeting
   const [disabledSkills, setDisabledSkills] = useState<string[]>([]);
 
-  // Editable contact details
-  const [contactDetails, setContactDetails] = useState<EditableContactDetails>({
-    name: settings.hero_name || 'Rajat Kumar Dash',
-    phone: '+91 8984550754',
-    email: settings.contact_email || 'rajat.pilgrimpackages@gmail.com',
-    location: 'New Delhi, India',
-    github: 'github.com/qm-rajat',
-    linkedin: 'linkedin.com/in/rajatdash-',
-    portfolio: 'rajatkumar.dev',
-  });
+  // Editable contact details - dynamically initialized from settings
+  const [contactDetails, setContactDetails] = useState<EditableContactDetails>(() => 
+    resolveContactDetails(settings)
+  );
   
   // Custom persona titles & summaries
-  const [customTitles, setCustomTitles] = useState<Record<ResumePersona, string>>({
-    general: PERSONA_META.general.title,
-    product: PERSONA_META.product.title,
-    seo: PERSONA_META.seo.title,
-    data: PERSONA_META.data.title,
-    qa: PERSONA_META.qa.title,
-    security: PERSONA_META.security.title,
-  });
+  const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
+  const [customSummaries, setCustomSummaries] = useState<Record<string, string>>({});
+  const [customCategoryNames, setCustomCategoryNames] = useState<Record<string, string>>({});
 
-  const [customSummaries, setCustomSummaries] = useState<Record<ResumePersona, string>>({
-    general: PERSONA_META.general.summary,
-    product: PERSONA_META.product.summary,
-    seo: PERSONA_META.seo.summary,
-    data: PERSONA_META.data.summary,
-    qa: PERSONA_META.qa.summary,
-    security: PERSONA_META.security.summary,
-  });
-
-  // Keep contact details synced with site-wide setup changes
+  // Sync titles and summaries whenever allProfiles or settings change
   useEffect(() => {
-    setContactDetails(prev => ({
-      ...prev,
-      name: settings.hero_name || prev.name,
-      email: settings.contact_email || prev.email,
-    }));
-  }, [settings.hero_name, settings.contact_email]);
+    const titlesMap: Record<string, string> = {};
+    const summariesMap: Record<string, string> = {};
+
+    allProfiles.forEach(prof => {
+      titlesMap[prof.id] = settings.resume_custom_titles?.[prof.id] || prof.title || PERSONA_META[prof.id]?.title || prof.name;
+      summariesMap[prof.id] = settings.resume_custom_summaries?.[prof.id] || prof.summary || PERSONA_META[prof.id]?.summary || '';
+    });
+
+    setCustomTitles(prev => ({ ...titlesMap, ...prev, ...(settings.resume_custom_titles || {}) }));
+    setCustomSummaries(prev => ({ ...summariesMap, ...prev, ...(settings.resume_custom_summaries || {}) }));
+    if (settings.resume_custom_categories) {
+      setCustomCategoryNames(prev => ({ ...settings.resume_custom_categories, ...prev }));
+    }
+  }, [allProfiles, settings]);
+
+  // Keep contact details synced with site-wide setup changes dynamically
+  useEffect(() => {
+    setContactDetails(resolveContactDetails(settings));
+  }, [
+    settings.hero_name, 
+    settings.contact_email, 
+    settings.contact_location, 
+    settings.contact_phone, 
+    settings.social_links?.github, 
+    settings.social_links?.linkedin, 
+    settings.custom_domain,
+    settings.resume_contact_details
+  ]);
 
   // Reset function to clear custom overrides
   const handleResetToDefault = () => {
-    setContactDetails({
-      name: settings.hero_name || 'Rajat Kumar Dash',
-      phone: '+91 8984550754',
-      email: settings.contact_email || 'rajat.pilgrimpackages@gmail.com',
-      location: 'New Delhi, India',
-      github: 'github.com/qm-rajat',
-      linkedin: 'linkedin.com/in/rajatdash-',
-      portfolio: 'rajatkumar.dev',
-    });
+    setContactDetails(resolveContactDetails(settings));
     setDisabledSkills([]);
-    setCustomTitles({
-      general: PERSONA_META.general.title,
-      product: PERSONA_META.product.title,
-      seo: PERSONA_META.seo.title,
-      data: PERSONA_META.data.title,
-      qa: PERSONA_META.qa.title,
-      security: PERSONA_META.security.title,
+
+    const titlesMap: Record<string, string> = {};
+    const summariesMap: Record<string, string> = {};
+    allProfiles.forEach(prof => {
+      titlesMap[prof.id] = prof.title;
+      summariesMap[prof.id] = prof.summary;
     });
-    setCustomSummaries({
-      general: PERSONA_META.general.summary,
-      product: PERSONA_META.product.summary,
-      seo: PERSONA_META.seo.summary,
-      data: PERSONA_META.data.summary,
-      qa: PERSONA_META.qa.summary,
-      security: PERSONA_META.security.summary,
-    });
+    setCustomTitles(titlesMap);
+    setCustomSummaries(summariesMap);
+    setCustomCategoryNames({});
+
     setActiveTheme('sans');
     setActiveAccent('blue');
     setVisibleSections({
@@ -113,32 +141,47 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
 
   // Filter skills based on persona and exclude disabled skills
   const getFilteredSkills = (persona: ResumePersona): Skill[] => {
+    const activeProfile = allProfiles.find(p => p.id === persona);
     let baseSkills: Skill[] = [];
-    switch (persona) {
-      case 'seo':
-        baseSkills = settings.skills.filter(s => s.category.includes('SEO') || s.category.includes('Web'));
-        break;
-      case 'data':
-        baseSkills = settings.skills.filter(s => s.category.includes('Data') || s.category.includes('Web'));
-        break;
-      case 'qa':
-        baseSkills = settings.skills.filter(s => s.category.includes('QA') || s.category.includes('Web'));
-        break;
-      case 'security':
-        baseSkills = settings.skills.filter(s => s.category.includes('Cybersecurity') || s.category.includes('QA'));
-        break;
-      default:
-        baseSkills = settings.skills;
-        break;
+    const allSkills = settings.skills || [];
+
+    if (activeProfile?.skills_categories && activeProfile.skills_categories.length > 0) {
+      baseSkills = allSkills.filter(s => 
+        activeProfile.skills_categories!.some(cat => s.category.toLowerCase().includes(cat.toLowerCase()) || cat.toLowerCase().includes(s.category.toLowerCase()))
+      );
+      if (baseSkills.length === 0) {
+        baseSkills = allSkills;
+      }
+    } else {
+      switch (persona) {
+        case 'seo':
+          baseSkills = allSkills.filter(s => s.category.includes('SEO') || s.category.includes('Web'));
+          break;
+        case 'data':
+          baseSkills = allSkills.filter(s => s.category.includes('Data') || s.category.includes('Web'));
+          break;
+        case 'qa':
+          baseSkills = allSkills.filter(s => s.category.includes('QA') || s.category.includes('Web'));
+          break;
+        case 'security':
+          baseSkills = allSkills.filter(s => s.category.includes('Cybersecurity') || s.category.includes('QA'));
+          break;
+        case 'product':
+          baseSkills = allSkills.filter(s => s.category.includes('Product') || s.category.includes('Web') || s.category.includes('Agile'));
+          break;
+        default:
+          baseSkills = allSkills;
+          break;
+      }
     }
 
     return baseSkills.map(categoryObj => ({
       ...categoryObj,
-      items: categoryObj.items.filter(item => {
+      items: (categoryObj.items || []).filter(item => {
         const name = typeof item === 'string' ? item : item.name;
         return !disabledSkills.includes(name);
       })
-    })).filter(categoryObj => categoryObj.items.length > 0);
+    })).filter(categoryObj => (categoryObj.items || []).length > 0);
   };
 
   // Filter projects by relevance
@@ -175,7 +218,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
   // Calculate ATS Compatibility Score
   const calculateAtsScore = () => {
     let score = 70;
-    if (visibleSections.summary && customSummaries[selectedPersona].length > 50) score += 6;
+    if (visibleSections.summary && (customSummaries[selectedPersona] || "").length > 50) score += 6;
     if (visibleSections.skills && activeSkills.length >= 3) score += 8;
     if (visibleSections.experience && activeExperience.length >= 2) score += 8;
     if (visibleSections.education) score += 4;
@@ -186,20 +229,20 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
   // Generate copyable markdown text representation
   const getMarkdownText = () => {
     let md = `# ${contactDetails.name.toUpperCase()}\n`;
-    md += `${customTitles[selectedPersona]}\n\n`;
+    md += `${customTitles[selectedPersona] || ""}\n\n`;
     md += `📍 ${contactDetails.location} | 📞 ${contactDetails.phone} | ✉️ ${contactDetails.email}\n`;
     md += `🔗 Portfolio: https://${contactDetails.portfolio} | GitHub: https://${contactDetails.github} | LinkedIn: https://${contactDetails.linkedin}\n\n`;
     
     if (visibleSections.summary) {
       md += `## PROFESSIONAL SUMMARY\n`;
-      md += `${customSummaries[selectedPersona]}\n\n`;
+      md += `${customSummaries[selectedPersona] || ""}\n\n`;
     }
     
     if (visibleSections.skills) {
-      md += `## TECHNICAL COMPETENCIES\n`;
+      md += `## ${customCategoryNames["__SkillsHeading__"] || "TECHNICAL COMPETENCIES"}\n`;
       activeSkills.forEach(cat => {
         const skillNames = cat.items.map(s => typeof s === 'string' ? s : s.name);
-        md += `- **${cat.category}**: ${skillNames.join(', ')}\n`;
+        md += `- **${customCategoryNames[cat.category] || cat.category}**: ${skillNames.join(', ')}\n`;
       });
       md += `\n`;
     }
@@ -246,20 +289,21 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
   // Generate plain text format
   const getPlainText = () => {
     let txt = `${contactDetails.name.toUpperCase()}\n`;
-    txt += `${customTitles[selectedPersona]}\n`;
+    txt += `${customTitles[selectedPersona] || ""}\n`;
     txt += `Email: ${contactDetails.email} | Phone: ${contactDetails.phone} | Location: ${contactDetails.location}\n`;
     txt += `GitHub: https://${contactDetails.github} | LinkedIn: https://${contactDetails.linkedin}\n\n`;
     
     if (visibleSections.summary) {
       txt += `SUMMARY\n----------------------------------------\n`;
-      txt += `${customSummaries[selectedPersona]}\n\n`;
+      txt += `${customSummaries[selectedPersona] || ""}\n\n`;
     }
 
     if (visibleSections.skills) {
-      txt += `TECHNICAL SKILLS\n----------------------------------------\n`;
+      const heading = customCategoryNames["__SkillsHeading__"] || "TECHNICAL SKILLS";
+      txt += `${heading.toUpperCase()}\n----------------------------------------\n`;
       activeSkills.forEach(cat => {
         const skillNames = cat.items.map(s => typeof s === 'string' ? s : s.name);
-        txt += `${cat.category}: ${skillNames.join(', ')}\n`;
+        txt += `${customCategoryNames[cat.category] || cat.category}: ${skillNames.join(', ')}\n`;
       });
       txt += `\n`;
     }
@@ -327,7 +371,7 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
         location: contactDetails.location
       },
       selected_persona: selectedPersona,
-      persona_title: customTitles[selectedPersona],
+      persona_title: customTitles[selectedPersona] || "",
       summary_proposal: customSummaries[selectedPersona],
       visible_sections: visibleSections,
       rendered_theme: activeTheme,
@@ -346,6 +390,56 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
     downloadAnchor.remove();
   };
 
+  useEffect(() => {
+    if (!isAdminLoggedIn) {
+      setIsEditable(false);
+      setShowConfigPanel(false);
+    }
+  }, [isAdminLoggedIn]);
+
+  const handleToggleEditable = async () => {
+    if (!isAdminLoggedIn) return;
+    if (isEditable) {
+      setIsEditable(false);
+      try {
+        const payload: Partial<SiteSettings> = {
+          resume_custom_titles: customTitles,
+          resume_custom_summaries: customSummaries,
+          resume_custom_categories: customCategoryNames,
+          hero_name: contactDetails.name,
+          contact_email: contactDetails.email,
+          contact_location: contactDetails.location,
+          contact_phone: contactDetails.phone,
+          resume_contact_details: contactDetails,
+        };
+
+        if (onUpdateSettings) {
+          const updatedSocials = {
+            ...(settings.social_links || {}),
+            github: contactDetails.github.startsWith('http') ? contactDetails.github : `https://${contactDetails.github}`,
+            linkedin: contactDetails.linkedin.startsWith('http') ? contactDetails.linkedin : `https://${contactDetails.linkedin}`,
+          };
+          await onUpdateSettings({
+            ...settings,
+            ...payload,
+            social_links: updatedSocials,
+            custom_domain: contactDetails.portfolio ? contactDetails.portfolio.replace(/^https?:\/\//, '') : settings.custom_domain,
+          });
+        } else {
+          await fetch('/api/settings', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+      } catch (err) {
+        console.error('Failed to save resume updates', err);
+      }
+    } else {
+      setIsEditable(true);
+    }
+  };
+
   const atsScore = calculateAtsScore();
 
   return (
@@ -358,17 +452,19 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
         showConfigPanel={showConfigPanel}
         onToggleConfigPanel={() => setShowConfigPanel(!showConfigPanel)}
         isEditable={isEditable}
-        onToggleEditable={() => setIsEditable(!isEditable)}
+        onToggleEditable={handleToggleEditable}
         copied={copied}
         copiedText={copiedText}
         onCopyMarkdown={handleCopyMarkdown}
         onDownloadTxt={handleDownloadTxt}
         onDownloadJSON={handleDownloadJSON}
         onPrint={handlePrint}
+        profiles={allProfiles}
+        isAdminLoggedIn={isAdminLoggedIn}
       />
 
       {/* 2. CUSTOMIZER HUD CONFIGURATION PANEL */}
-      {showConfigPanel && (
+      {showConfigPanel && isAdminLoggedIn && (
         <ResumeConfigPanel
           settings={settings}
           activeTheme={activeTheme}
@@ -386,8 +482,8 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
 
       {/* 3. THE INTERACTIVE RESUME PREVIEW SHEET */}
       <ResumeDocumentView
-        isEditable={isEditable}
-        onExitEdit={() => setIsEditable(false)}
+        isEditable={isEditable && isAdminLoggedIn}
+        onExitEdit={handleToggleEditable}
         activeTheme={activeTheme}
         activeAccent={activeAccent}
         selectedPersona={selectedPersona}
@@ -397,6 +493,8 @@ export default function ResumeCenter({ settings, projects = [], certificates = [
         onUpdateCustomTitle={(persona, title) => setCustomTitles(prev => ({ ...prev, [persona]: title }))}
         customSummaries={customSummaries}
         onUpdateCustomSummary={(persona, summary) => setCustomSummaries(prev => ({ ...prev, [persona]: summary }))}
+        customCategoryNames={customCategoryNames}
+        onUpdateCategoryName={(original, newName) => setCustomCategoryNames(prev => ({ ...prev, [original]: newName }))}
         visibleSections={visibleSections}
         activeSkills={activeSkills}
         activeExperience={activeExperience}

@@ -36,8 +36,6 @@ var EMPTY_SETTINGS = {
   contact_location: "",
   company_name: "",
   company_tagline: "",
-  company_bio: "",
-  company_about_html: "",
   hero_stats: [],
   overview_fourth_stat: { label: "", value: "" }
 };
@@ -1470,8 +1468,7 @@ var aiTools = {
       seo_keywords: input.seo_keywords || "",
       is_featured: input.is_featured ?? true,
       display_order: input.display_order ?? projects.length + 1,
-      created_at: (/* @__PURE__ */ new Date()).toISOString(),
-      project_type: input.project_type || "both"
+      created_at: (/* @__PURE__ */ new Date()).toISOString()
     };
     projects.unshift(newProject);
     await saveProjects(projects);

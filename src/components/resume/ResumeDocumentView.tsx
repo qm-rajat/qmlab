@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
+import { MapPin, Phone, Mail, ExternalLink, Save } from 'lucide-react';
 import { 
   ResumePersona, ResumeTheme, ResumeAccent, VisibleSections, 
   EditableContactDetails 
@@ -18,6 +18,8 @@ interface ResumeDocumentViewProps {
   onUpdateCustomTitle: (persona: ResumePersona, title: string) => void;
   customSummaries: Record<ResumePersona, string>;
   onUpdateCustomSummary: (persona: ResumePersona, summary: string) => void;
+  customCategoryNames: Record<string, string>;
+  onUpdateCategoryName: (original: string, newName: string) => void;
   visibleSections: VisibleSections;
   activeSkills: Skill[];
   activeExperience: Experience[];
@@ -39,6 +41,8 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
   onUpdateCustomTitle,
   customSummaries,
   onUpdateCustomSummary,
+  customCategoryNames,
+  onUpdateCategoryName,
   visibleSections,
   activeSkills,
   activeExperience,
@@ -63,6 +67,9 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
       case 'indigo': return 'border-indigo-600';
       case 'emerald': return 'border-emerald-600';
       case 'slate': return 'border-slate-800';
+      case 'amber': return 'border-amber-600';
+      case 'rose': return 'border-rose-600';
+      case 'purple': return 'border-purple-600';
       default: return 'border-[#0084ff]';
     }
   };
@@ -72,24 +79,27 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
       case 'indigo': return 'text-indigo-600';
       case 'emerald': return 'text-emerald-600';
       case 'slate': return 'text-slate-800';
+      case 'amber': return 'text-amber-600';
+      case 'rose': return 'text-rose-600';
+      case 'purple': return 'text-purple-600';
       default: return 'text-[#0084ff]';
     }
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden print:border-none print:shadow-none print:rounded-none print:p-0">
       {/* EDIT MODE BANNER */}
       {isEditable && (
         <div className="bg-indigo-50 border-b border-indigo-200 px-6 py-2 flex items-center justify-between text-indigo-900 text-xs font-semibold no-print">
           <span className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
-            Live Edit Mode: Click on any text, title, or field below to make live edits before exporting.
+            Edit Mode Active: Customize the fields below to tailor your resume.
           </span>
           <button
             onClick={onExitEdit}
-            className="text-[11px] font-bold text-indigo-700 hover:text-indigo-950 underline cursor-pointer"
+            className="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
           >
-            Done Editing
+            <Save className="w-3.5 h-3.5" /> Save Changes
           </button>
         </div>
       )}
@@ -124,14 +134,14 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
                   <label className="text-[9px] font-mono font-bold text-indigo-600 uppercase block">Target Designation</label>
                   <input
                     type="text"
-                    value={customTitles[selectedPersona]}
+                    value={customTitles[selectedPersona] || ""}
                     onChange={(e) => onUpdateCustomTitle(selectedPersona, e.target.value)}
                     className="text-xs font-bold text-slate-700 uppercase tracking-wider border border-indigo-300 rounded-lg px-2 py-1 w-full bg-indigo-50/40"
                   />
                 </div>
               ) : (
                 <p className={`text-xs font-extrabold uppercase tracking-widest ${getAccentTextClass()}`}>
-                  {customTitles[selectedPersona]}
+                  {customTitles[selectedPersona] || ""}
                 </p>
               )}
             </div>
@@ -203,6 +213,15 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
                       Portfolio <ExternalLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
+
+                  {/* Print-friendly coordinates line showing actual URLs */}
+                  <div className="hidden print:flex flex-wrap items-center gap-2 pt-1 text-[9pt] font-mono text-slate-600 sm:justify-end">
+                    {contactDetails.github && <span>github.com/{contactDetails.github.replace(/^https?:\/\/(www\.)?github\.com\/?/i, '')}</span>}
+                    {contactDetails.github && contactDetails.linkedin && <span>•</span>}
+                    {contactDetails.linkedin && <span>linkedin.com/in/{contactDetails.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/i, '')}</span>}
+                    {(contactDetails.github || contactDetails.linkedin) && contactDetails.portfolio && <span>•</span>}
+                    {contactDetails.portfolio && <span>{contactDetails.portfolio.replace(/^https?:\/\//i, '')}</span>}
+                  </div>
                 </div>
               )}
             </div>
@@ -218,13 +237,13 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
             </h2>
             {isEditable ? (
               <textarea
-                value={customSummaries[selectedPersona]}
+                value={customSummaries[selectedPersona] || ""}
                 onChange={(e) => onUpdateCustomSummary(selectedPersona, e.target.value)}
                 className="w-full text-xs text-slate-700 p-2.5 bg-indigo-50/40 border border-indigo-300 rounded-xl leading-relaxed min-h-[90px]"
               />
             ) : (
               <p className="text-xs text-slate-700 leading-relaxed text-justify">
-                {customSummaries[selectedPersona]}
+                {customSummaries[selectedPersona] || ""}
               </p>
             )}
           </div>
@@ -233,16 +252,34 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
         {/* SECTION 2: TECHNICAL COMPETENCIES */}
         {visibleSections.skills && activeSkills.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-1 mb-2.5 font-mono">
-              Core Technical Competencies &amp; Toolkit
-            </h2>
+            {isEditable ? (
+              <input
+                type="text"
+                value={customCategoryNames["__SkillsHeading__"] !== undefined ? customCategoryNames["__SkillsHeading__"] : "Core Technical Competencies & Toolkit"}
+                onChange={(e) => onUpdateCategoryName("__SkillsHeading__", e.target.value)}
+                className="text-xs font-black text-slate-800 uppercase tracking-widest border-b border-indigo-300 pb-1 mb-2.5 font-mono w-full bg-indigo-50/40 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              />
+            ) : (
+              <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-1 mb-2.5 font-mono">
+                {customCategoryNames["__SkillsHeading__"] || "Core Technical Competencies & Toolkit"}
+              </h2>
+            )}
             <div className="space-y-2">
               {activeSkills.map((categoryObj, idx) => (
                 <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-3 text-xs">
-                  <span className="font-bold text-slate-800 font-mono text-[11px] md:text-right">
-                    {categoryObj.category}:
-                  </span>
-                  <div className="md:col-span-3 flex flex-wrap gap-1">
+                  {isEditable ? (
+                    <input
+                      type="text"
+                      value={customCategoryNames[categoryObj.category] !== undefined ? customCategoryNames[categoryObj.category] : categoryObj.category}
+                      onChange={(e) => onUpdateCategoryName(categoryObj.category, e.target.value)}
+                      className="font-bold text-slate-800 font-mono text-[11px] bg-indigo-50 border border-indigo-200 rounded px-1 py-0.5 md:text-right w-full mb-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    />
+                  ) : (
+                    <span className="font-bold text-slate-800 font-mono text-[11px] md:text-right">
+                      {customCategoryNames[categoryObj.category] || categoryObj.category}:
+                    </span>
+                  )}
+                  <div className="md:col-span-3 flex flex-wrap gap-1 items-start">
                     {categoryObj.items.map((skill, sIdx) => {
                       const skillName = typeof skill === 'string' ? skill : skill.name;
                       return (
@@ -256,7 +293,7 @@ export const ResumeDocumentView: React.FC<ResumeDocumentViewProps> = ({
                           }`}
                           title={isEditable ? 'Click to toggle hide' : ''}
                         >
-                          {skillName}{sIdx < categoryObj.items.length - 1 ? ',' : ''}
+                          {skillName}{sIdx < (categoryObj.items || []).length - 1 ? ',' : ''}
                         </span>
                       );
                     })}

@@ -1,23 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Check, Database, RefreshCw, DownloadCloud, UploadCloud, 
   Shield, Briefcase, GraduationCap, ChevronUp, ChevronDown, Calendar, MapPin, 
-  Building, BookOpen, Award, Sparkles, Globe, ExternalLink, FileCode, Search 
+  Building, BookOpen, Award, Sparkles, Globe, ExternalLink, FileCode, Search, Cpu 
 } from 'lucide-react';
 import { SiteSettings, Experience, Education } from '../../types';
 import RichTextEditor from '../RichTextEditor';
 import { getClientBaseUrl } from '../../lib/seo';
+import { AdminProfilesTab } from './AdminProfilesTab';
+
+export type SettingsSubTab = 'hero' | 'profiles' | 'experience' | 'education' | 'skills' | 'socials' | 'seo' | 'database';
 
 interface AdminSettingsTabProps {
   settings: SiteSettings;
   onUpdateSettings: (settings: SiteSettings) => void;
+  activeSubTab?: SettingsSubTab;
+  onSubTabChange?: (tab: SettingsSubTab) => void;
 }
 
 export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   settings,
   onUpdateSettings,
+  activeSubTab,
+  onSubTabChange,
 }) => {
-  const [settingsSubTab, setSettingsSubTab] = useState<'hero' | 'experience' | 'education' | 'company' | 'skills' | 'socials' | 'seo' | 'database'>('hero');
+  const [internalSubTab, setInternalSubTab] = useState<SettingsSubTab>(activeSubTab || 'hero');
+
+  useEffect(() => {
+    if (activeSubTab) {
+      setInternalSubTab(activeSubTab);
+    }
+  }, [activeSubTab]);
+
+  const currentSubTab = activeSubTab || internalSubTab;
+
+  const handleSelectSubTab = (tab: SettingsSubTab) => {
+    setInternalSubTab(tab);
+    if (onSubTabChange) {
+      onSubTabChange(tab);
+    }
+  };
   
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -141,8 +163,39 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
     onUpdateSettings({ ...settings, education: nextEdu });
   };
 
+  // --- SKILLS CRUD HANDLERS ---
+  const handleAddCategory = () => {
+    const nextSkills = [...(settings.skills || [])];
+    nextSkills.push({ category: 'New Category', items: [] });
+    onUpdateSettings({ ...settings, skills: nextSkills });
+  };
+
+  const handleUpdateCategory = (catIdx: number, newCategoryName: string) => {
+    const nextSkills = [...(settings.skills || [])];
+    if (!nextSkills[catIdx]) return;
+    nextSkills[catIdx].category = newCategoryName;
+    onUpdateSettings({ ...settings, skills: nextSkills });
+  };
+
+  const handleRemoveCategory = (catIdx: number) => {
+    const nextSkills = [...(settings.skills || [])];
+    nextSkills.splice(catIdx, 1);
+    onUpdateSettings({ ...settings, skills: nextSkills });
+  };
+
+  const handleMoveCategory = (idx: number, direction: 'up' | 'down') => {
+    const nextSkills = [...(settings.skills || [])];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= nextSkills.length) return;
+    const temp = nextSkills[idx];
+    nextSkills[idx] = nextSkills[targetIdx];
+    nextSkills[targetIdx] = temp;
+    onUpdateSettings({ ...settings, skills: nextSkills });
+  };
+
   const handleSkillUpdate = (catIdx: number, itemIdx: number, newName: string) => {
-    const nextSkills = [...settings.skills];
+    const nextSkills = [...(settings.skills || [])];
+    if (!nextSkills[catIdx]) return;
     const target = nextSkills[catIdx].items[itemIdx];
     if (typeof target === 'string') {
       nextSkills[catIdx].items[itemIdx] = { name: newName };
@@ -153,16 +206,490 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   };
 
   const handleAddSkill = (catIdx: number) => {
-    const nextSkills = [...settings.skills];
+    const nextSkills = [...(settings.skills || [])];
+    if (!nextSkills[catIdx]) return;
     nextSkills[catIdx].items.push({ name: 'New Skill' });
     onUpdateSettings({ ...settings, skills: nextSkills });
   };
 
   const handleRemoveSkill = (catIdx: number, itemIdx: number) => {
-    const nextSkills = [...settings.skills];
+    const nextSkills = [...(settings.skills || [])];
+    if (!nextSkills[catIdx]) return;
     nextSkills[catIdx].items.splice(itemIdx, 1);
     onUpdateSettings({ ...settings, skills: nextSkills });
   };
+
+  const isStandaloneSection = ['profiles', 'experience', 'education', 'skills'].includes(currentSubTab);
+
+  if (isStandaloneSection) {
+    return (
+      <div className="space-y-6 animate-fade-in text-left">
+        {/* Settings Sub-Tab: Profiles & Domains Manager */}
+        {currentSubTab === 'profiles' && (
+          <AdminProfilesTab
+            settings={settings}
+            onUpdateSettings={onUpdateSettings}
+          />
+        )}
+
+        {/* Settings Sub-Tab: Work Experience Timeline */}
+        {currentSubTab === 'experience' && (
+          <div className="space-y-5 animate-fade-in text-left font-sans">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Work Experience Timeline</h4>
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    {(settings.experience || []).length} Recorded
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Positions and roles configured here dynamically sync across the Overview timeline, Resume Hub document, and ATS exports.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddExperience}
+                className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Experience
+              </button>
+            </div>
+
+            {(!settings.experience || settings.experience.length === 0) ? (
+              <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                <Briefcase className="w-8 h-8 text-slate-300 mx-auto" />
+                <p className="text-xs text-slate-500 font-medium">No work experience entries configured yet.</p>
+                <button
+                  type="button"
+                  onClick={handleAddExperience}
+                  className="px-4 py-2 text-xs font-bold text-primary bg-blue-50 hover:bg-blue-100 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add First Experience Entry
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {settings.experience.map((exp, idx) => (
+                  <div key={idx} className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4 transition-all hover:border-slate-300">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-mono text-xs font-bold flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <h5 className="text-xs font-bold text-slate-900 truncate">
+                          {exp.role || 'Untitled Role'} {exp.company ? `@ ${exp.company}` : ''}
+                        </h5>
+                        {exp.is_current && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveExperience(idx, 'up')}
+                          disabled={idx === 0}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveExperience(idx, 'down')}
+                          disabled={idx === settings.experience.length - 1}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExperience(idx)}
+                          className="p-1 text-rose-400 hover:text-rose-600 rounded ml-1 cursor-pointer"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Role Title</label>
+                        <input
+                          type="text"
+                          value={exp.role}
+                          onChange={(e) => handleUpdateExperience(idx, { role: e.target.value })}
+                          placeholder="e.g. Technical Product Manager"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Company / Organization</label>
+                        <input
+                          type="text"
+                          value={exp.company}
+                          onChange={(e) => handleUpdateExperience(idx, { company: e.target.value })}
+                          placeholder="e.g. Quality Matrix Labs"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Location</label>
+                        <input
+                          type="text"
+                          value={exp.location || ''}
+                          onChange={(e) => handleUpdateExperience(idx, { location: e.target.value })}
+                          placeholder="e.g. New Delhi, India"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Start Date / Year</label>
+                        <input
+                          type="text"
+                          value={exp.start_date || ''}
+                          onChange={(e) => handleUpdateExperience(idx, { start_date: e.target.value })}
+                          placeholder="e.g. 2024 or Jan 2024"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">End Date</label>
+                        <input
+                          type="text"
+                          disabled={exp.is_current}
+                          value={exp.is_current ? 'Present' : (exp.end_date || '')}
+                          onChange={(e) => handleUpdateExperience(idx, { end_date: e.target.value })}
+                          placeholder={exp.is_current ? 'Present' : 'e.g. 2026'}
+                          className="w-full px-3 py-2 text-xs bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="flex items-center pt-5">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={exp.is_current || false}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              handleUpdateExperience(idx, {
+                                is_current: checked,
+                                end_date: checked ? 'Present' : (exp.end_date === 'Present' ? '' : exp.end_date)
+                              });
+                            }}
+                            className="rounded text-primary focus:ring-primary h-4 w-4"
+                          />
+                          Currently Working Here
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-500 uppercase block">Description & Key Contributions</label>
+                      <textarea
+                        value={exp.description}
+                        rows={3}
+                        placeholder="Detail major architectural achievements, metrics, team scope, technologies used..."
+                        onChange={(e) => handleUpdateExperience(idx, { description: e.target.value })}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 leading-relaxed resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Settings Sub-Tab: Academic History & Foundations */}
+        {currentSubTab === 'education' && (
+          <div className="space-y-5 animate-fade-in text-left font-sans">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
+              <div>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-primary" />
+                  <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Academic Background &amp; Education</h4>
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    {(settings.education || []).length} Degrees
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Degrees, fields of study, institutions, and grades displayed on the Overview Academic Timeline and Resume Hub.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddEducation}
+                className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Academic Record
+              </button>
+            </div>
+
+            {(!settings.education || settings.education.length === 0) ? (
+              <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                <GraduationCap className="w-8 h-8 text-slate-300 mx-auto" />
+                <p className="text-xs text-slate-500 font-medium">No education records configured yet.</p>
+                <button
+                  type="button"
+                  onClick={handleAddEducation}
+                  className="px-4 py-2 text-xs font-bold text-primary bg-blue-50 hover:bg-blue-100 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add First Degree
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {settings.education.map((edu, idx) => (
+                  <div key={idx} className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4 transition-all hover:border-slate-300">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-mono text-xs font-bold flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <h5 className="text-xs font-bold text-slate-900 truncate">
+                          {edu.degree} in {edu.field} <span className="text-slate-400 font-normal">({edu.start_year || '—'} – {edu.end_year || 'Present'})</span>
+                        </h5>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveEducation(idx, 'up')}
+                          disabled={idx === 0}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveEducation(idx, 'down')}
+                          disabled={idx === settings.education.length - 1}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEducation(idx)}
+                          className="p-1 text-rose-400 hover:text-rose-600 rounded ml-1 cursor-pointer"
+                          title="Delete degree"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Degree / Credential</label>
+                        <input
+                          type="text"
+                          value={edu.degree}
+                          onChange={(e) => handleUpdateEducation(idx, { degree: e.target.value })}
+                          placeholder="e.g. MBA or B.Tech"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1 sm:col-span-1 lg:col-span-2">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Field of Study / Specialization</label>
+                        <input
+                          type="text"
+                          value={edu.field}
+                          onChange={(e) => handleUpdateEducation(idx, { field: e.target.value })}
+                          placeholder="e.g. Product Management or Computer Science & Engineering"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Institution / University / School</label>
+                        <input
+                          type="text"
+                          value={edu.institution}
+                          onChange={(e) => handleUpdateEducation(idx, { institution: e.target.value })}
+                          placeholder="e.g. DY Patil University"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Start Year</label>
+                        <input
+                          type="number"
+                          value={edu.start_year || ''}
+                          onChange={(e) => handleUpdateEducation(idx, { start_year: parseInt(e.target.value, 10) || 0 })}
+                          placeholder="e.g. 2024"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden font-mono"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">End Year (Optional / Blank if Ongoing)</label>
+                        <input
+                          type="number"
+                          value={edu.end_year || ''}
+                          onChange={(e) => handleUpdateEducation(idx, { end_year: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+                          placeholder="e.g. 2026"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden font-mono"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase block">Grade / CGPA / Value</label>
+                        <input
+                          type="text"
+                          value={edu.grade || ''}
+                          onChange={(e) => handleUpdateEducation(idx, { grade: e.target.value })}
+                          placeholder="e.g. 8.4 CGPA or First Class"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-primary focus:outline-hidden"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Settings Sub-Tab: Skills configuration */}
+        {currentSubTab === 'skills' && (
+          <div className="space-y-6 animate-fade-in text-left font-sans">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-primary" />
+                  <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Tech Competencies</h4>
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    {(settings.skills || []).length} Categories
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Live edit your tech competencies tags below. These updates refresh seamlessly on the landing page grids.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Category
+              </button>
+            </div>
+
+            {(!settings.skills || settings.skills.length === 0) ? (
+              <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                <Cpu className="w-8 h-8 text-slate-300 mx-auto" />
+                <p className="text-xs text-slate-500 font-medium">No skill categories configured yet.</p>
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  className="px-4 py-2 text-xs font-bold text-primary bg-blue-50 hover:bg-blue-100 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add First Category
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {settings.skills.map((cat, catIdx) => (
+                  <div key={catIdx} className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4 transition-all hover:border-slate-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2 w-full max-w-sm">
+                        <span className="w-6 h-6 shrink-0 rounded-lg bg-slate-100 text-slate-600 font-mono text-xs font-bold flex items-center justify-center">
+                          {catIdx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={cat.category}
+                          onChange={(e) => handleUpdateCategory(catIdx, e.target.value)}
+                          placeholder="Category Name (e.g. Frontend, Languages)"
+                          className="flex-1 px-3 py-1.5 text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white border border-transparent focus:border-slate-300 rounded-lg focus:outline-hidden transition-colors"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveCategory(catIdx, 'up')}
+                          disabled={catIdx === 0}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveCategory(catIdx, 'down')}
+                          disabled={catIdx === settings.skills.length - 1}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCategory(catIdx)}
+                          className="p-1 text-rose-400 hover:text-rose-600 rounded ml-1 cursor-pointer"
+                          title="Delete category"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {cat.items.map((skill, itemIdx) => {
+                        const skillName = typeof skill === 'string' ? skill : skill.name;
+                        
+                        return (
+                          <div key={itemIdx} className="bg-slate-50 rounded-xl border border-slate-200 p-2 space-y-2 flex flex-col justify-between group/skill relative transition-shadow hover:shadow-xs focus-within:bg-white focus-within:border-primary">
+                            <div className="relative pr-6">
+                              <input
+                                type="text"
+                                value={skillName}
+                                onChange={(e) => handleSkillUpdate(catIdx, itemIdx, e.target.value)}
+                                className="w-full text-xs font-semibold text-slate-800 bg-transparent focus:outline-hidden"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSkill(catIdx, itemIdx)}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-rose-500 rounded cursor-pointer transition-colors"
+                                title="Delete skill"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => handleAddSkill(catIdx)}
+                        className="min-h-[38px] px-3 py-1.5 border border-dashed border-slate-300 text-slate-500 hover:text-slate-800 hover:border-slate-400 hover:bg-slate-50 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <Plus className="w-3 h-3" /> Add Skill
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in text-left">
@@ -171,14 +698,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         <p className="text-xs text-slate-400 mt-0.5">Instantly update bio descriptions, timelines and custom social coordinates.</p>
       </div>
 
-      {/* Sub-tabs header */}
+      {/* Sub-tabs header - strictly settings-specific (no duplicates) */}
       <div className="flex flex-wrap items-center gap-1 border-b border-slate-100 pb-1.5 font-sans">
         {[
           { label: 'Hero & Summary', value: 'hero' },
-          { label: 'Work Experience', value: 'experience' },
-          { label: 'Academic History', value: 'education' },
-          { label: 'Company Profile', value: 'company' },
-          { label: 'Skills lists', value: 'skills' },
           { label: 'Social connections', value: 'socials' },
           { label: 'Domain & SEO', value: 'seo' },
           { label: 'Database & Security', value: 'database' }
@@ -186,9 +709,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
           <button
             key={st.value}
             type="button"
-            onClick={() => setSettingsSubTab(st.value as any)}
+            onClick={() => handleSelectSubTab(st.value as SettingsSubTab)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer transition-colors ${
-              settingsSubTab === st.value
+              currentSubTab === st.value
                 ? 'bg-primary-light text-primary font-bold shadow-xs'
                 : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
             }`}
@@ -199,7 +722,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       </div>
 
       {/* Settings Sub-Tab: Hero Context */}
-      {settingsSubTab === 'hero' && (
+      {currentSubTab === 'hero' && (
         <div className="space-y-4 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -213,13 +736,44 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="set-tagline" className="text-xs font-bold text-slate-505 block">Display Tagline</label>
+              <label htmlFor="set-tagline" className="text-xs font-bold text-slate-505 block">
+                Display Tagline / Typewriter Roles
+              </label>
               <input
                 id="set-tagline"
                 type="text"
-                value={settings.hero_tagline}
+                value={settings.hero_tagline || ''}
+                placeholder="e.g. Technical Product Manager, Full-Stack Developer, Technical SEO, IT Support"
                 onChange={(e) => onUpdateSettings({ ...settings, hero_tagline: e.target.value })}
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+              <p className="text-[11px] text-slate-400">
+                Directly controls the hero animated typewriter. Enter a single tagline or comma-separated roles to rotate through.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label htmlFor="set-brand-name" className="text-xs font-bold text-slate-505 block">Brand / Studio Name</label>
+              <input
+                id="set-brand-name"
+                type="text"
+                value={settings.company_name || 'QM Labs'}
+                onChange={(e) => onUpdateSettings({ ...settings, company_name: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                placeholder="e.g. QM Labs"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="set-brand-tagline" className="text-xs font-bold text-slate-505 block">Brand Tagline</label>
+              <input
+                id="set-brand-tagline"
+                type="text"
+                value={settings.company_tagline || 'Quality Builds Trust. Momentum Drives Growth.'}
+                onChange={(e) => onUpdateSettings({ ...settings, company_tagline: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                placeholder="e.g. Quality Builds Trust."
               />
             </div>
           </div>
@@ -260,15 +814,37 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
               <label htmlFor="set-location" className="text-xs font-bold text-slate-505 block">Base Location</label>
               <input
                 id="set-location"
                 type="text"
                 value={settings.contact_location || ''}
-                placeholder="e.g. Delhi, India"
+                placeholder="e.g. New Delhi, India"
                 onChange={(e) => onUpdateSettings({ ...settings, contact_location: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="set-contact-email" className="text-xs font-bold text-slate-505 block">Contact Email</label>
+              <input
+                id="set-contact-email"
+                type="email"
+                value={settings.contact_email || ''}
+                placeholder="e.g. rajat.pilgrimpackages@gmail.com"
+                onChange={(e) => onUpdateSettings({ ...settings, contact_email: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="set-contact-phone" className="text-xs font-bold text-slate-505 block">Phone / WhatsApp</label>
+              <input
+                id="set-contact-phone"
+                type="text"
+                value={settings.contact_phone || ''}
+                placeholder="e.g. +91 8984550754"
+                onChange={(e) => onUpdateSettings({ ...settings, contact_phone: e.target.value })}
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
               />
             </div>
@@ -373,580 +949,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         </div>
       )}
 
-      {/* Settings Sub-Tab: Work Experience Timeline */}
-      {settingsSubTab === 'experience' && (
-        <div className="space-y-5 animate-fade-in text-left font-sans">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
-            <div>
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-primary" />
-                <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Work Experience Timeline</h4>
-                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                  {(settings.experience || []).length} Recorded
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Positions and roles configured here dynamically sync across the Overview timeline, Resume Hub document, and ATS exports.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddExperience}
-              className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
-            >
-              <Plus className="w-4 h-4" /> Add Experience
-            </button>
-          </div>
-
-          {(!settings.experience || settings.experience.length === 0) ? (
-            <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
-              <Briefcase className="w-8 h-8 text-slate-300 mx-auto" />
-              <p className="text-xs text-slate-500 font-medium">No work experience entries configured yet.</p>
-              <button
-                type="button"
-                onClick={handleAddExperience}
-                className="px-3 py-1.5 text-xs font-bold text-primary bg-primary-light rounded-lg hover:bg-blue-100 cursor-pointer inline-flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add First Experience Record
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {settings.experience.map((exp, idx) => (
-                <div key={idx} className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4 relative group/exp hover:border-slate-300 transition-all">
-                  {/* Card Header */}
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center">
-                        {idx + 1}
-                      </span>
-                      <h5 className="text-xs font-black text-slate-900 truncate">
-                        {exp.role || 'Untitled Role'} <span className="text-slate-400 font-normal">at</span> {exp.company || 'Untitled Company'}
-                      </h5>
-                      {exp.is_current && (
-                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
-                          Current Role
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveExperience(idx, 'up')}
-                        disabled={idx === 0}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                        title="Move Up"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveExperience(idx, 'down')}
-                        disabled={idx === settings.experience.length - 1}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                        title="Move Down"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExperience(idx)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
-                        title="Delete Experience"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Input Form Fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Role / Designation
-                      </label>
-                      <input
-                        type="text"
-                        value={exp.role}
-                        placeholder="e.g. Full Stack Developer"
-                        onChange={(e) => handleUpdateExperience(idx, { role: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-semibold"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Company / Organization
-                      </label>
-                      <input
-                        type="text"
-                        value={exp.company}
-                        placeholder="e.g. QM Labs"
-                        onChange={(e) => handleUpdateExperience(idx, { company: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Location
-                      </label>
-                      <input
-                        type="text"
-                        value={exp.location}
-                        placeholder="e.g. Bhubaneswar, India / Remote"
-                        onChange={(e) => handleUpdateExperience(idx, { location: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Start Date
-                      </label>
-                      <input
-                        type="text"
-                        value={exp.start_date}
-                        placeholder="e.g. Jan 2023 or 2022"
-                        onChange={(e) => handleUpdateExperience(idx, { start_date: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        End Date
-                      </label>
-                      <input
-                        type="text"
-                        value={exp.is_current ? 'Present' : (exp.end_date || '')}
-                        disabled={exp.is_current}
-                        placeholder="e.g. Dec 2024"
-                        onChange={(e) => handleUpdateExperience(idx, { end_date: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono disabled:opacity-60 disabled:bg-slate-100"
-                      />
-                    </div>
-
-                    <div className="pb-2">
-                      <label className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={!!exp.is_current}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            handleUpdateExperience(idx, {
-                              is_current: checked,
-                              end_date: checked ? 'Present' : (exp.end_date === 'Present' ? '' : exp.end_date)
-                            });
-                          }}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-slate-700">Currently Working Here</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                      Description & Key Contributions
-                    </label>
-                    <textarea
-                      value={exp.description}
-                      rows={2}
-                      placeholder="Detail major architectural achievements, metrics, team scope, technologies used..."
-                      onChange={(e) => handleUpdateExperience(idx, { description: e.target.value })}
-                      className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 leading-relaxed resize-none"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Settings Sub-Tab: Academic History & Foundations */}
-      {settingsSubTab === 'education' && (
-        <div className="space-y-5 animate-fade-in text-left font-sans">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-150">
-            <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-primary" />
-                <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest font-mono">Academic Background & Education</h4>
-                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                  {(settings.education || []).length} Degrees
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Degrees, fields of study, institutions, and grades displayed on the Overview Academic Timeline and Resume Hub.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddEducation}
-              className="px-3.5 py-2 text-xs font-bold bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
-            >
-              <Plus className="w-4 h-4" /> Add Academic Record
-            </button>
-          </div>
-
-          {(!settings.education || settings.education.length === 0) ? (
-            <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-3">
-              <GraduationCap className="w-8 h-8 text-slate-300 mx-auto" />
-              <p className="text-xs text-slate-500 font-medium">No education records configured yet.</p>
-              <button
-                type="button"
-                onClick={handleAddEducation}
-                className="px-3 py-1.5 text-xs font-bold text-primary bg-primary-light rounded-lg hover:bg-blue-100 cursor-pointer inline-flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add First Academic Record
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {settings.education.map((edu, idx) => (
-                <div key={idx} className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4 relative group/edu hover:border-slate-300 transition-all">
-                  {/* Card Header */}
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center">
-                        {idx + 1}
-                      </span>
-                      <h5 className="text-xs font-black text-slate-900 truncate">
-                        {edu.degree || 'Degree'} in {edu.field || 'Field of Study'}
-                      </h5>
-                      <span className="text-[10px] font-mono text-slate-500">
-                        ({edu.start_year}{edu.end_year ? ` – ${edu.end_year}` : ' – Present'})
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveEducation(idx, 'up')}
-                        disabled={idx === 0}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                        title="Move Up"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveEducation(idx, 'down')}
-                        disabled={idx === settings.education.length - 1}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                        title="Move Down"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveEducation(idx)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
-                        title="Delete Academic Record"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Input Form Fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Degree / Credential
-                      </label>
-                      <input
-                        type="text"
-                        value={edu.degree}
-                        placeholder="e.g. B.Tech, M.S., B.Sc"
-                        onChange={(e) => handleUpdateEducation(idx, { degree: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-semibold"
-                      />
-                    </div>
-
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Field of Study / Specialization
-                      </label>
-                      <input
-                        type="text"
-                        value={edu.field}
-                        placeholder="e.g. Computer Science & Engineering"
-                        onChange={(e) => handleUpdateEducation(idx, { field: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                      Institution / University / School
-                    </label>
-                    <input
-                      type="text"
-                      value={edu.institution}
-                      placeholder="e.g. Silicon Institute of Technology, Bhubaneswar"
-                      onChange={(e) => handleUpdateEducation(idx, { institution: e.target.value })}
-                      className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Start Year
-                      </label>
-                      <input
-                        type="number"
-                        value={edu.start_year || ''}
-                        placeholder="e.g. 2018"
-                        onChange={(e) => handleUpdateEducation(idx, { start_year: parseInt(e.target.value, 10) || 0 })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        End Year (Optional / Blank if Ongoing)
-                      </label>
-                      <input
-                        type="number"
-                        value={edu.end_year || ''}
-                        placeholder="e.g. 2022"
-                        onChange={(e) => handleUpdateEducation(idx, { end_year: e.target.value ? parseInt(e.target.value, 10) : undefined })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
-                        Grade / CGPA / Value
-                      </label>
-                      <input
-                        type="text"
-                        value={edu.grade || ''}
-                        placeholder="e.g. 8.4 CGPA or First Class"
-                        onChange={(e) => handleUpdateEducation(idx, { grade: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Settings Sub-Tab: Company Profile */}
-      {settingsSubTab === 'company' && (
-        <div className="space-y-5 animate-fade-in text-left font-sans">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1 text-left">
-              <label className="text-xs font-bold text-slate-500 block">Company Name</label>
-              <input
-                type="text"
-                value={settings.company_name || 'QM Labs'}
-                onChange={(e) => onUpdateSettings({ ...settings, company_name: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-              />
-            </div>
-            <div className="space-y-1 text-left">
-              <label className="text-xs font-bold text-slate-500 block">Company Tagline</label>
-              <input
-                type="text"
-                value={settings.company_tagline || 'Quality Builds Trust. Momentum Drives Growth.'}
-                onChange={(e) => onUpdateSettings({ ...settings, company_tagline: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1 text-left">
-            <label className="text-xs font-bold text-slate-500 block">Company Bio / Short Intro</label>
-            <textarea
-              value={settings.company_bio || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, company_bio: e.target.value })}
-              rows={2}
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
-            />
-          </div>
-
-          <div className="space-y-1 text-left">
-            <label className="text-xs font-bold text-slate-500 block">Public Contact Email</label>
-            <input
-              type="text"
-              value={settings.contact_email || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, contact_email: e.target.value })}
-              placeholder="e.g. hello@qmlabs.com"
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-            />
-          </div>
-
-          <div className="space-y-1 px-1 text-left">
-            <label className="text-xs font-bold text-slate-500 block mb-1">Detailed Company Profile / Pitch (Rich Text Editor)</label>
-            <RichTextEditor
-              value={settings.company_about_html || ''}
-              onChange={(val) => onUpdateSettings({ ...settings, company_about_html: val })}
-              placeholder="Explain what your company does in detail..."
-            />
-          </div>
-
-          {/* Company Services list editor */}
-          <div className="space-y-3 pt-3 border-t border-slate-100 text-left">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-widest">Company Services & Capabilities</h4>
-              <button
-                type="button"
-                onClick={() => {
-                  const services = settings.company_services || [];
-                  onUpdateSettings({
-                    ...settings,
-                    company_services: [...services, { title: 'New Service', description: 'Service description...', icon_name: 'Cpu' }]
-                  });
-                }}
-                className="px-2.5 py-1 text-[10px] font-bold bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3 h-3" /> Add Service
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(settings.company_services || []).map((srv, sIdx) => {
-                const iconSelectVal = srv.icon_name || 'Cpu';
-                return (
-                  <div key={sIdx} className="p-4 bg-slate-50 rounded-2xl border border-slate-150 space-y-3 relative group/srv">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const filtered = (settings.company_services || []).filter((_, i) => i !== sIdx);
-                        onUpdateSettings({ ...settings, company_services: filtered });
-                      }}
-                      className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover/srv:opacity-100 cursor-pointer"
-                      title="Remove Service"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="col-span-2 text-left">
-                          <label className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Title</label>
-                          <input
-                            type="text"
-                            value={srv.title}
-                            onChange={(e) => {
-                              const next = [...(settings.company_services || [])];
-                              next[sIdx] = { ...srv, title: e.target.value };
-                              onUpdateSettings({ ...settings, company_services: next });
-                            }}
-                            className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs text-slate-800"
-                          />
-                        </div>
-                        <div className="text-left">
-                          <label className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Icon (Lucide)</label>
-                          <select
-                            value={iconSelectVal}
-                            onChange={(e) => {
-                              const next = [...(settings.company_services || [])];
-                              next[sIdx] = { ...srv, icon_name: e.target.value };
-                              onUpdateSettings({ ...settings, company_services: next });
-                            }}
-                            className="w-full px-1 py-1 bg-white border border-slate-200 rounded-md text-xs cursor-pointer text-slate-800"
-                          >
-                            <option value="Cpu">Cpu</option>
-                            <option value="TrendingUp">TrendingUp</option>
-                            <option value="CheckCircle">CheckCircle</option>
-                            <option value="Activity">Activity</option>
-                            <option value="Mail">Mail</option>
-                            <option value="FileText">FileText</option>
-                            <option value="Search">Search</option>
-                            <option value="Award">Award</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="text-left">
-                        <label className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Description</label>
-                        <textarea
-                          value={srv.description}
-                          onChange={(e) => {
-                            const next = [...(settings.company_services || [])];
-                            next[sIdx] = { ...srv, description: e.target.value };
-                            onUpdateSettings({ ...settings, company_services: next });
-                          }}
-                          rows={2}
-                          className="w-full px-2 py-1 bg-white border border-slate-200 rounded-md text-xs resize-none text-slate-805"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Sub-Tab: Skills configuration */}
-      {settingsSubTab === 'skills' && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 leading-relaxed">
-            🌟 Live edit your tech competencies tags below. These updates refresh seamlessly on the landing page grids.
-          </div>
-
-          <div className="space-y-6">
-            {settings.skills.map((cat, catIdx) => (
-              <div key={catIdx} className="bg-slate-50/30 p-4 rounded-2xl border border-slate-150/60 text-left space-y-3">
-                <h4 className="text-xs font-bold text-slate-700 tracking-wider uppercase border-b border-slate-100 pb-1 flex items-center justify-between">
-                  {cat.category}
-                </h4>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {cat.items.map((skill, itemIdx) => {
-                    const skillName = typeof skill === 'string' ? skill : skill.name;
-                    
-                    
-                    return (
-                      <div key={itemIdx} className="bg-white rounded-xl border border-slate-200 p-2.5 space-y-2 flex flex-col justify-between group/skill relative transition-shadow hover:shadow-xs">
-                        <div className="relative pr-5">
-                          <input
-                            type="text"
-                            value={skillName}
-                            onChange={(e) => handleSkillUpdate(catIdx, itemIdx, e.target.value)}
-                            className="w-full text-xs font-bold text-slate-800 bg-transparent focus:outline-hidden border-b border-transparent focus:border-slate-300 pb-0.5"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSkill(catIdx, itemIdx)}
-                            className="absolute -right-1 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover/skill:opacity-100 transition-opacity cursor-pointer text-xs font-bold"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    onClick={() => handleAddSkill(catIdx)}
-                    className="px-3 py-1.5 border border-dashed border-slate-200 text-slate-400 hover:text-slate-700 rounded-lg text-xs font-medium flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                  >
-                    + Add Tag
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Settings Sub-Tab: Social Coordinates */}
-      {settingsSubTab === 'socials' && (
+      {currentSubTab === 'socials' && (
         <div className="space-y-4 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -994,7 +998,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       )}
 
       {/* Settings Sub-Tab: Maps & Index */}
-      {settingsSubTab === 'seo' && (
+      {currentSubTab === 'seo' && (
         <div className="space-y-6 animate-fade-in text-left">
           {/* DYNAMIC DOMAIN & SEO INFRASTRUCTURE CARD */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 border border-slate-700 shadow-sm space-y-4">
@@ -1146,7 +1150,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         </div>
       )}
       
-      {settingsSubTab === 'database' && (
+      {currentSubTab === 'database' && (
         <div className="space-y-6 animate-fade-in text-left">
           {sysMessage && (
             <div className={`p-4 rounded-2xl border flex items-start gap-2.5 text-xs ${

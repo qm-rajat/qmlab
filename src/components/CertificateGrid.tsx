@@ -12,44 +12,54 @@ interface CertificateGridProps {
   certificates: Certificate[];
 }
 
-type CategoryFilter = 'all' | 'cybersecurity' | 'data-science' | 'web-development' | 'seo-digital-marketing';
-
 export default function CertificateGrid({ certificates }: CertificateGridProps) {
-  const [filter, setFilter] = useState<CategoryFilter>('all');
+  const [filter, setFilter] = useState<string>('all');
   const [issuerFilter, setIssuerFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Category labels mapping
-  const categoryNames: Record<CategoryFilter, string> = {
-    all: 'All Credentials',
-    cybersecurity: 'Cybersecurity & Audits',
-    'data-science': 'Data Science & ML',
-    'web-development': 'Web Development',
-    'seo-digital-marketing': 'SEO & Digital Strategy'
+  // Dynamic unique category tags from certificates
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    certificates.forEach(c => {
+      if (c.category) set.add(c.category);
+    });
+    return Array.from(set);
+  }, [certificates]);
+
+  const formatCategoryLabel = (cat: string) => {
+    if (cat === 'all') return 'All Credentials';
+    if (cat === 'cybersecurity') return 'Cybersecurity & Audits';
+    if (cat === 'data-science') return 'Data Science & ML';
+    if (cat === 'web-development') return 'Web Development';
+    if (cat === 'seo-digital-marketing') return 'SEO & Digital Strategy';
+    // If it's already a formatted custom string (e.g. "Product Management"), capitalize/display cleanly
+    return cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const getShorthandCategory = (cat: string) => {
-    switch (cat) {
-      case 'cybersecurity': return 'Security & Audits';
-      case 'data-science': return 'Data & ML';
-      case 'web-development': return 'Web Engineering';
-      case 'seo-digital-marketing': return 'SEO & Growth';
-      default: return 'Accreditation';
-    }
+    const lower = (cat || '').toLowerCase();
+    if (lower.includes('cyber') || lower.includes('security')) return 'Security & Audits';
+    if (lower.includes('data') || lower.includes('analytics') || lower.includes('ml')) return 'Data & ML';
+    if (lower.includes('web') || lower.includes('dev') || lower.includes('full-stack')) return 'Web Engineering';
+    if (lower.includes('seo') || lower.includes('marketing') || lower.includes('growth')) return 'SEO & Growth';
+    if (lower.includes('product') || lower.includes('management')) return 'Product Strategy';
+    if (lower.includes('qa') || lower.includes('testing') || lower.includes('automation')) return 'QA & Testing';
+    return cat || 'Accreditation';
   };
 
   // Color configurations for categories matching portfolio identity
   const getCategoryTheme = (cat: string) => {
-    switch (cat) {
-      case 'cybersecurity': return 'bg-rose-50 border-rose-200 text-rose-600';
-      case 'data-science': return 'bg-emerald-50 border-emerald-200 text-emerald-600';
-      case 'web-development': return 'bg-blue-50 border-blue-200 text-[#0084ff]';
-      case 'seo-digital-marketing': return 'bg-amber-50 border-amber-200 text-amber-600';
-      default: return 'bg-slate-50 border-slate-200 text-slate-600';
-    }
+    const lower = (cat || '').toLowerCase();
+    if (lower.includes('cyber') || lower.includes('security')) return 'bg-rose-50 border-rose-200 text-rose-600';
+    if (lower.includes('data') || lower.includes('analytics') || lower.includes('ml')) return 'bg-emerald-50 border-emerald-200 text-emerald-600';
+    if (lower.includes('web') || lower.includes('dev')) return 'bg-blue-50 border-blue-200 text-[#0084ff]';
+    if (lower.includes('seo') || lower.includes('marketing')) return 'bg-amber-50 border-amber-200 text-amber-600';
+    if (lower.includes('product')) return 'bg-purple-50 border-purple-200 text-purple-600';
+    if (lower.includes('qa') || lower.includes('testing')) return 'bg-sky-50 border-sky-200 text-sky-600';
+    return 'bg-slate-50 border-slate-200 text-slate-600';
   };
 
   // Unique issuers list
@@ -63,7 +73,7 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
 
   // Filter list
   const filteredCerts = useMemo(() => {
-    return certificates.filter((c) => {
+    return (certificates || []).filter((c) => {
       // Category filter
       if (filter !== 'all' && c.category !== filter) return false;
       
@@ -150,7 +160,7 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
           {/* Quick Metrics Badges */}
           <div className="md:col-span-5 grid grid-cols-3 gap-3 text-center">
             <div className="p-3 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-xs">
-              <div className="text-2xl font-black text-white font-mono">{certificates.length}</div>
+              <div className="text-2xl font-black text-white font-mono">{(certificates || []).length}</div>
               <div className="text-[10px] font-mono text-slate-300 uppercase tracking-wider mt-0.5">Accreditations</div>
             </div>
             <div className="p-3 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-xs">
@@ -231,11 +241,11 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
             <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mr-1">
               Domain:
             </span>
-            {(Object.keys(categoryNames) as CategoryFilter[]).map((key) => {
+            {['all', ...availableCategories].map((key) => {
               const isActive = filter === key;
               const count = key === 'all' 
-                ? certificates.length 
-                : certificates.filter(c => c.category === key).length;
+                ? (certificates || []).length 
+                : (certificates || []).filter(c => c.category === key).length;
 
               return (
                 <button
@@ -250,7 +260,7 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60'
                   }`}
                 >
-                  {categoryNames[key]} <span className="opacity-60 font-mono text-[11px]">({count})</span>
+                  {formatCategoryLabel(key)} <span className="opacity-60 font-mono text-[11px]">({count})</span>
                 </button>
               );
             })}
@@ -386,16 +396,16 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
                     )}
 
                     {/* Skill Tags */}
-                    {cert.skills && cert.skills.length > 0 && (
+                    {cert.skills && (cert.skills || []).length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-1">
                         {cert.skills.slice(0, 3).map((skill) => (
                           <span key={skill} className="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md font-semibold">
                             {skill}
                           </span>
                         ))}
-                        {cert.skills.length > 3 && (
+                        {(cert.skills || []).length > 3 && (
                           <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-md">
-                            +{cert.skills.length - 3}
+                            +{(cert.skills || []).length - 3}
                           </span>
                         )}
                       </div>

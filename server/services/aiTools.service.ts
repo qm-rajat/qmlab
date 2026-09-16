@@ -141,7 +141,6 @@ export const aiTools = {
       is_featured: input.is_featured ?? true,
       display_order: input.display_order ?? (projects.length + 1),
       created_at: new Date().toISOString(),
-      project_type: input.project_type || "both",
     };
 
     projects.unshift(newProject);
@@ -635,6 +634,11 @@ export const aiTools = {
       overview_fourth_stat: {
         ...settings.overview_fourth_stat,
         ...(updates.overview_fourth_stat || {}),
+      },
+      // Deep merge resume contact details if provided
+      resume_contact_details: {
+        ...(settings.resume_contact_details || {}),
+        ...(updates.resume_contact_details || {}),
       },
     };
 

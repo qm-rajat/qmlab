@@ -138,8 +138,8 @@ export default function App() {
               <OverviewView
                 settings={settings}
                 projects={projects}
-                certificatesCount={certificates.length}
-                uniqueBlogCatsCount={uniqueBlogCats.length}
+                certificatesCount={(certificates || []).length}
+                uniqueBlogCatsCount={(uniqueBlogCats || []).length}
                 skillSearch={skillSearch}
                 selectedSkillCat={selectedSkillCat}
                 onSelectSkillCat={setSelectedSkillCat}
@@ -205,7 +205,7 @@ export default function App() {
                 exit={{ opacity: 0 }}
                 className="space-y-10 py-6"
               >
-                <div className="text-center space-y-2">
+                <div className="text-center space-y-2 no-print">
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">Interactive Resume Hub</h2>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
                     Customize and export targeted resumes for different professional personas: Full-Stack Engineering, Technical SEO, QA, and Cybersecurity.
@@ -215,6 +215,8 @@ export default function App() {
                   settings={settings} 
                   projects={projects}
                   certificates={certificates}
+                  isAdminLoggedIn={isAdminLoggedIn}
+                  onUpdateSettings={handleUpdateSettings}
                 />
               </motion.div>
             } />

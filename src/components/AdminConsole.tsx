@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Shield, LayoutDashboard, FileCode, Award, Inbox, Settings, LogOut, Mail, BookOpen, Bot, Sparkles, BarChart2
+  Shield, LayoutDashboard, FileCode, Award, Inbox, Settings, LogOut, Mail, BookOpen, Bot, Sparkles, BarChart2,
+  Briefcase, GraduationCap, Cpu, Layers
 } from 'lucide-react';
 import { Project, Blog, Certificate, Contact, SiteSettings } from '../types';
 import { AdminLoginView } from './admin/AdminLoginView';
@@ -10,7 +11,7 @@ import { AdminBlogsTab } from './admin/AdminBlogsTab';
 import { AdminCertificatesTab } from './admin/AdminCertificatesTab';
 import { AdminContactsTab } from './admin/AdminContactsTab';
 import { AdminSmtpTab } from './admin/AdminSmtpTab';
-import { AdminSettingsTab } from './admin/AdminSettingsTab';
+import { AdminSettingsTab, SettingsSubTab } from './admin/AdminSettingsTab';
 import { AdminAiTab } from './admin/AdminAiTab';
 import { AdminDeleteModal } from './admin/AdminDeleteModal';
 import AdminAnalyticsTab from './admin/AdminAnalyticsTab';
@@ -28,7 +29,20 @@ interface AdminConsoleProps {
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
 
-type AdminTab = 'dashboard' | 'analytics' | 'projects' | 'blogs' | 'certs' | 'contacts' | 'ai' | 'smtp' | 'settings';
+export type AdminTab = 
+  | 'dashboard' 
+  | 'analytics' 
+  | 'profiles'
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'projects' 
+  | 'blogs' 
+  | 'certs' 
+  | 'contacts' 
+  | 'ai' 
+  | 'smtp' 
+  | 'settings';
 
 export default function AdminConsole({
   settings,
@@ -186,6 +200,10 @@ export default function AdminConsole({
           {[
             { label: 'Admin Metrics', value: 'dashboard', icon: LayoutDashboard, alert: unreadContactCount > 0 ? `${unreadContactCount}` : null },
             { label: 'Traffic Analytics', value: 'analytics', icon: BarChart2 },
+            { label: 'Profiles & Domains', value: 'profiles', icon: Layers },
+            { label: 'Work Experience', value: 'experience', icon: Briefcase },
+            { label: 'Academic History', value: 'education', icon: GraduationCap },
+            { label: 'Skills lists', value: 'skills', icon: Cpu },
             { label: 'Project Portfolio', value: 'projects', icon: FileCode },
             { label: 'Technical Blogs', value: 'blogs', icon: BookOpen },
             { label: 'Certifications', value: 'certs', icon: Award },
@@ -255,6 +273,7 @@ export default function AdminConsole({
               projects={projects}
               onUpdateProjects={onUpdateProjects}
               onDeleteProjectRequest={(id, title) => setDeleteConfirm({ id, type: 'project', title })}
+              settings={settings}
             />
           )}
 
@@ -271,6 +290,7 @@ export default function AdminConsole({
               certificates={certificates}
               onUpdateCertificates={onUpdateCertificates}
               onDeleteCertificateRequest={(id, title) => setDeleteConfirm({ id, type: 'certificate', title })}
+              settings={settings}
             />
           )}
 
@@ -302,10 +322,24 @@ export default function AdminConsole({
             />
           )}
 
-          {activeTab === 'settings' && (
+          {['settings', 'profiles', 'experience', 'education', 'skills'].includes(activeTab) && (
             <AdminSettingsTab
               settings={settings}
               onUpdateSettings={onUpdateSettings}
+              activeSubTab={
+                activeTab === 'profiles' ? 'profiles' :
+                activeTab === 'experience' ? 'experience' :
+                activeTab === 'education' ? 'education' :
+                activeTab === 'skills' ? 'skills' :
+                undefined
+              }
+              onSubTabChange={(subTab: SettingsSubTab) => {
+                if (['profiles', 'experience', 'education', 'skills'].includes(subTab)) {
+                  setActiveTab(subTab as AdminTab);
+                } else {
+                  setActiveTab('settings');
+                }
+              }}
             />
           )}
         </div>

@@ -242,11 +242,8 @@ export default function BlogPost({
         <div className="space-y-0.5 flex-1">
           <div className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
             <span>Written by Rajat Kumar Dash</span>
-            <span className="text-[10px] font-mono text-[#0084ff] bg-blue-50 px-2 py-0.5 rounded-full font-bold">Verified Author</span>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Full-Stack Developer, Technical SEO Specialist, and Software Engineer at QM Labs.
-          </p>
+          {/* Bio line hidden as requested */}
         </div>
       </div>
 

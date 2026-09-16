@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
-  Zap, FileCheck, SlidersHorizontal, Edit3, Check, Copy, 
-  FileText, Download, Printer 
+  Zap, FileCheck, SlidersHorizontal, Edit3, Save, Check, Copy, 
+  FileText, Download, Printer, Target
 } from 'lucide-react';
-import { ResumePersona, PERSONA_META } from './resumeTypes';
+import { ResumePersona, PERSONA_META, ICON_MAP } from './resumeTypes';
+import { DomainProfile } from '../../types';
 
 interface ResumeHeaderControlsProps {
   atsScore: number;
@@ -19,6 +20,8 @@ interface ResumeHeaderControlsProps {
   onDownloadTxt: () => void;
   onDownloadJSON: () => void;
   onPrint: () => void;
+  profiles?: DomainProfile[];
+  isAdminLoggedIn?: boolean;
 }
 
 export const ResumeHeaderControls: React.FC<ResumeHeaderControlsProps> = ({
@@ -35,7 +38,31 @@ export const ResumeHeaderControls: React.FC<ResumeHeaderControlsProps> = ({
   onDownloadTxt,
   onDownloadJSON,
   onPrint,
+  profiles,
+  isAdminLoggedIn = false,
 }) => {
+  // Determine list of personas to display
+  const activeProfilesList = (profiles && profiles.length > 0)
+    ? profiles.map(p => ({
+        id: p.id,
+        name: p.name,
+        icon: (p.icon_name && ICON_MAP[p.icon_name]) ? ICON_MAP[p.icon_name] : Target
+      }))
+    : (Object.keys(PERSONA_META)).map(key => ({
+        id: key,
+        name: key === 'general' 
+          ? 'Full-Stack Developer' 
+          : key === 'product'
+          ? 'Product Manager (TPM)'
+          : key === 'seo' 
+          ? 'Technical SEO & Analytics' 
+          : key === 'data' 
+          ? 'Data Science & ML' 
+          : key === 'qa' 
+          ? 'QA & Automation' 
+          : 'Cybersecurity',
+        icon: PERSONA_META[key]?.icon || Target
+      }));
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 md:p-6 no-print">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -54,42 +81,49 @@ export const ResumeHeaderControls: React.FC<ResumeHeaderControlsProps> = ({
             Adaptive Resume &amp; Dossier Hub
           </h3>
           <p className="text-xs text-slate-500 max-w-xl">
-            Target tailored personas, customize active sections and competencies, toggle live draft edits, and export directly as PDF, ATS Text, Markdown, or JSON.
+            {isAdminLoggedIn
+              ? "Target tailored personas, customize active sections and competencies, edit draft content, and export directly as PDF, ATS Text, Markdown, or JSON."
+              : "Target tailored personas, inspect ATS competencies, and export directly as PDF, ATS Text, Markdown, or JSON."}
           </p>
         </div>
 
         {/* Primary Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           
-          {/* Customizer Settings Toggle */}
-          <button
-            id="resume-toggle-settings-btn"
-            onClick={onToggleConfigPanel}
-            className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border cursor-pointer ${
-              showConfigPanel 
-                ? 'bg-slate-900 text-white border-slate-950 shadow-xs' 
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
-            title="Toggle Customizer & ATS Options"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            {showConfigPanel ? 'Close Customizer' : 'Customize Layout'}
-          </button>
+          {/* Admin-only customization & editing controls */}
+          {isAdminLoggedIn && (
+            <>
+              {/* Customizer Settings Toggle */}
+              <button
+                id="resume-toggle-settings-btn"
+                onClick={onToggleConfigPanel}
+                className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border cursor-pointer ${
+                  showConfigPanel 
+                    ? 'bg-slate-900 text-white border-slate-950 shadow-xs' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+                title="Toggle Customizer & ATS Options (Admin Only)"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                {showConfigPanel ? 'Close Customizer' : 'Customize Layout'}
+              </button>
 
-          {/* Live Inline Draft Switcher */}
-          <button
-            id="resume-live-edit-btn"
-            onClick={onToggleEditable}
-            className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border cursor-pointer ${
-              isEditable 
-                ? 'bg-indigo-600 text-white border-indigo-700 ring-3 ring-indigo-500/20 shadow-xs' 
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
-            title="Enable inline content editing directly inside resume preview"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            {isEditable ? 'Exit Edit Mode' : 'Live Draft Edit'}
-          </button>
+              {/* Live Inline Draft Switcher */}
+              <button
+                id="resume-live-edit-btn"
+                onClick={onToggleEditable}
+                className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border cursor-pointer ${
+                  isEditable 
+                    ? 'bg-indigo-600 text-white border-indigo-700 ring-3 ring-indigo-500/20 shadow-xs' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+                title="Enable content editing directly inside resume preview (Admin Only)"
+              >
+                {isEditable ? <Save className="w-3.5 h-3.5" /> : <Edit3 className="w-3.5 h-3.5" />}
+                {isEditable ? 'Save Changes' : 'Edit Resume'}
+              </button>
+            </>
+          )}
 
           {/* Copy Markdown */}
           <button
@@ -142,15 +176,14 @@ export const ResumeHeaderControls: React.FC<ResumeHeaderControlsProps> = ({
         <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mr-1">
           TARGET PERSONA:
         </span>
-        {(Object.keys(PERSONA_META) as ResumePersona[]).map((key) => {
-          const meta = PERSONA_META[key];
-          const Icon = meta.icon;
-          const isSelected = selectedPersona === key;
+        {activeProfilesList.map((item) => {
+          const Icon = item.icon;
+          const isSelected = selectedPersona === item.id;
           return (
             <button
-              key={key}
-              id={`resume-persona-tab-${key}`}
-              onClick={() => onSelectPersona(key)}
+              key={item.id}
+              id={`resume-persona-tab-${item.id}`}
+              onClick={() => onSelectPersona(item.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-slate-900 text-white shadow-xs'
@@ -158,19 +191,7 @@ export const ResumeHeaderControls: React.FC<ResumeHeaderControlsProps> = ({
               }`}
             >
               <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#0084ff]' : 'text-slate-400'}`} />
-              <span>
-                {key === 'general' 
-                  ? 'Full-Stack Developer' 
-                  : key === 'product'
-                  ? 'Product Manager (TPM)'
-                  : key === 'seo' 
-                  ? 'Technical SEO & Analytics' 
-                  : key === 'data' 
-                  ? 'Data Science & ML' 
-                  : key === 'qa' 
-                  ? 'QA & Automation' 
-                  : 'Cybersecurity'}
-              </span>
+              <span>{item.name}</span>
             </button>
           );
         })}

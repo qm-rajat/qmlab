@@ -143,7 +143,7 @@ export const ResumeConfigPanel: React.FC<ResumeConfigPanelProps> = ({
             )}
           </div>
           <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-2 bg-white rounded-xl border border-slate-200 scrollbar-none">
-            {settings.skills.flatMap(s => s.items).map((item, idx) => {
+            {(settings.skills || []).flatMap(s => s.items).map((item, idx) => {
               const name = typeof item === 'string' ? item : item.name;
               const isHidden = disabledSkills.includes(name);
               return (

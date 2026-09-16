@@ -36,20 +36,35 @@ async function runSeed() {
   console.log("Seeding Redis database with default data...");
 
   try {
+    // Only seed settings and blogs, keep projects, certificates and contacts clean
     await saveSettings(DEFAULT_SETTINGS);
-    console.log("✅ Seeded Settings");
+    console.log("✅ Seeded Settings (Profile & Config)");
 
-    await saveProjects(DEFAULT_PROJECTS);
-    console.log("✅ Seeded Projects");
+    if (DEFAULT_PROJECTS.length > 0) {
+      await saveProjects(DEFAULT_PROJECTS);
+      console.log(`✅ Seeded ${DEFAULT_PROJECTS.length} Projects`);
+    } else {
+      console.log("ℹ️  Projects array is clean (no dummy data to push)");
+    }
 
-    await saveBlogs(DEFAULT_BLOGS);
-    console.log("✅ Seeded Blogs");
+    if (DEFAULT_BLOGS.length > 0) {
+      await saveBlogs(DEFAULT_BLOGS);
+      console.log(`✅ Seeded ${DEFAULT_BLOGS.length} Blogs`);
+    }
 
-    await saveCertificates(DEFAULT_CERTIFICATES);
-    console.log("✅ Seeded Certificates");
+    if (DEFAULT_CERTIFICATES.length > 0) {
+      await saveCertificates(DEFAULT_CERTIFICATES);
+      console.log(`✅ Seeded ${DEFAULT_CERTIFICATES.length} Certificates`);
+    } else {
+      console.log("ℹ️  Certificates array is clean (no dummy data to push)");
+    }
 
-    await saveContacts(DEFAULT_CONTACTS);
-    console.log("✅ Seeded Contacts");
+    if (DEFAULT_CONTACTS.length > 0) {
+      await saveContacts(DEFAULT_CONTACTS);
+      console.log(`✅ Seeded ${DEFAULT_CONTACTS.length} Contacts`);
+    } else {
+      console.log("ℹ️  Contacts array is clean (no dummy data to push)");
+    }
 
     console.log("Database seed completed successfully.");
     process.exit(0);

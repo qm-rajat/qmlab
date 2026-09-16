@@ -1,21 +1,67 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save } from 'lucide-react';
-import { Certificate } from '../../types';
+import { Plus, Edit2, Trash2, Save, X, Check, Sparkles } from 'lucide-react';
+import { Certificate, SiteSettings } from '../../types';
+import { DEFAULT_PROFILES } from './AdminProfilesTab';
 
 interface AdminCertificatesTabProps {
   certificates: Certificate[];
   onUpdateCertificates: (certs: Certificate[]) => void;
   onDeleteCertificateRequest: (id: string, title: string) => void;
+  settings?: SiteSettings;
 }
 
 export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
   certificates,
   onUpdateCertificates,
   onDeleteCertificateRequest,
+  settings,
 }) => {
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [certForm, setCertForm] = useState<Partial<Certificate>>({});
   const [skillsInput, setSkillsInput] = useState<string>('');
+
+  // Available domain profiles and existing categories list
+  const availableProfiles = settings?.profiles && settings.profiles.length > 0 
+    ? settings.profiles 
+    : DEFAULT_PROFILES;
+
+  // Collect unique category tags across existing certificates + profiles
+  const existingCategories = Array.from(
+    new Set([
+      ...availableProfiles.map(p => (typeof p?.name === 'string' ? p.name : '')).filter(Boolean),
+      ...certificates.map(c => (typeof c?.category === 'string' ? c.category : '')).filter(Boolean),
+      'Cybersecurity & Defenses',
+      'Data Science & Analytics',
+      'Web Development',
+      'SEO & Digital Strategy',
+      'AI & Machine Learning',
+      'Product Management'
+    ])
+  ).filter(Boolean);
+
+  // Collect all existing skills from settings, certificates, and profiles
+  const availableSkillsList = Array.from(
+    new Set([
+      ...(settings?.skills?.flatMap(s => 
+        (Array.isArray(s?.items) ? s.items : []).map(item => {
+          if (typeof item === 'string') return item;
+          if (typeof item === 'object' && item !== null && 'name' in item) return String((item as any).name || '');
+          return String(item || '');
+        }).filter(Boolean)
+      ) || []),
+      ...certificates.flatMap(c => 
+        (Array.isArray(c?.skills) ? c.skills : []).map(s => (typeof s === 'string' ? s : String(s || ''))).filter(Boolean)
+      ),
+      'Python', 'Pandas', 'NumPy', 'TypeScript', 'React', 'Node.js',
+      'Docker', 'Kubernetes', 'CI/CD', 'Jest', 'Playwright', 'Selenium',
+      'Penetration Testing', 'Burp Suite', 'Wireshark', 'Metasploit',
+      'Product Strategy', 'Roadmapping', 'Agile / Scrum', 'Jira',
+      'Technical SEO', 'Google Search Console', 'Lighthouse',
+      'SQL', 'PostgreSQL', 'Redis', 'GraphQL', 'AWS', 'GCP'
+    ])
+  )
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .sort((a, b) => String(a).localeCompare(String(b)));
 
   const handleCertEditStart = (cert?: Certificate) => {
     if (cert) {
@@ -166,21 +212,85 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
               />
             </div>
 
-            {/* Category */}
-            <div className="space-y-1">
-              <label htmlFor="cform-category" className="text-xs font-bold text-slate-505 block">Category Tag</label>
-              <select
-                id="cform-category"
-                value={certForm.category || 'other'}
-                onChange={(e) => setCertForm({ ...certForm, category: e.target.value as any })}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden cursor-pointer"
-              >
-                <option value="cybersecurity">Cybersecurity & Defenses</option>
-                <option value="data-science">Data Science & Analytics</option>
-                <option value="web-development">Web Development</option>
-                <option value="seo-digital-marketing">SEO & Strategy</option>
-                <option value="other">Other simulations</option>
-              </select>
+            {/* Category / Domain Tag */}
+            <div className="space-y-1.5 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="cform-category" className="text-xs font-bold text-slate-505 block">
+                  Category &amp; Domain Tag
+                </label>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  Synced with configured Profiles &amp; Domains
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <input
+                    id="cform-category"
+                    type="text"
+                    value={certForm.category || ''}
+                    onChange={(e) => setCertForm({ ...certForm, category: e.target.value })}
+                    placeholder="Select below or type custom domain (e.g. Cybersecurity, Web Dev, Product Management)..."
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                  {certForm.category && (
+                    <button
+                      type="button"
+                      onClick={() => setCertForm({ ...certForm, category: '' })}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                      title="Clear category tag"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <select
+                  aria-label="Quick Select Certificate Category Tag"
+                  value={existingCategories.includes(certForm.category || '') ? (certForm.category || '') : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setCertForm({ ...certForm, category: e.target.value });
+                    }
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 focus:outline-hidden cursor-pointer shrink-0"
+                >
+                  <option value="">⚡ Quick Select Category...</option>
+                  {existingCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quick Select Category Badges */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono mr-1">Available Domains:</span>
+                {existingCategories.map((cat) => {
+                  const isSelected = (certForm.category || '').toLowerCase() === cat.toLowerCase();
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        setCertForm({ 
+                          ...certForm, 
+                          category: isSelected ? '' : cat 
+                        });
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 border ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3" />}
+                      <span>{cat}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Credential ID */}
@@ -209,16 +319,99 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
             </div>
 
             {/* Validated Competencies (Skills) */}
-            <div className="md:col-span-2 space-y-1">
-              <label htmlFor="cform-skills" className="text-xs font-bold text-slate-505 block">Validated Competencies (Comma separated)</label>
-              <input
-                id="cform-skills"
-                type="text"
-                value={skillsInput}
-                onChange={(e) => setSkillsInput(e.target.value)}
-                placeholder="Python, Pandas, NumPy, Data Visualization"
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
-              />
+            <div className="md:col-span-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="cform-skills" className="text-xs font-bold text-slate-505 block">
+                  Validated Competencies &amp; Skills (Comma separated)
+                </label>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  Synced with Skills &amp; Profiles catalog
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <input
+                    id="cform-skills"
+                    type="text"
+                    value={skillsInput}
+                    onChange={(e) => setSkillsInput(e.target.value)}
+                    placeholder="e.g. Python, Pandas, NumPy, Penetration Testing"
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                  {skillsInput && (
+                    <button
+                      type="button"
+                      onClick={() => setSkillsInput('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                      title="Clear skills"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <select
+                  aria-label="Add Skill from Catalog"
+                  value=""
+                  onChange={(e) => {
+                    const skillToAdd = e.target.value;
+                    if (!skillToAdd) return;
+                    const current = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
+                    if (!current.some(s => s.toLowerCase() === skillToAdd.toLowerCase())) {
+                      setSkillsInput([...current, skillToAdd].join(', '));
+                    }
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 focus:outline-hidden cursor-pointer shrink-0"
+                >
+                  <option value="">⚡ Add Skill from Catalog...</option>
+                  {availableSkillsList.map((skill) => (
+                    <option key={skill} value={skill}>
+                      + {skill}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quick Add / Remove Skill Chips from Catalog */}
+              <div className="space-y-1.5 pt-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">
+                    Catalog Quick Toggle:
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Click to add / remove from certificate
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1.5 bg-slate-50/70 rounded-xl border border-slate-150">
+                  {availableSkillsList.map((skill) => {
+                    const currentSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
+                    const isSelected = currentSkills.some(s => s.toLowerCase() === skill.toLowerCase());
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            const filtered = currentSkills.filter(s => s.toLowerCase() !== skill.toLowerCase());
+                            setSkillsInput(filtered.join(', '));
+                          } else {
+                            setSkillsInput([...currentSkills, skill].join(', '));
+                          }
+                        }}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 border ${
+                          isSelected
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-2xs font-semibold'
+                            : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        {isSelected ? <Check className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5 text-slate-400" />}
+                        <span>{skill}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Description */}

@@ -50,7 +50,7 @@ export const BentoSkillCard: React.FC<BentoSkillCardProps> = ({
             {category.category}
           </h5>
           <p className="text-[11px] font-semibold text-slate-400 mt-0.5 uppercase tracking-widest">
-            {category.items.length} Technologies
+            {(category.items || []).length} Technologies
           </p>
         </div>
       </div>
@@ -63,7 +63,7 @@ export const BentoSkillCard: React.FC<BentoSkillCardProps> = ({
           visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.2 } }
         }}
       >
-        {category.items.map((item, sIdx) => {
+        {(category.items || []).map((item, sIdx) => {
           const skillName = typeof item === 'string' ? item : item.name;
           const SkillIconComp = getSkillIcon(skillName, category.category);
           

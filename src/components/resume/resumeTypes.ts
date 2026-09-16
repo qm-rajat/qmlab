@@ -1,10 +1,9 @@
-import { Code2, Search, Database, Briefcase, ShieldAlert, Target } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
-import { SiteSettings, Project, Certificate } from '../../types';
+import { Code2, Search, Database, Briefcase, ShieldAlert, Target, Cpu, Globe, Zap, LucideIcon } from 'lucide-react';
+import { SiteSettings, Project, Certificate, DomainProfile } from '../../types';
 
-export type ResumePersona = 'general' | 'product' | 'seo' | 'data' | 'qa' | 'security';
+export type ResumePersona = string;
 export type ResumeTheme = 'sans' | 'serif' | 'mono';
-export type ResumeAccent = 'blue' | 'indigo' | 'emerald' | 'slate';
+export type ResumeAccent = 'blue' | 'indigo' | 'emerald' | 'slate' | 'amber' | 'rose' | 'purple';
 
 export interface PersonaMetadata {
   title: string;
@@ -14,7 +13,19 @@ export interface PersonaMetadata {
   badgeColor: string;
 }
 
-export const PERSONA_META: Record<ResumePersona, PersonaMetadata> = {
+export const ICON_MAP: Record<string, LucideIcon> = {
+  Code2,
+  Search,
+  Database,
+  Briefcase,
+  ShieldAlert,
+  Target,
+  Cpu,
+  Globe,
+  Zap,
+};
+
+export const PERSONA_META: Record<string, PersonaMetadata> = {
   general: {
     title: 'Full-Stack Developer & Multi-Disciplinary Engineer',
     summary: 'High-performing Software Engineer and Computer Science graduate specializing in modern React/Next.js architectures, TypeScript, Node.js API services, and Technical SEO infrastructure. Proven background in architecting end-to-end applications, real-time analytics pipelines, and automated test environments that drive quantifiable business growth and optimal Core Web Vitals.',
@@ -82,4 +93,6 @@ export interface ResumeCenterProps {
   settings: SiteSettings;
   projects?: Project[];
   certificates?: Certificate[];
+  isAdminLoggedIn?: boolean;
+  onUpdateSettings?: (newSettings: SiteSettings) => Promise<boolean | void> | void;
 }

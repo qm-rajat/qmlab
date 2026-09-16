@@ -64,7 +64,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
 
   // Filter & sort logic
   const filteredAndSortedProjects = useMemo(() => {
-    let result = projects.filter((p) => {
+    let result = (projects || []).filter((p) => {
       // Category filter
       if (categoryFilter !== 'all' && p.category !== categoryFilter) {
         // Fallback matching if legacy data doesn't have explicit category
@@ -114,7 +114,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
         return dateB - dateA;
       }
       if (sortBy === 'alphabetical') {
-        return a.title.localeCompare(b.title);
+        return String(a.title || '').localeCompare(String(b.title || ''));
       }
       return 0;
     });
@@ -122,10 +122,10 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
 
   // Overall metric counts
   const metrics = useMemo(() => {
-    const total = projects.length;
-    const openSourceCount = projects.filter(p => !!p.github_url).length;
-    const liveCount = projects.filter(p => !!p.live_url).length;
-    const featuredCount = projects.filter(p => p.is_featured).length;
+    const total = (projects || []).length;
+    const openSourceCount = (projects || []).filter(p => !!p.github_url).length;
+    const liveCount = (projects || []).filter(p => !!p.live_url).length;
+    const featuredCount = (projects || []).filter(p => p.is_featured).length;
     return { total, openSourceCount, liveCount, featuredCount };
   }, [projects]);
 
@@ -156,11 +156,11 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!selectedProject) return;
       if (e.key === 'Escape') setSelectedProject(null);
-      if (e.key === 'ArrowRight' && selectedProject.images.length > 1) {
-        setActiveImgIdx(prev => (prev < selectedProject.images.length - 1 ? prev + 1 : 0));
+      if (e.key === 'ArrowRight' && (selectedProject.images || []).length > 1) {
+        setActiveImgIdx(prev => (prev < (selectedProject.images || []).length - 1 ? prev + 1 : 0));
       }
-      if (e.key === 'ArrowLeft' && selectedProject.images.length > 1) {
-        setActiveImgIdx(prev => (prev > 0 ? prev - 1 : selectedProject.images.length - 1));
+      if (e.key === 'ArrowLeft' && (selectedProject.images || []).length > 1) {
+        setActiveImgIdx(prev => (prev > 0 ? prev - 1 : (selectedProject.images || []).length - 1));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -302,8 +302,8 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
             {(Object.keys(categoryLabels) as CategoryFilter[]).map((key) => {
               const isActive = categoryFilter === key;
               const count = key === 'all'
-                ? projects.length
-                : projects.filter(p => p.category === key).length;
+                ? (projects || []).length
+                : (projects || []).filter(p => p.category === key).length;
 
               return (
                 <button
@@ -412,9 +412,9 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                     )}
 
                     {/* Multi-Image Indicator */}
-                    {project.images.length > 1 && (
+                    {(project.images || []).length > 1 && (
                       <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-mono font-bold">
-                        +{project.images.length} visuals
+                        +{(project.images || []).length} visuals
                       </div>
                     )}
 
@@ -454,9 +454,9 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                           {tech}
                         </span>
                       ))}
-                      {project.technologies.length > 3 && (
+                      {(project.technologies || []).length > 3 && (
                         <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-150">
-                          +{project.technologies.length - 3}
+                          +{(project.technologies || []).length - 3}
                         </span>
                       )}
                     </div>
@@ -573,17 +573,17 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                   />
                 </div>
 
-                {selectedProject.images.length > 1 && (
+                {(selectedProject.images || []).length > 1 && (
                   <>
                     <button
-                      onClick={() => setActiveImgIdx(prev => prev > 0 ? prev - 1 : selectedProject.images.length - 1)}
+                      onClick={() => setActiveImgIdx(prev => prev > 0 ? prev - 1 : (selectedProject.images || []).length - 1)}
                       className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 p-2.5 bg-white/95 hover:bg-white text-slate-900 rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl z-20 cursor-pointer border border-slate-200 flex items-center justify-center"
                       title="Previous image"
                     >
                       <ChevronLeft className="w-5 h-5 text-[#0084ff]" />
                     </button>
                     <button
-                      onClick={() => setActiveImgIdx(prev => prev < selectedProject.images.length - 1 ? prev + 1 : 0)}
+                      onClick={() => setActiveImgIdx(prev => prev < (selectedProject.images || []).length - 1 ? prev + 1 : 0)}
                       className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 p-2.5 bg-white/95 hover:bg-white text-slate-900 rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl z-20 cursor-pointer border border-slate-200 flex items-center justify-center"
                       title="Next image"
                     >

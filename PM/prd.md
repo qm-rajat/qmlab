@@ -1,8 +1,8 @@
 # Product Requirement Document (PRD)
 
 **Product Name:** Rajat Portfolio & Technical PM Intelligence Platform  
-**Document Version:** v2.4.0  
-**Product Owner:** Rajat (Technical Product Lead & AI Systems Engineer)  
+**Document Version:** v2.5.0  
+**Product Owner:** Rajat Kumar Dash (Technical Product Lead & AI Systems Engineer)  
 **Status:** Approved & Active  
 **Target Release:** Production GA  
 
@@ -28,8 +28,8 @@ Transform the static developer/PM portfolio into a dynamic, production-grade ope
 
 ### 2.2 The Solution
 A full-stack, responsive platform combining:
-- **Interactive Public Front:** Ultra-fast case study gallery, interactive resume builder, dynamic skill matrix, technical blog CMS, and verified credential showcase.
-- **Enterprise Admin Console:** Secure, authenticated single-pane-of-glass management for projects, blogs, credentials, SMTP mailers, analytics, and platform configuration.
+- **Interactive Public Front:** Ultra-fast case study gallery, interactive multi-persona resume builder (defaulting to Technical PM), dynamic skill matrix, technical blog CMS, and verified credential showcase.
+- **Enterprise Admin Console:** Secure, authenticated single-pane-of-glass management for projects, profiles/personas, typewriter taglines, blogs, credentials, SMTP mailers, analytics, and platform configuration.
 - **Model Context Protocol (MCP) Server:** Native JSON-RPC 2.0 HTTP & Server-Sent Events (SSE) gateway exposing 18+ tools for AI agents to inspect, query, and manage portfolio entities.
 - **Dual Persistence Architecture:** Hybrid in-memory JSON and Redis data layer with instantaneous seeding and atomic updates.
 
@@ -49,20 +49,25 @@ A full-stack, responsive platform combining:
 ## 4. Functional Requirements
 
 ### 4.1 Public Portfolio Experience (P0)
-- **FR-1.1 Hero & Identity Matrix:** Dynamic taglines, bio, avatar, social links, and real-time operational stats.
+- **FR-1.1 Hero & Identity Matrix:** Dynamic taglines with Admin-controlled typewriter rotating roles (e.g., Technical Product Manager, Full-Stack Developer, Technical SEO, IT Support), bio, avatar, social links, and real-time operational stats.
 - **FR-1.2 Featured Projects & Deep Case Studies:** Categorized by domain (*Product Management, AI/ML, Automation, Cybersecurity, Web Systems, Data BI*). Includes problem statements, solution architecture, live links, and key business metrics.
 - **FR-1.3 Technical Skills Matrix:** Categorized competencies (*AI Systems, Backend Engineering, Cloud Infrastructure, Product Analytics*) with interactive filtering.
-- **FR-1.4 Interactive Resume Center:** Experience timeline, MBA & B.Tech education cards, configurable print/export views, and direct PDF downloads.
+- **FR-1.4 Interactive Resume Center:** 
+  - Persona switching defaulting to **Technical Product Manager (TPM)**, with Full-Stack, Technical SEO, QA, and Cybersecurity.
+  - Experience timeline, MBA & B.Tech education cards, and inline draft customization.
+  - Pixel-perfect ATS print & "Save as PDF" engine with `@page { size: A4 portrait }`, CSS print shields (`.no-print`, `print-page`), automatic heading break avoidance, and formatted print-friendly contact links.
+  - Direct exports to Markdown, TXT, and JSON.
 - **FR-1.5 Verified Credentials & Certifications:** Official badge verification, credential IDs, issuing authority links, and expiration trackers.
-- **FR-1.6 Technical Blog Engine:** Markdown/HTML rendering, reading time calculation, tag filtering, bookmarking, and view counters.
+- **FR-1.6 Technical Blog Engine:** Markdown/HTML rendering with prose formatting, reading time calculation, tag filtering, bookmarking, view counters, reader notes scratchpad, and clean author attribution.
 - **FR-1.7 Contact & Lead Capture:** Anti-spam rate-limited contact form with SMTP email dispatch and admin inbox synchronization.
 
 ### 4.2 Admin Console & CMS (P0)
 - **FR-2.1 Secure Authentication:** Session-based bcrypt/token verification with brute-force rate limiting.
 - **FR-2.2 Real-time Dashboard:** Live analytics overview, top page paths, lead counts, and content volume telemetry.
 - **FR-2.3 Project & Blog CRUD:** Rich markdown editor, SEO metadata injectors, tag managers, and instant publishing.
-- **FR-2.4 Site Configuration:** Zero-downtime editing of hero text, experience history, skills, contact coordinates, and brand assets.
-- **FR-2.5 Contact CRM:** Lead management with priority tagging, note taking, status workflows (*unread, read, replied, archived*), and estimated deal values.
+- **FR-2.4 Site & Hero Configuration:** Zero-downtime editing of typewriter rotating tagline roles via comma-separated input (`#set-tagline`), hero text, experience history, skills, contact coordinates, and brand assets.
+- **FR-2.5 Career Profiles & Personas Manager:** Add, customize, and set default resume persona (e.g., Product Manager, Full-Stack, Technical SEO) with customized summaries and category mappings.
+- **FR-2.6 Contact CRM:** Lead management with priority tagging, note taking, status workflows (*unread, read, replied, archived*), and estimated deal values.
 
 ### 4.3 Model Context Protocol (MCP) AI Server (P0)
 - **FR-3.1 Dual Transport Engine:** Support for both HTTP POST (JSON-RPC 2.0) and Server-Sent Events (SSE) on `/api/mcp` and `/api/sse`.

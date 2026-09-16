@@ -58,7 +58,7 @@ export default function BlogHub({
 
   // Filter & Sort blogs
   const filteredAndSortedBlogs = useMemo(() => {
-    let result = blogs.filter(b => b.status === 'published');
+    let result = (blogs || []).filter(b => b.status === 'published');
 
     // Search query filter
     if (searchQuery.trim()) {
@@ -365,10 +365,10 @@ export default function BlogHub({
                   : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60'
               }`}
             >
-              All Articles ({blogs.filter(b => b.status === 'published').length})
+              All Articles ({(blogs || []).filter(b => b.status === 'published').length})
             </button>
             {categories.map((cat) => {
-              const count = blogs.filter(b => b.categories?.includes(cat) && b.status === 'published').length;
+              const count = (blogs || []).filter(b => b.categories?.includes(cat) && b.status === 'published').length;
               const isSelected = selectedCategory === cat;
               return (
                 <button
@@ -468,7 +468,7 @@ export default function BlogHub({
                     </p>
 
                     {/* Tech Tags */}
-                    {b.tags && b.tags.length > 0 && (
+                    {b.tags && (b.tags || []).length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-1">
                         {b.tags.slice(0, 3).map((tag) => (
                           <span key={tag} className="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">

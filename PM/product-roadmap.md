@@ -26,7 +26,7 @@
 
 ## 2. 4-Quarter Release Timeline
 
-### Q1 2026: The Foundation & AI Gateway (Current - Completed)
+### Q1 2026: The Foundation & AI Gateway (Completed)
 - **Focus:** Robust architecture, headless CMS, and native Model Context Protocol (MCP) server.
 - **Key Deliverables:**
   - [x] Dual-persistence data engine (Redis primary + atomic JSON fallback).
@@ -38,11 +38,13 @@
 
 ---
 
-### Q2 2026: Intelligence, Analytics & SEO Expansion (Now - In Progress)
-- **Focus:** Enterprise telemetry, SEO auditing, automated performance sandboxing, and crawler enhancements.
+### Q2 2026: Intelligence, Analytics & SEO Expansion (Current - In Progress)
+- **Focus:** Enterprise telemetry, SEO auditing, automated performance sandboxing, resume export excellence, and crawler enhancements.
 - **Key Deliverables:**
-  - [ ] **Core Web Vitals & SEO Lab:** Live PageSpeed Insights integration, DOM tree visualizers, and sitemap builder.
-  - [ ] **Dynamic Graph Previews:** Automated OpenGraph social image rendering per blog and project slug.
+  - [x] **Core Web Vitals & SEO Lab:** Live PageSpeed Insights integration, DOM tree visualizers, and sitemap builder.
+  - [x] **ATS-Optimized Resume Hub Engine:** Persona switching (defaulting to Technical PM), pixel-perfect print layout (`@page` sizing, zero UI bleed, automated break avoidance, and formatted print URL coordinates).
+  - [x] **Dynamic Typewriter Role Admin Controller:** Live comma-separated tagline control from Admin Settings to hero typewriter rotation (including IT Support, Technical PM, Full-Stack).
+  - [x] **Dynamic Graph & Meta Tags Alignment:** Unified `<title>`, `<meta property="og:title">`, `<meta property="twitter:title">`, and Schema.org Person JSON-LD synchronization across pages.
   - [ ] **AI Inquiry Auto-Triage:** Gemini-powered classification and lead scoring for inbound contact submissions.
   - [ ] **Granular Analytics Funnel:** Recruiter conversion tracking from initial page landing to resume download.
 

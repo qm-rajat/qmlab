@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save } from 'lucide-react';
-import { Project } from '../../types';
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, Sparkles, X, Check } from 'lucide-react';
+import { Project, SiteSettings } from '../../types';
+import { DEFAULT_PROFILES } from './AdminProfilesTab';
 
 interface AdminProjectsTabProps {
   projects: Project[];
   onUpdateProjects: (proj: Project[]) => void;
   onDeleteProjectRequest: (id: string, title: string) => void;
+  settings?: SiteSettings;
 }
 
 export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
   projects,
   onUpdateProjects,
   onDeleteProjectRequest,
+  settings,
 }) => {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState<Partial<Project>>({});
@@ -19,6 +22,48 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
   const [featuresInput, setFeaturesInput] = useState<string>('');
   const [archInput, setArchInput] = useState<string>('');
   const [secondaryImagesInput, setSecondaryImagesInput] = useState<string>('');
+
+  // Available domain profiles and existing categories list
+  const availableProfiles = settings?.profiles && settings.profiles.length > 0 
+    ? settings.profiles 
+    : DEFAULT_PROFILES;
+
+  // Collect unique categories across existing projects + profiles
+  const existingCategories = Array.from(
+    new Set([
+      ...availableProfiles.map(p => (typeof p?.name === 'string' ? p.name : '')).filter(Boolean),
+      ...projects.map(p => (typeof p?.category === 'string' ? p.category : '')).filter(Boolean),
+      'Product Strategy & Case Studies',
+      'QA Automation & Testing',
+      'AI & Machine Learning',
+      'Cybersecurity & Pentesting',
+      'BI & Data Analytics',
+      'Full-Stack & Web Systems'
+    ])
+  ).filter(Boolean);
+
+  // Collect all existing skills / technologies from settings, projects, and profiles
+  const availableSkillsList = Array.from(
+    new Set([
+      ...(settings?.skills?.flatMap(s => 
+        (Array.isArray(s?.items) ? s.items : []).map(item => {
+          if (typeof item === 'string') return item;
+          if (typeof item === 'object' && item !== null && 'name' in item) return String((item as any).name || '');
+          return String(item || '');
+        }).filter(Boolean)
+      ) || []),
+      ...projects.flatMap(p => 
+        (Array.isArray(p?.technologies) ? p.technologies : []).map(t => (typeof t === 'string' ? t : String(t || ''))).filter(Boolean)
+      ),
+      'React', 'TypeScript', 'Node.js', 'Python', 'Tailwind CSS', 'Next.js',
+      'PostgreSQL', 'Redis', 'Docker', 'Kubernetes', 'Express', 'GraphQL',
+      'TensorFlow', 'PyTorch', 'FastAPI', 'Pandas', 'NumPy', 'OpenCV',
+      'Playwright', 'Selenium', 'Jest', 'Cypress', 'Burp Suite', 'Wireshark',
+      'AWS', 'GCP', 'Firebase', 'Supabase', 'Jira', 'Figma'
+    ])
+  )
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .sort((a, b) => String(a).localeCompare(String(b)));
 
   const handleProjectEditStart = (proj?: Project) => {
     if (proj) {
@@ -40,7 +85,6 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
         live_url: '',
         is_featured: false,
         display_order: projects.length + 1,
-        project_type: 'both'
       });
       setTechInput('');
       setFeaturesInput('');
@@ -133,18 +177,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                             className="w-10 h-8 object-cover rounded-md border border-slate-100"
                           />
                           <div>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <div className="font-bold text-slate-900 text-sm leading-tight">{proj.title}</div>
-                              {proj.project_type === 'company' && (
-                                <span className="text-[8px] font-extrabold uppercase bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded-md">🏢 Company</span>
-                              )}
-                              {proj.project_type === 'portfolio' && (
-                                <span className="text-[8px] font-extrabold uppercase bg-blue-50 text-blue-700 border border-blue-105/10 px-1.5 py-0.5 rounded-md">👨‍💻 Portfolio</span>
-                              )}
-                              {(proj.project_type === 'both' || !proj.project_type) && (
-                                <span className="text-[8px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md">🌟 Both</span>
-                              )}
-                            </div>
+                            <div className="font-bold text-slate-900 text-sm leading-tight">{proj.title}</div>
                             <span className="text-[10px] text-slate-400 mt-0.5 block truncate">/{proj.slug}</span>
                           </div>
                         </div>
@@ -299,17 +332,85 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
               />
             </div>
 
-            {/* Category */}
-            <div className="space-y-1">
-              <label htmlFor="pform-category" className="text-xs font-bold text-slate-505 block">Category</label>
-              <input
-                id="pform-category"
-                type="text"
-                value={projectForm.category || ''}
-                onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
-                placeholder="e.g., Automation, ML, Cybersecurity"
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
-              />
+            {/* Category / Profile Domain */}
+            <div className="space-y-1.5 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="pform-category" className="text-xs font-bold text-slate-505 block">
+                  Category & Profile Domain
+                </label>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  Synced with configured Profiles &amp; Domains
+                </span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <input
+                    id="pform-category"
+                    type="text"
+                    value={projectForm.category || ''}
+                    onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
+                    placeholder="Select below or type custom domain (e.g., Product Management, Cybersecurity)..."
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                  />
+                  {projectForm.category && (
+                    <button
+                      type="button"
+                      onClick={() => setProjectForm({ ...projectForm, category: '' })}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                      title="Clear category"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <select
+                  aria-label="Quick Select Domain Category"
+                  value={existingCategories.includes(projectForm.category || '') ? (projectForm.category || '') : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setProjectForm({ ...projectForm, category: e.target.value });
+                    }
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 focus:outline-hidden cursor-pointer shrink-0"
+                >
+                  <option value="">⚡ Quick Select Domain...</option>
+                  {existingCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quick Select Domain Badges */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono mr-1">Available Domains:</span>
+                {existingCategories.map((cat) => {
+                  const isSelected = (projectForm.category || '').toLowerCase() === cat.toLowerCase();
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        setProjectForm({ 
+                          ...projectForm, 
+                          category: isSelected ? '' : cat 
+                        });
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 border ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3" />}
+                      <span>{cat}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Key Metric */}
@@ -325,8 +426,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
               />
             </div>
 
-            {/* Display Order & Section Designation */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Display Order & Featured Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label htmlFor="pform-order" className="text-xs font-bold text-slate-505 block">Display Order</label>
                 <input
@@ -338,20 +439,6 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                 />
               </div>
 
-              <div className="space-y-1">
-                <label htmlFor="pform-type" className="text-xs font-bold text-slate-505 block">Designation Section</label>
-                <select
-                  id="pform-type"
-                  value={projectForm.project_type || 'both'}
-                  onChange={(e) => setProjectForm({ ...projectForm, project_type: e.target.value as any })}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden cursor-pointer"
-                >
-                  <option value="company">🏢 Company Project</option>
-                  <option value="portfolio">👨‍💻 Portfolio Project</option>
-                  <option value="both">🌟 Both Sections</option>
-                </select>
-              </div>
-
               {/* Featured checkbox */}
               <div className="flex items-center gap-2 pt-6 pl-2">
                 <input
@@ -359,24 +446,107 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                   type="checkbox"
                   checked={projectForm.is_featured || false}
                   onChange={(e) => setProjectForm({ ...projectForm, is_featured: e.target.checked })}
-                  className="w-4 h-4 text-primary rounded-md border-slate-200"
+                  className="w-4 h-4 text-primary rounded-md border-slate-200 cursor-pointer"
                 />
-                <label htmlFor="pform-featured" className="text-xs font-bold text-slate-700 block">Is Featured card</label>
+                <label htmlFor="pform-featured" className="text-xs font-bold text-slate-700 block cursor-pointer">Is Featured card</label>
               </div>
             </div>
           </div>
 
           {/* Tech stack tags */}
-          <div className="space-y-1">
-            <label htmlFor="pform-tech" className="text-xs font-bold text-slate-505 block">Technologies Applied (Comma Separated)</label>
-            <input
-              id="pform-tech"
-              type="text"
-              value={techInput}
-              onChange={(e) => setTechInput(e.target.value)}
-              placeholder="Python, OpenCV, TensorFlow, Deep Learning"
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
-            />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="pform-tech" className="text-xs font-bold text-slate-505 block">
+                Technologies Applied (Comma Separated)
+              </label>
+              <span className="text-[10px] text-slate-400 font-mono">
+                Synced with Skills &amp; Profiles catalog
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="pform-tech"
+                  type="text"
+                  value={techInput}
+                  onChange={(e) => setTechInput(e.target.value)}
+                  placeholder="e.g. Python, OpenCV, TensorFlow, Deep Learning"
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                />
+                {techInput && (
+                  <button
+                    type="button"
+                    onClick={() => setTechInput('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                    title="Clear technologies"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <select
+                aria-label="Add Technology from Catalog"
+                value=""
+                onChange={(e) => {
+                  const techToAdd = e.target.value;
+                  if (!techToAdd) return;
+                  const current = techInput.split(',').map(t => t.trim()).filter(Boolean);
+                  if (!current.some(t => t.toLowerCase() === techToAdd.toLowerCase())) {
+                    setTechInput([...current, techToAdd].join(', '));
+                  }
+                }}
+                className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 focus:outline-hidden cursor-pointer shrink-0"
+              >
+                <option value="">⚡ Add Tech from Catalog...</option>
+                {availableSkillsList.map((skill) => (
+                  <option key={skill} value={skill}>
+                    + {skill}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Quick Add / Remove Tech Chips from Catalog */}
+            <div className="space-y-1.5 pt-0.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">
+                  Catalog Quick Toggle:
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Click to add / remove from project
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1.5 bg-slate-50/70 rounded-xl border border-slate-150">
+                {availableSkillsList.map((skill) => {
+                  const currentTechs = techInput.split(',').map(t => t.trim()).filter(Boolean);
+                  const isSelected = currentTechs.some(t => t.toLowerCase() === skill.toLowerCase());
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          const filtered = currentTechs.filter(t => t.toLowerCase() !== skill.toLowerCase());
+                          setTechInput(filtered.join(', '));
+                        } else {
+                          setTechInput([...currentTechs, skill].join(', '));
+                        }
+                      }}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 border ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-2xs font-semibold'
+                          : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {isSelected ? <Check className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5 text-slate-400" />}
+                      <span>{skill}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Long description */}

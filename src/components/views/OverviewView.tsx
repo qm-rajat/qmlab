@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Sparkles, FileText, Mail, ArrowUpRight, Briefcase, 
   Layers, Zap, TrendingUp, Cpu, CheckCircle, BookOpen, 
@@ -148,19 +148,23 @@ export default function OverviewView({
 
         {/* Left Column: Brand Greeting Card & Technical Specialization */}
         <div className="lg:col-span-7 space-y-8 text-left">
-          {/* Floating Action Availability Tag */}
-          <motion.div 
+          {/* Top Navbar / Availability Strip */}
+          {/* <motion.div 
             variants={heroItemVariants}
-            animate={{ y: [0, -6, 0] }}
-            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-white border border-blue-500/15 text-[#0084ff] rounded-full text-xs font-bold shadow-xs hover:border-blue-500/30 transition-colors select-none font-sans"
+            className="flex flex-wrap items-center gap-3"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="tracking-wide text-[11px] font-mono uppercase text-emerald-600">Status: Freelancer Available</span>
-          </motion.div>
+            <motion.div 
+              animate={{ y: [0, -4, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-blue-500/15 text-[#0084ff] rounded-full text-xs font-bold shadow-xs hover:border-blue-500/30 transition-colors select-none font-sans"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="tracking-wide text-[11px] font-mono uppercase text-emerald-600">Available for Hire</span>
+            </motion.div>
+          </motion.div> */}
           
           {/* Majestic Heading & Signature Presentation */}
           <div className="space-y-3">
@@ -177,7 +181,7 @@ export default function OverviewView({
             
             {/* Dynamic Animated Typewriter: Types out roles */}
             <motion.div variants={heroItemVariants}>
-              <TypewriterRoles />
+              <TypewriterRoles tagline={settings.hero_tagline} />
             </motion.div>
           </div>
 
@@ -341,21 +345,23 @@ export default function OverviewView({
         viewport={{ once: true, margin: "-80px" }}
         className="max-w-7xl mx-auto"
       >
-        <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 bg-white border border-slate-150 rounded-3xl px-6 py-5 shadow-xs">
-          <div className="flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-slate-150/90 rounded-2xl px-6 py-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
             <QMLogo size="xs" showTagline={false} interactive={false} />
+            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+            <div className="text-left">
+              <span className="text-xs font-bold text-slate-900 tracking-tight font-sans">
+                {settings.company_name || "QM Labs"}
+              </span>
+              <span className="text-xs text-slate-400 font-medium block sm:inline sm:ml-2">
+                • {settings.company_tagline || "Quality Builds Trust. Momentum Drives Growth."}
+              </span>
+            </div>
           </div>
-          <div className="hidden sm:block w-px h-10 bg-slate-150" />
-          <div className="text-center sm:text-left space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] font-mono text-slate-400 block">
-              {settings.company_name || "QM Labs"}
+          <div className="text-right hidden md:block">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+              Engineering &amp; Strategy
             </span>
-            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-snug font-sans">
-              Engineering Next-Gen Uptime &amp; Crawl Strategy.
-            </h3>
-            <p className="text-xs text-slate-500 italic font-medium">
-              "{settings.company_tagline || "Quality Builds Trust. Momentum Drives Growth."}"
-            </p>
           </div>
         </div>
       </motion.section>
@@ -368,7 +374,7 @@ export default function OverviewView({
         className="bg-white rounded-[2rem] border border-slate-150 p-6 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center shadow-xs select-none max-w-7xl mx-auto"
       >
         {[
-          { count: projects.filter(p => !p.project_type || p.project_type === 'portfolio' || p.project_type === 'both').length, label: 'Projects Engineered', icon: Layers, color: "text-blue-500 bg-blue-50/50" },
+          { count: (projects || []).length, label: 'Projects Engineered', icon: Layers, color: "text-blue-500 bg-blue-50/50" },
           { count: uniqueBlogCatsCount, label: 'Tech Domains Audit', icon: TrendingUp, color: "text-emerald-500 bg-emerald-50/50" },
           { count: certificatesCount, label: 'Certifications Logged', icon: BookOpen, color: "text-indigo-500 bg-indigo-50/50" },
           { count: settings.overview_fourth_stat?.value || 'Top 9%', label: settings.overview_fourth_stat?.label || 'TryHackMe Context Rank', icon: Cpu, color: "text-amber-500 bg-amber-50/50" }

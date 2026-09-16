@@ -23,8 +23,6 @@ const EMPTY_SETTINGS: SiteSettings = {
   contact_location: "",
   company_name: "",
   company_tagline: "",
-  company_bio: "",
-  company_about_html: "",
   hero_stats: [],
   overview_fourth_stat: { label: "", value: "" }
 };

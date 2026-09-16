@@ -25,7 +25,6 @@ export interface Project {
   is_featured: boolean;
   display_order: number;
   created_at: string;
-  project_type?: 'company' | 'portfolio' | 'both';
 }
 
 export interface Blog {
@@ -61,7 +60,7 @@ export interface Certificate {
   verify_url?: string;
   image_url?: string;
   category: 'cybersecurity' | 'web-development' | 'data-science' |
-            'machine-learning' | 'seo-digital-marketing' | 'cloud' | 'other';
+            'machine-learning' | 'seo-digital-marketing' | 'cloud' | 'other' | (string & {});
   skills?: string[];
   description?: string;
   score_or_grade?: string;
@@ -119,16 +118,21 @@ export interface SocialLinks {
   instagram?: string;
 }
 
-export interface CompanyService {
-  title: string;
-  description: string;
-  icon_name: string;
-}
-
 export interface HeroStat {
   label: string;
   value: string;
   subtext: string;
+}
+
+export interface DomainProfile {
+  id: string; // e.g. 'general', 'product', 'seo', 'data', 'qa', 'security', or custom
+  name: string; // e.g. 'Product Manager (TPM)'
+  title: string; // e.g. 'Technical Product Manager & Product Strategist'
+  summary: string;
+  icon_name?: string; // 'Code2', 'Target', 'Search', 'Database', 'Briefcase', 'ShieldAlert', 'Cpu', 'Globe', 'Zap'
+  accent_color?: string; // 'blue', 'amber', 'indigo', 'emerald', 'rose', 'purple'
+  skills_categories?: string[]; // categories associated with this profile
+  is_default?: boolean;
 }
 
 export interface SiteSettings {
@@ -153,11 +157,22 @@ export interface SiteSettings {
   google_maps_embed_url: string;
   contact_email: string;
   contact_location: string;
+  contact_phone?: string;
+  resume_contact_details?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    location?: string;
+    github?: string;
+    linkedin?: string;
+    portfolio?: string;
+  };
   company_name: string;
   company_tagline: string;
-  company_bio: string;
-  company_about_html: string;
-  company_services?: CompanyService[];
+  profiles?: DomainProfile[];
+  resume_custom_titles?: Record<string, string>;
+  resume_custom_summaries?: Record<string, string>;
+  resume_custom_categories?: Record<string, string>;
   hero_stats: HeroStat[];
   overview_fourth_stat: {
     label: string;
