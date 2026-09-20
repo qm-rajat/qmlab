@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Save } from 'lucide-react';
 import { Blog } from '../../types';
 import MarkdownEditor from './MarkdownEditor';
+import { ImageUploadInput } from './ImageUploadInput';
 
 interface AdminBlogsTabProps {
   blogs: Blog[];
@@ -213,14 +214,11 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
             
             {/* Cover Image URL */}
             <div className="md:col-span-3 space-y-1">
-              <label htmlFor="bform-image" className="text-xs font-bold text-slate-505 block">Cover Image URL</label>
-              <input
-                id="bform-image"
-                type="text"
+              <ImageUploadInput
+                label="Cover Image URL or Upload Local File"
                 value={blogForm.cover_image_url || ''}
-                onChange={(e) => setBlogForm({ ...blogForm, cover_image_url: e.target.value })}
-                placeholder="https://images.unsplash.com/photo-..."
-                className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                onChange={(val) => setBlogForm({ ...blogForm, cover_image_url: val })}
+                placeholder="https://images.unsplash.com/... or upload file"
               />
             </div>
 

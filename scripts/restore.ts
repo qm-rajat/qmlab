@@ -7,7 +7,10 @@ import {
   saveProjects,
   saveBlogs,
   saveCertificates,
-  saveContacts
+  saveContacts,
+  saveServices,
+  saveCustomPassword,
+  saveStoredAiApiKey
 } from "../server/lib/store";
 
 const BACKUP_DIR = path.join(process.cwd(), ".data", "backups");
@@ -47,22 +50,24 @@ async function runRestore() {
       throw new Error("Invalid backup file format. Missing 'data' or 'timestamp'.");
     }
 
-    const { settings, projects, blogs, certificates, contacts } = backup.data;
+    const payload = backup.data ? backup.data : backup;
+    const { settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey } = payload;
 
     if (!settings || typeof settings !== "object") throw new Error("Invalid settings in backup.");
-    if (!Array.isArray(projects)) throw new Error("Invalid projects array in backup.");
-    if (!Array.isArray(blogs)) throw new Error("Invalid blogs array in backup.");
-    if (!Array.isArray(certificates)) throw new Error("Invalid certificates array in backup.");
-    if (!Array.isArray(contacts)) throw new Error("Invalid contacts array in backup.");
+    if (projects && !Array.isArray(projects)) throw new Error("Invalid projects array in backup.");
+    if (blogs && !Array.isArray(blogs)) throw new Error("Invalid blogs array in backup.");
+    if (certificates && !Array.isArray(certificates)) throw new Error("Invalid certificates array in backup.");
+    if (contacts && !Array.isArray(contacts)) throw new Error("Invalid contacts array in backup.");
 
     // 2. Display restore summary
-    console.log(`\nBackup timestamp: ${backup.timestamp}`);
+    console.log(`\nBackup timestamp: ${backup.timestamp || 'N/A'}`);
     console.log("Data to restore:");
-    console.log(`- Settings: Present`);
-    console.log(`- Projects: ${projects.length}`);
-    console.log(`- Blogs: ${blogs.length}`);
-    console.log(`- Certificates: ${certificates.length}`);
-    console.log(`- Contacts: ${contacts.length}`);
+    console.log(`- Settings: Present (with dynamic SEO & metadata)`);
+    console.log(`- Projects: ${projects?.length || 0}`);
+    console.log(`- Blogs: ${blogs?.length || 0}`);
+    console.log(`- Certificates: ${certificates?.length || 0}`);
+    console.log(`- Contacts: ${contacts?.length || 0}`);
+    console.log(`- Services: ${services?.length || 0}`);
 
     // 3. Require explicit confirmation
     console.log("\n⚠️  WARNING: This will OVERWRITE current data in Redis.");
@@ -75,22 +80,44 @@ async function runRestore() {
 
     console.log("Restoring data to Redis...");
 
-    // 4. Restore data (using Promise.all for speed, or sequentially for safety)
-    // We do it sequentially to ensure order and avoid overwhelming the connection.
+    // 4. Restore data
     await saveSettings(settings);
     console.log("✅ Restored Settings");
 
-    await saveProjects(projects);
-    console.log("✅ Restored Projects");
+    if (projects && Array.isArray(projects)) {
+      await saveProjects(projects);
+      console.log("✅ Restored Projects");
+    }
 
-    await saveBlogs(blogs);
-    console.log("✅ Restored Blogs");
+    if (blogs && Array.isArray(blogs)) {
+      await saveBlogs(blogs);
+      console.log("✅ Restored Blogs");
+    }
 
-    await saveCertificates(certificates);
-    console.log("✅ Restored Certificates");
+    if (certificates && Array.isArray(certificates)) {
+      await saveCertificates(certificates);
+      console.log("✅ Restored Certificates");
+    }
 
-    await saveContacts(contacts);
-    console.log("✅ Restored Contacts");
+    if (contacts && Array.isArray(contacts)) {
+      await saveContacts(contacts);
+      console.log("✅ Restored Contacts");
+    }
+
+    if (services && Array.isArray(services)) {
+      await saveServices(services);
+      console.log("✅ Restored Services");
+    }
+
+    if (customPassword) {
+      await saveCustomPassword(customPassword);
+      console.log("✅ Restored Admin Password");
+    }
+
+    if (aiApiKey) {
+      await saveStoredAiApiKey(aiApiKey);
+      console.log("✅ Restored AI API Key");
+    }
 
     console.log("\n🎉 Restore completed successfully!");
     process.exit(0);

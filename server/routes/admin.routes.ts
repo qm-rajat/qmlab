@@ -22,8 +22,18 @@ import {
   saveContacts,
   saveCustomPassword,
   saveStoredAiApiKey,
+  getSettings,
+  getProjects,
+  getBlogs,
+  getCertificates,
+  getCustomPassword,
+  getStoredAiApiKey,
+  getServices,
+  saveServices,
 } from "../lib/store.js";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { getBotTelemetry, recordBotCrawl } from "../services/crawler.service.js";
 import { getTrafficTelemetry } from "../services/telemetry.service.js";
 
@@ -146,6 +156,18 @@ router.put("/certificates", requireAdmin, async (req, res) => {
   }
 });
 
+router.put("/services", requireAdmin, async (req, res) => {
+  try {
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: "Services payload must be an array." });
+    }
+    await saveServices(req.body);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to save services." });
+  }
+});
+
 router.get("/contacts", requireAdmin, async (req, res) => {
   try {
     const contacts = await getContacts();
@@ -254,6 +276,213 @@ router.post("/ai-key/set", requireAdmin, async (req, res) => {
     res.json({ success: true, apiKey: cleanKey, message: "AI API key saved successfully." });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Failed to save AI key." });
+  }
+});
+
+// File Upload endpoint for local storage / public/uploads sync with Git
+router.post("/upload", requireAdmin, async (req, res) => {
+  try {
+    const { filename, data } = req.body;
+    if (!filename || !data) {
+      return res.status(400).json({ success: false, error: "Filename and data are required." });
+    }
+
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const safeName = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const filePath = path.join(uploadsDir, safeName);
+
+    let base64Data = data;
+    if (data.includes(";base64,")) {
+      base64Data = data.split(";base64,").pop();
+    }
+    const buffer = Buffer.from(base64Data, "base64");
+
+    fs.writeFileSync(filePath, buffer);
+
+    const url = `/uploads/${safeName}`;
+    res.json({ success: true, url, message: "Image uploaded successfully to /public/uploads/" });
+  } catch (error: any) {
+    console.error("Upload error:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to upload file." });
+  }
+});
+
+// Media Library: List uploaded files
+router.get("/media", requireAdmin, async (req, res) => {
+  try {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      return res.json({ success: true, files: [] });
+    }
+    const filenames = fs.readdirSync(uploadsDir);
+    const files = filenames.map(filename => {
+      const filePath = path.join(uploadsDir, filename);
+      const stats = fs.statSync(filePath);
+      return {
+        filename,
+        url: `/uploads/${filename}`,
+        sizeBytes: stats.size,
+        createdAt: stats.birthtime || stats.mtime,
+      };
+    });
+    res.json({ success: true, files });
+  } catch (error: any) {
+    console.error("Failed to list media:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to list media." });
+  }
+});
+
+// Media Library: Delete file
+router.delete("/media", requireAdmin, async (req, res) => {
+  try {
+    const { filename } = req.body;
+    if (!filename || typeof filename !== "string") {
+      return res.status(400).json({ success: false, error: "Filename is required." });
+    }
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(process.cwd(), "public", "uploads", safeFilename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      res.json({ success: true, message: `Deleted ${safeFilename} successfully.` });
+    } else {
+      res.status(404).json({ success: false, error: "File not found." });
+    }
+  } catch (error: any) {
+    console.error("Failed to delete media:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to delete file." });
+  }
+});
+
+// Backup All Data to JSON
+router.post("/backup", requireAdmin, async (req, res) => {
+  try {
+    const [settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey] = await Promise.all([
+      getSettings(),
+      getProjects(),
+      getBlogs(),
+      getCertificates(),
+      getContacts(),
+      getServices(),
+      getCustomPassword(),
+      getStoredAiApiKey(),
+    ]);
+
+    const backupData = {
+      version: 1,
+      timestamp: new Date().toISOString(),
+      settings,
+      projects,
+      blogs,
+      certificates,
+      contacts,
+      services,
+      customPassword,
+      aiApiKey,
+    };
+
+    const backupsDir = path.join(process.cwd(), ".data", "backups");
+    if (!fs.existsSync(backupsDir)) {
+      fs.mkdirSync(backupsDir, { recursive: true });
+    }
+
+    const latestPath = path.join(backupsDir, "latest.json");
+    fs.writeFileSync(latestPath, JSON.stringify(backupData, null, 2), "utf-8");
+
+    const dateStr = new Date().toISOString().replace(/[:.]/g, "-");
+    const archivePath = path.join(backupsDir, `backup-${dateStr}.json`);
+    fs.writeFileSync(archivePath, JSON.stringify(backupData, null, 2), "utf-8");
+
+    res.json({ 
+      success: true, 
+      message: "Backup created successfully in .data/backups/latest.json",
+      backupData,
+      filename: `backup-${dateStr}.json`
+    });
+  } catch (error: any) {
+    console.error("Backup error:", error);
+    res.status(500).json({ success: false, error: error.message || "Backup failed." });
+  }
+});
+
+// Download latest backup JSON file directly
+router.get("/backup/download", requireAdmin, async (req, res) => {
+  try {
+    const [settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey] = await Promise.all([
+      getSettings(),
+      getProjects(),
+      getBlogs(),
+      getCertificates(),
+      getContacts(),
+      getServices(),
+      getCustomPassword(),
+      getStoredAiApiKey(),
+    ]);
+
+    const backupData = {
+      version: 1,
+      timestamp: new Date().toISOString(),
+      settings,
+      projects,
+      blogs,
+      certificates,
+      contacts,
+      services,
+      customPassword,
+      aiApiKey,
+    };
+
+    const filename = `qmlabs-backup-${new Date().toISOString().split("T")[0]}.json`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify(backupData, null, 2));
+  } catch (error: any) {
+    console.error("Download backup error:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to download backup." });
+  }
+});
+
+// Restore All Data from JSON (Supports uploaded backup payload or latest.json)
+router.post("/restore", requireAdmin, async (req, res) => {
+  try {
+    let backupData: any = null;
+
+    if (req.body && req.body.backupData && typeof req.body.backupData === "object") {
+      backupData = req.body.backupData;
+    } else {
+      const backupsDir = path.join(process.cwd(), ".data", "backups");
+      const latestPath = path.join(backupsDir, "latest.json");
+
+      if (!fs.existsSync(latestPath)) {
+        return res.status(404).json({ success: false, error: "No backup found (.data/backups/latest.json)." });
+      }
+
+      const raw = fs.readFileSync(latestPath, "utf-8");
+      backupData = JSON.parse(raw);
+    }
+
+    // Support nested data format if coming from scripts/backup.ts (which used backup.data)
+    const payload = backupData.data ? backupData.data : backupData;
+
+    if (payload.settings) await saveSettings(payload.settings);
+    if (payload.projects && Array.isArray(payload.projects)) await saveProjects(payload.projects);
+    if (payload.blogs && Array.isArray(payload.blogs)) await saveBlogs(payload.blogs);
+    if (payload.certificates && Array.isArray(payload.certificates)) await saveCertificates(payload.certificates);
+    if (payload.contacts && Array.isArray(payload.contacts)) await saveContacts(payload.contacts);
+    if (payload.services && Array.isArray(payload.services)) await saveServices(payload.services);
+    if (payload.customPassword) await saveCustomPassword(payload.customPassword);
+    if (payload.aiApiKey) await saveStoredAiApiKey(payload.aiApiKey);
+
+    res.json({ 
+      success: true, 
+      message: "Restored all database records successfully (settings, projects, blogs, certificates, contacts, services)." 
+    });
+  } catch (error: any) {
+    console.error("Restore error:", error);
+    res.status(500).json({ success: false, error: error.message || "Restore failed." });
   }
 });
 

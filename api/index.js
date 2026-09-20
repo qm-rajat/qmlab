@@ -1,5 +1,6 @@
 // server/api.ts
 import express from "express";
+import path2 from "path";
 import cookieParser from "cookie-parser";
 import dotenv2 from "dotenv";
 
@@ -15,6 +16,64 @@ import crypto from "crypto";
 
 // server/lib/store.ts
 import Redis from "ioredis";
+var DEFAULT_SERVICES = [
+  {
+    id: "srv-1",
+    title: "Full-Stack Web Engineering & SaaS",
+    slug: "fullstack-web-engineering",
+    short_description: "High-performance React, TypeScript, and Node.js applications built for speed, scalability, and conversion.",
+    full_description: "End-to-end development of modern web apps, dashboards, and SaaS platforms. Built with robust REST APIs, secure authentication, and responsive Tailwind layouts.",
+    icon: "Code2",
+    deliverables: ["Production-ready Web App", "Responsive Tailwind UI", "REST/GraphQL API", "Secure Auth & Database"],
+    pricing_type: "fixed",
+    starting_price: "$2,500",
+    turnaround_time: "2-4 Weeks",
+    is_active: true,
+    sort_order: 1
+  },
+  {
+    id: "srv-2",
+    title: "AI & LLM / MCP Integration",
+    slug: "ai-llm-mcp-integration",
+    short_description: "Custom AI agents, Gemini API integration, Model Context Protocol (MCP) servers, and smart automation.",
+    full_description: "Supercharge your software with generative AI. Implement custom embeddings, RAG pipelines, automated workflows, and intelligent assistant features securely.",
+    icon: "Cpu",
+    deliverables: ["Custom Gemini/OpenAI Integration", "Model Context Protocol (MCP) Server", "RAG & Document Search", "Secure Server-Side Proxy"],
+    pricing_type: "fixed",
+    starting_price: "$3,000",
+    turnaround_time: "2-3 Weeks",
+    is_active: true,
+    sort_order: 2
+  },
+  {
+    id: "srv-3",
+    title: "Technical SEO, AEO & GEO Optimization",
+    slug: "technical-seo-aeo-geo",
+    short_description: "Dominate search engines and AI answer engines (ChatGPT, Perplexity) with advanced technical auditing.",
+    full_description: "Optimize your web presence for both traditional search and AI answer engines. Structured JSON-LD schemas, lightning-fast Core Web Vitals, and regional GEO targeting.",
+    icon: "Search",
+    deliverables: ["Complete Technical SEO Audit", "Schema.org JSON-LD Implementation", "AEO / AI Citation Optimization", "Core Web Vitals Tuning"],
+    pricing_type: "fixed",
+    starting_price: "$1,500",
+    turnaround_time: "1-2 Weeks",
+    is_active: true,
+    sort_order: 3
+  },
+  {
+    id: "srv-4",
+    title: "Cloud Architecture & DevOps Advisory",
+    slug: "cloud-architecture-devops",
+    short_description: "Scalable cloud deployment, Dockerization, CI/CD pipelines, and high-availability server setups.",
+    full_description: "Expert guidance and setup for Cloud Run, Vercel, AWS, Redis, and PostgreSQL with enterprise-grade security and automated deployment pipelines.",
+    icon: "Server",
+    deliverables: ["Cloud Architecture Blueprint", "Docker & CI/CD Pipelines", "Database Security Hardening", "Monitoring & Telemetry"],
+    pricing_type: "hourly",
+    starting_price: "$150/hr",
+    turnaround_time: "Flexible",
+    is_active: true,
+    sort_order: 4
+  }
+];
 var EMPTY_SETTINGS = {
   hero_name: "",
   hero_tagline: "",
@@ -25,6 +84,26 @@ var EMPTY_SETTINGS = {
   seo_home_description: "",
   seo_home_keywords: "",
   seo_og_image_url: "",
+  seo_twitter_handle: "@rajatdash",
+  seo_theme_color: "#0f172a",
+  seo_services_title: "",
+  seo_services_description: "",
+  seo_services_keywords: "",
+  seo_projects_title: "",
+  seo_projects_description: "",
+  seo_projects_keywords: "",
+  seo_blog_title: "",
+  seo_blog_description: "",
+  seo_blog_keywords: "",
+  seo_resume_title: "",
+  seo_resume_description: "",
+  seo_resume_keywords: "",
+  seo_certificates_title: "",
+  seo_certificates_description: "",
+  seo_certificates_keywords: "",
+  seo_contact_title: "",
+  seo_contact_description: "",
+  seo_contact_keywords: "",
   skills: [],
   experience: [],
   education: [],
@@ -60,6 +139,7 @@ var KEYS = {
   blogs: "qmlabs:blogs",
   certificates: "qmlabs:certificates",
   contacts: "qmlabs:contacts",
+  services: "qmlabs:services",
   password: "qmlabs:admin:password",
   aiApiKey: "qmlabs:ai:api_key"
 };
@@ -112,6 +192,8 @@ var getCertificates = () => readJson(KEYS.certificates, []);
 var saveCertificates = (value) => writeJson(KEYS.certificates, value);
 var getContacts = () => readJson(KEYS.contacts, []);
 var saveContacts = (value) => writeJson(KEYS.contacts, value);
+var getServices = () => readJson(KEYS.services, DEFAULT_SERVICES);
+var saveServices = (value) => writeJson(KEYS.services, value);
 var getCustomPassword = () => readString(KEYS.password);
 var saveCustomPassword = (value) => writeString(KEYS.password, value);
 var getStoredAiApiKey = () => readString(KEYS.aiApiKey);
@@ -295,6 +377,8 @@ function rateLimiter(namespace, options) {
 
 // server/routes/admin.routes.ts
 import crypto2 from "crypto";
+import fs from "fs";
+import path from "path";
 
 // server/services/crawler.service.ts
 var recordedLogs = [];
@@ -317,7 +401,7 @@ function identifyBot(userAgent) {
   if (ua.includes("linkedinbot")) return { botName: "LinkedInBot", botCategory: "social_bot" };
   return null;
 }
-function recordBotCrawl(userAgent, path, method = "GET", statusCode = 200, ip = "127.0.0.1", responseTimeMs = 25) {
+function recordBotCrawl(userAgent, path3, method = "GET", statusCode = 200, ip = "127.0.0.1", responseTimeMs = 25) {
   const botInfo = identifyBot(userAgent);
   if (!botInfo) return;
   const newEntry = {
@@ -325,7 +409,7 @@ function recordBotCrawl(userAgent, path, method = "GET", statusCode = 200, ip = 
     botName: botInfo.botName,
     botCategory: botInfo.botCategory,
     userAgent,
-    path,
+    path: path3,
     method,
     statusCode,
     ip: ip.replace(/^.*:/, "") || "127.0.0.1",
@@ -355,8 +439,8 @@ function getBotTelemetry() {
     }
     pathHits[log.path].hits += 1;
   });
-  const topCrawledPaths = Object.entries(pathHits).map(([path, data]) => ({
-    path,
+  const topCrawledPaths = Object.entries(pathHits).map(([path3, data]) => ({
+    path: path3,
     hits: data.hits,
     lastCrawled: formatTimeAgo(data.lastTime)
   })).sort((a, b) => b.hits - a.hits);
@@ -423,11 +507,11 @@ function parseDevice(ua) {
   }
   return "Desktop";
 }
-function recordPageView(path, userAgent = "", ip = "127.0.0.1", referrer = "") {
+function recordPageView(path3, userAgent = "", ip = "127.0.0.1", referrer = "") {
   const cleanIp = (ip || "127.0.0.1").replace(/^.*:/, "");
   const entry = {
     id: `vis-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    path: path || "/",
+    path: path3 || "/",
     ip: cleanIp,
     userAgent: userAgent || "",
     deviceType: parseDevice(userAgent),
@@ -451,8 +535,8 @@ function getTrafficTelemetry() {
   recordedVisits.forEach((v) => {
     pathCounts[v.path] = (pathCounts[v.path] || 0) + 1;
   });
-  const topPages = Object.entries(pathCounts).map(([path, views]) => ({
-    path,
+  const topPages = Object.entries(pathCounts).map(([path3, views]) => ({
+    path: path3,
     views,
     bounceRate: totalVisits > 0 ? `${Math.max(10, Math.round((1 - views / totalVisits) * 100))}%` : "0%"
   })).sort((a, b) => b.views - a.views);
@@ -618,6 +702,17 @@ router.put("/certificates", requireAdmin, async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save certificates." });
   }
 });
+router.put("/services", requireAdmin, async (req, res) => {
+  try {
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: "Services payload must be an array." });
+    }
+    await saveServices(req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message || "Failed to save services." });
+  }
+});
 router.get("/contacts", requireAdmin, async (req, res) => {
   try {
     const contacts = await getContacts();
@@ -667,7 +762,7 @@ router.get("/bot-logs", requireAdmin, async (req, res) => {
 });
 router.post("/bot-ping", requireAdmin, async (req, res) => {
   try {
-    const { botName = "Googlebot", path = "/sitemap.xml", statusCode = 200 } = req.body;
+    const { botName = "Googlebot", path: path3 = "/sitemap.xml", statusCode = 200 } = req.body;
     const sampleUAs = {
       Googlebot: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
       Bingbot: "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
@@ -678,8 +773,8 @@ router.post("/bot-ping", requireAdmin, async (req, res) => {
       Applebot: "Mozilla/5.0 (compatible; Applebot/0.1; +http://www.apple.com/go/applebot)"
     };
     const ua = sampleUAs[botName] || "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
-    recordBotCrawl(ua, path, "GET", Number(statusCode), "66.249.66." + Math.floor(Math.random() * 250 + 1), Math.floor(Math.random() * 30 + 15));
-    res.json({ success: true, message: `Simulated crawler hit from ${botName} to ${path}` });
+    recordBotCrawl(ua, path3, "GET", Number(statusCode), "66.249.66." + Math.floor(Math.random() * 250 + 1), Math.floor(Math.random() * 30 + 15));
+    res.json({ success: true, message: `Simulated crawler hit from ${botName} to ${path3}` });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message || "Failed to simulate bot hit." });
   }
@@ -713,6 +808,182 @@ router.post("/ai-key/set", requireAdmin, async (req, res) => {
     res.json({ success: true, apiKey: cleanKey, message: "AI API key saved successfully." });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message || "Failed to save AI key." });
+  }
+});
+router.post("/upload", requireAdmin, async (req, res) => {
+  try {
+    const { filename, data } = req.body;
+    if (!filename || !data) {
+      return res.status(400).json({ success: false, error: "Filename and data are required." });
+    }
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    const safeName = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const filePath = path.join(uploadsDir, safeName);
+    let base64Data = data;
+    if (data.includes(";base64,")) {
+      base64Data = data.split(";base64,").pop();
+    }
+    const buffer = Buffer.from(base64Data, "base64");
+    fs.writeFileSync(filePath, buffer);
+    const url = `/uploads/${safeName}`;
+    res.json({ success: true, url, message: "Image uploaded successfully to /public/uploads/" });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to upload file." });
+  }
+});
+router.get("/media", requireAdmin, async (req, res) => {
+  try {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      return res.json({ success: true, files: [] });
+    }
+    const filenames = fs.readdirSync(uploadsDir);
+    const files = filenames.map((filename) => {
+      const filePath = path.join(uploadsDir, filename);
+      const stats = fs.statSync(filePath);
+      return {
+        filename,
+        url: `/uploads/${filename}`,
+        sizeBytes: stats.size,
+        createdAt: stats.birthtime || stats.mtime
+      };
+    });
+    res.json({ success: true, files });
+  } catch (error) {
+    console.error("Failed to list media:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to list media." });
+  }
+});
+router.delete("/media", requireAdmin, async (req, res) => {
+  try {
+    const { filename } = req.body;
+    if (!filename || typeof filename !== "string") {
+      return res.status(400).json({ success: false, error: "Filename is required." });
+    }
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(process.cwd(), "public", "uploads", safeFilename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      res.json({ success: true, message: `Deleted ${safeFilename} successfully.` });
+    } else {
+      res.status(404).json({ success: false, error: "File not found." });
+    }
+  } catch (error) {
+    console.error("Failed to delete media:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to delete file." });
+  }
+});
+router.post("/backup", requireAdmin, async (req, res) => {
+  try {
+    const [settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey] = await Promise.all([
+      getSettings(),
+      getProjects(),
+      getBlogs(),
+      getCertificates(),
+      getContacts(),
+      getServices(),
+      getCustomPassword(),
+      getStoredAiApiKey()
+    ]);
+    const backupData = {
+      version: 1,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      settings,
+      projects,
+      blogs,
+      certificates,
+      contacts,
+      services,
+      customPassword,
+      aiApiKey
+    };
+    const backupsDir = path.join(process.cwd(), ".data", "backups");
+    if (!fs.existsSync(backupsDir)) {
+      fs.mkdirSync(backupsDir, { recursive: true });
+    }
+    const latestPath = path.join(backupsDir, "latest.json");
+    fs.writeFileSync(latestPath, JSON.stringify(backupData, null, 2), "utf-8");
+    const dateStr = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const archivePath = path.join(backupsDir, `backup-${dateStr}.json`);
+    fs.writeFileSync(archivePath, JSON.stringify(backupData, null, 2), "utf-8");
+    res.json({
+      success: true,
+      message: "Backup created successfully in .data/backups/latest.json",
+      backupData,
+      filename: `backup-${dateStr}.json`
+    });
+  } catch (error) {
+    console.error("Backup error:", error);
+    res.status(500).json({ success: false, error: error.message || "Backup failed." });
+  }
+});
+router.get("/backup/download", requireAdmin, async (req, res) => {
+  try {
+    const [settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey] = await Promise.all([
+      getSettings(),
+      getProjects(),
+      getBlogs(),
+      getCertificates(),
+      getContacts(),
+      getServices(),
+      getCustomPassword(),
+      getStoredAiApiKey()
+    ]);
+    const backupData = {
+      version: 1,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      settings,
+      projects,
+      blogs,
+      certificates,
+      contacts,
+      services,
+      customPassword,
+      aiApiKey
+    };
+    const filename = `qmlabs-backup-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.json`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify(backupData, null, 2));
+  } catch (error) {
+    console.error("Download backup error:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to download backup." });
+  }
+});
+router.post("/restore", requireAdmin, async (req, res) => {
+  try {
+    let backupData = null;
+    if (req.body && req.body.backupData && typeof req.body.backupData === "object") {
+      backupData = req.body.backupData;
+    } else {
+      const backupsDir = path.join(process.cwd(), ".data", "backups");
+      const latestPath = path.join(backupsDir, "latest.json");
+      if (!fs.existsSync(latestPath)) {
+        return res.status(404).json({ success: false, error: "No backup found (.data/backups/latest.json)." });
+      }
+      const raw = fs.readFileSync(latestPath, "utf-8");
+      backupData = JSON.parse(raw);
+    }
+    const payload = backupData.data ? backupData.data : backupData;
+    if (payload.settings) await saveSettings(payload.settings);
+    if (payload.projects && Array.isArray(payload.projects)) await saveProjects(payload.projects);
+    if (payload.blogs && Array.isArray(payload.blogs)) await saveBlogs(payload.blogs);
+    if (payload.certificates && Array.isArray(payload.certificates)) await saveCertificates(payload.certificates);
+    if (payload.contacts && Array.isArray(payload.contacts)) await saveContacts(payload.contacts);
+    if (payload.services && Array.isArray(payload.services)) await saveServices(payload.services);
+    if (payload.customPassword) await saveCustomPassword(payload.customPassword);
+    if (payload.aiApiKey) await saveStoredAiApiKey(payload.aiApiKey);
+    res.json({
+      success: true,
+      message: "Restored all database records successfully (settings, projects, blogs, certificates, contacts, services)."
+    });
+  } catch (error) {
+    console.error("Restore error:", error);
+    res.status(500).json({ success: false, error: error.message || "Restore failed." });
   }
 });
 var admin_routes_default = router;
@@ -804,23 +1075,32 @@ var interactionRateLimiter = rateLimiter("blog-interaction", {
 });
 router2.get("/content", async (req, res) => {
   try {
-    const [settings, projects, blogs, certificates] = await Promise.all([
+    const [settings, projects, blogs, certificates, services] = await Promise.all([
       getSettings(),
       getProjects(),
       getBlogs(),
-      getCertificates()
+      getCertificates(),
+      getServices()
     ]);
-    res.json({ success: true, storeConfigured: isStoreConfigured(), settings, projects, blogs, certificates });
+    res.json({ success: true, storeConfigured: isStoreConfigured(), settings, projects, blogs, certificates, services });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message || "Failed to load site content." });
   }
 });
+router2.get("/services", async (req, res) => {
+  try {
+    const services = await getServices();
+    res.json({ success: true, services });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message || "Failed to load services." });
+  }
+});
 router2.post("/telemetry/visit", telemetryRateLimiter, (req, res) => {
   try {
-    const { path = "/", referrer = "" } = req.body;
+    const { path: path3 = "/", referrer = "" } = req.body;
     const userAgent = String(req.headers["user-agent"] || "").slice(0, 500);
     const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "127.0.0.1";
-    const safePath = String(path).slice(0, 200);
+    const safePath = String(path3).slice(0, 200);
     const safeReferrer = String(referrer).slice(0, 500);
     if (identifyBot(userAgent)) {
       recordBotCrawl(userAgent, safePath, "GET", 200, clientIp, 20);
@@ -1942,7 +2222,7 @@ function generateOpenApiSpec(req) {
   return {
     openapi: "3.0.3",
     info: {
-      title: "Rajat Dash Portfolio & Content CMS Management API",
+      title: "Rajat Kumar Dash Portfolio & Content CMS Management API",
       description: "Full programmatic access for ChatGPT Custom GPTs, Claude Desktop, and AI Agents to create, update, delete, and manage projects, case studies, blogs, certifications, resume work experiences, education history, skills, and site settings.",
       version: "1.0.0",
       contact: {
@@ -2528,7 +2808,7 @@ router4.get("/status", async (req, res) => {
   const baseUrl = resolveBaseUrl(req);
   res.json({
     success: true,
-    name: "Rajat Dash AI & ChatGPT / MCP CMS Engine",
+    name: "Rajat Kumar Dash AI & ChatGPT / MCP CMS Engine",
     status: "online",
     authentication: {
       configured: !!currentKey,
@@ -3637,11 +3917,12 @@ function corsHeaders(req, res, next) {
 // server/api.ts
 dotenv2.config();
 var app = express();
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 app.use(cookieParser());
 app.use(securityHeaders);
 app.use(corsHeaders);
+app.use("/uploads", express.static(path2.join(process.cwd(), "public", "uploads")));
 app.use("/", root_routes_default);
 app.use("/api", routes_default);
 var api_default = app;

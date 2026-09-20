@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, Sparkles, X, Check } from 'lucide-react';
 import { Project, SiteSettings } from '../../types';
 import { DEFAULT_PROFILES } from './AdminProfilesTab';
+import { ImageUploadInput } from './ImageUploadInput';
 
 interface AdminProjectsTabProps {
   projects: Project[];
@@ -303,19 +304,16 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             </div>
 
             {/* Primary Picture Link */}
-            <div className="space-y-1">
-              <label htmlFor="pform-image" className="text-xs font-bold text-slate-505 block">Primary Picture URL</label>
-              <input
-                id="pform-image"
-                type="text"
+            <div className="space-y-1 md:col-span-2">
+              <ImageUploadInput
+                label="Primary Picture URL or Upload Local File"
                 value={projectForm.images?.[0] || ''}
-                onChange={(e) => {
+                onChange={(val) => {
                   const currentImages = projectForm.images || [];
-                  const newImages = [e.target.value, ...currentImages.slice(1)];
+                  const newImages = [val, ...currentImages.slice(1)];
                   setProjectForm({ ...projectForm, images: newImages.filter(Boolean) });
                 }}
-                placeholder="https://images.unsplash.com/..."
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                placeholder="https://images.unsplash.com/... or upload image file"
               />
             </div>
 

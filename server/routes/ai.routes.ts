@@ -18,7 +18,7 @@ export function generateOpenApiSpec(req: Request) {
   return {
     openapi: "3.0.3",
     info: {
-      title: "Rajat Dash Portfolio & Content CMS Management API",
+      title: "Rajat Kumar Dash Portfolio & Content CMS Management API",
       description:
         "Full programmatic access for ChatGPT Custom GPTs, Claude Desktop, and AI Agents to create, update, delete, and manage projects, case studies, blogs, certifications, resume work experiences, education history, skills, and site settings.",
       version: "1.0.0",
@@ -611,7 +611,7 @@ router.get("/status", async (req, res) => {
 
   res.json({
     success: true,
-    name: "Rajat Dash AI & ChatGPT / MCP CMS Engine",
+    name: "Rajat Kumar Dash AI & ChatGPT / MCP CMS Engine",
     status: "online",
     authentication: {
       configured: !!currentKey,

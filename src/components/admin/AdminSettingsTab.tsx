@@ -8,6 +8,7 @@ import { SiteSettings, Experience, Education } from '../../types';
 import RichTextEditor from '../RichTextEditor';
 import { getClientBaseUrl } from '../../lib/seo';
 import { AdminProfilesTab } from './AdminProfilesTab';
+import { ImageUploadInput } from './ImageUploadInput';
 
 export type SettingsSubTab = 'hero' | 'profiles' | 'experience' | 'education' | 'skills' | 'socials' | 'seo' | 'database';
 
@@ -55,7 +56,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       });
       const data = await response.json();
       if (data.success) {
-        setSysMessage({ text: 'Backup completed successfully!', type: 'success' });
+        setSysMessage({ text: 'Backup created in .data/backups/latest.json successfully!', type: 'success' });
       } else {
         setSysMessage({ text: data.error || 'Backup failed.', type: 'error' });
       }
@@ -63,6 +64,46 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       setSysMessage({ text: err.message, type: 'error' });
     }
     setIsBackingUp(false);
+  };
+
+  const handleDownloadBackup = () => {
+    window.location.href = '/api/admin/backup/download';
+  };
+
+  const handleFileUploadRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!window.confirm(`⚠️ WARNING: Restoring from "${file.name}" will overwrite your live database data. Proceed?`)) {
+      e.target.value = '';
+      return;
+    }
+
+    setIsRestoring(true);
+    setSysMessage(null);
+
+    try {
+      const text = await file.text();
+      const parsedData = JSON.parse(text);
+
+      const response = await fetch('/api/admin/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ backupData: parsedData })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSysMessage({ text: 'Restore completed successfully from uploaded file! Please refresh the page.', type: 'success' });
+      } else {
+        setSysMessage({ text: data.error || 'Restore failed.', type: 'error' });
+      }
+    } catch (err: any) {
+      setSysMessage({ text: `Invalid backup file or network error: ${err.message}`, type: 'error' });
+    } finally {
+      setIsRestoring(false);
+      e.target.value = '';
+    }
   };
 
   const handleRestore = async () => {
@@ -778,38 +819,21 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label htmlFor="set-profile-img" className="text-xs font-bold text-slate-505 block">Profile Image URL</label>
-              <input
-                id="set-profile-img"
-                type="text"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <ImageUploadInput
+                label="Profile Image URL or Upload Local File"
                 value={settings.profile_image_url || ''}
-                onChange={(e) => onUpdateSettings({ ...settings, profile_image_url: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                placeholder="https://..."
+                onChange={(val) => onUpdateSettings({ ...settings, profile_image_url: val })}
+                placeholder="https://... or upload file"
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="set-logo-img" className="text-xs font-bold text-slate-505 block">Logo Image URL</label>
-              <input
-                id="set-logo-img"
-                type="text"
+            <div>
+              <ImageUploadInput
+                label="Logo Image URL or Upload Local File"
                 value={settings.logo_url || ''}
-                onChange={(e) => onUpdateSettings({ ...settings, logo_url: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                placeholder="https://..."
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="set-resume-pdf" className="text-xs font-bold text-slate-505 block">Resume PDF Link</label>
-              <input
-                id="set-resume-pdf"
-                type="text"
-                value={settings.resume_storage_path || ''}
-                onChange={(e) => onUpdateSettings({ ...settings, resume_storage_path: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-                placeholder="https://.../resume.pdf"
+                onChange={(val) => onUpdateSettings({ ...settings, logo_url: val })}
+                placeholder="https://... or upload file"
               />
             </div>
           </div>
@@ -1150,48 +1174,293 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="seo-title-field" className="text-xs font-bold text-slate-550 block">Canonical Home Title</label>
-            <input
-              id="seo-title-field"
-              type="text"
-              value={settings.seo_home_title || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, seo_home_title: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-            />
+          {/* GLOBAL & SOCIAL SEO */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <Globe className="w-4 h-4 text-primary" />
+              Global Meta & Social Identity
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label htmlFor="seo-twitter-field" className="text-xs font-bold text-slate-600 block">Twitter / X Handle</label>
+                <input
+                  id="seo-twitter-field"
+                  type="text"
+                  placeholder="@rajatdash"
+                  value={settings.seo_twitter_handle || ''}
+                  onChange={(e) => onUpdateSettings({ ...settings, seo_twitter_handle: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="seo-theme-field" className="text-xs font-bold text-slate-600 block">Browser Theme Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={settings.seo_theme_color || '#0f172a'}
+                    onChange={(e) => onUpdateSettings({ ...settings, seo_theme_color: e.target.value })}
+                    className="w-9 h-9 rounded-xl border border-slate-200 cursor-pointer p-0.5"
+                  />
+                  <input
+                    id="seo-theme-field"
+                    type="text"
+                    placeholder="#0f172a"
+                    value={settings.seo_theme_color || ''}
+                    onChange={(e) => onUpdateSettings({ ...settings, seo_theme_color: e.target.value })}
+                    className="flex-1 px-3.5 py-2 text-sm font-mono bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="seo-og-field" className="text-xs font-bold text-slate-600 block">Default OG Image URL</label>
+                <input
+                  id="seo-og-field"
+                  type="text"
+                  placeholder="https://.../og-image.png"
+                  value={settings.seo_og_image_url || ''}
+                  onChange={(e) => onUpdateSettings({ ...settings, seo_og_image_url: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="seo-desc-field" className="text-xs font-bold text-slate-550 block">Home SEO Description</label>
-            <textarea
-              id="seo-desc-field"
-              value={settings.seo_home_description || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, seo_home_description: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
-              rows={3}
-            />
+          {/* HOME PAGE SEO */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Home Page (/) SEO
+            </h4>
+            <div className="space-y-1">
+              <label htmlFor="seo-title-field" className="text-xs font-bold text-slate-600 block">Canonical Home Title</label>
+              <input
+                id="seo-title-field"
+                type="text"
+                placeholder="Rajat Kumar Dash | Technical Product Manager & Software Engineer"
+                value={settings.seo_home_title || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_home_title: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="seo-desc-field" className="text-xs font-bold text-slate-600 block">Home Meta Description</label>
+              <textarea
+                id="seo-desc-field"
+                value={settings.seo_home_description || ''}
+                placeholder="Technical Product Manager (MBA Candidate) & Full-Stack Software Engineer..."
+                onChange={(e) => onUpdateSettings({ ...settings, seo_home_description: e.target.value })}
+                className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+                rows={2}
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="seo-keys-field" className="text-xs font-bold text-slate-600 block">Home Keywords (comma-separated)</label>
+              <input
+                id="seo-keys-field"
+                type="text"
+                value={settings.seo_home_keywords || ''}
+                placeholder="Technical Product Manager, MBA Product Management, PRD, Full-Stack Developer"
+                onChange={(e) => onUpdateSettings({ ...settings, seo_home_keywords: e.target.value })}
+                className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="seo-keys-field" className="text-xs font-bold text-slate-550 block">Home SEO Keywords (Comma Separated)</label>
-            <input
-              id="seo-keys-field"
-              type="text"
-              value={settings.seo_home_keywords || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, seo_home_keywords: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-            />
+          {/* SERVICES PAGE SEO */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Services Page (/services) SEO
+            </h4>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 block">Services Title</label>
+              <input
+                type="text"
+                placeholder="QM Labs | Full-Stack Engineering, AI Systems & Technical Consulting"
+                value={settings.seo_services_title || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_services_title: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 block">Services Description</label>
+              <textarea
+                value={settings.seo_services_description || ''}
+                placeholder="Specialized engineering and product consulting..."
+                onChange={(e) => onUpdateSettings({ ...settings, seo_services_description: e.target.value })}
+                className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+                rows={2}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 block">Services Keywords</label>
+              <input
+                type="text"
+                value={settings.seo_services_keywords || ''}
+                placeholder="full-stack development, AI agent integration, MCP server, technical SEO audits"
+                onChange={(e) => onUpdateSettings({ ...settings, seo_services_keywords: e.target.value })}
+                className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+              />
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="seo-og-field" className="text-xs font-bold text-slate-550 block">Global OG Image URL (Social Share)</label>
-            <input
-              id="seo-og-field"
-              type="text"
-              value={settings.seo_og_image_url || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, seo_og_image_url: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
-            />
+          {/* PROJECTS PAGE SEO */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              Projects & Case Studies (/projects) SEO
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 block">Projects Title</label>
+                <input
+                  type="text"
+                  placeholder="Case Studies & Projects Portfolio | Rajat Kumar Dash"
+                  value={settings.seo_projects_title || ''}
+                  onChange={(e) => onUpdateSettings({ ...settings, seo_projects_title: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 block">Projects Keywords</label>
+                <input
+                  type="text"
+                  placeholder="software engineering portfolio, PRD case studies, automated QA"
+                  value={settings.seo_projects_keywords || ''}
+                  onChange={(e) => onUpdateSettings({ ...settings, seo_projects_keywords: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 block">Projects Description</label>
+              <textarea
+                value={settings.seo_projects_description || ''}
+                placeholder="Explore software engineering builds, product requirement documents (PRD)..."
+                onChange={(e) => onUpdateSettings({ ...settings, seo_projects_description: e.target.value })}
+                className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800 resize-none"
+                rows={2}
+              />
+            </div>
+          </div>
+
+          {/* BLOG, RESUME, CERTIFICATES & CONTACT SEO IN A RESPONSIVE GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* BLOG SEO */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                Blog (/blog) SEO
+              </h4>
+              <input
+                type="text"
+                placeholder="Blog Title"
+                value={settings.seo_blog_title || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_blog_title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+              <textarea
+                placeholder="Blog Description"
+                value={settings.seo_blog_description || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_blog_description: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg resize-none"
+                rows={2}
+              />
+              <input
+                type="text"
+                placeholder="Blog Keywords"
+                value={settings.seo_blog_keywords || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_blog_keywords: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+            </div>
+
+            {/* RESUME SEO */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-teal-500" />
+                Resume (/resume) SEO
+              </h4>
+              <input
+                type="text"
+                placeholder="Resume Title"
+                value={settings.seo_resume_title || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_resume_title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+              <textarea
+                placeholder="Resume Description"
+                value={settings.seo_resume_description || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_resume_description: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg resize-none"
+                rows={2}
+              />
+              <input
+                type="text"
+                placeholder="Resume Keywords"
+                value={settings.seo_resume_keywords || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_resume_keywords: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+            </div>
+
+            {/* CERTIFICATES SEO */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-500" />
+                Certificates (/certificates) SEO
+              </h4>
+              <input
+                type="text"
+                placeholder="Certificates Title"
+                value={settings.seo_certificates_title || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_certificates_title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+              <textarea
+                placeholder="Certificates Description"
+                value={settings.seo_certificates_description || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_certificates_description: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg resize-none"
+                rows={2}
+              />
+              <input
+                type="text"
+                placeholder="Certificates Keywords"
+                value={settings.seo_certificates_keywords || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_certificates_keywords: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+            </div>
+
+            {/* CONTACT SEO */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                Contact (/contact) SEO
+              </h4>
+              <input
+                type="text"
+                placeholder="Contact Title"
+                value={settings.seo_contact_title || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_contact_title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+              <textarea
+                placeholder="Contact Description"
+                value={settings.seo_contact_description || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_contact_description: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg resize-none"
+                rows={2}
+              />
+              <input
+                type="text"
+                placeholder="Contact Keywords"
+                value={settings.seo_contact_keywords || ''}
+                onChange={(e) => onUpdateSettings({ ...settings, seo_contact_keywords: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+              />
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -1241,33 +1510,88 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left">
             <div className="flex items-center gap-2 mb-4">
               <Database className="w-5 h-5 text-slate-600" />
-              <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Database Tools & Security</h4>
+              <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Database Backup & Disaster Recovery</h4>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
               <div>
+                {/* 4 PRIMARY BACKUP / RESTORE ACTIONS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button 
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
+                  >
+                    <DownloadCloud className="w-4 h-4" />
+                    Download Full JSON Backup
+                  </button>
+
+                  <button 
+                    type="button"
                     onClick={handleBackup} 
                     disabled={isBackingUp || isRestoring}
-                    className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    {isBackingUp ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
-                    Backup Data to JSON
+                    {isBackingUp ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4 text-blue-500" />}
+                    Save to Server (.data/backups)
                   </button>
+
+                  <label className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all cursor-pointer">
+                    {isRestoring ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4 text-emerald-600" />}
+                    <span>Upload &amp; Restore JSON File</span>
+                    <input 
+                      type="file" 
+                      accept=".json,application/json" 
+                      onChange={handleFileUploadRestore} 
+                      className="hidden" 
+                    />
+                  </label>
                   
                   <button 
+                    type="button"
                     onClick={handleRestore} 
                     disabled={isBackingUp || isRestoring}
-                    className="flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    {isRestoring ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    Restore from JSON
+                    {isRestoring ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4 text-rose-600" />}
+                    Restore from latest.json
                   </button>
                 </div>
+
+                {/* BACKUP CONTENT INVENTORY BADGES */}
+                <div className="mt-5 p-4 bg-white rounded-xl border border-slate-200 space-y-2">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                    Backup Archive Inclusions
+                  </span>
+                  <div className="flex flex-wrap gap-2 text-[11px]">
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Site Settings &amp; Dynamic Route SEO
+                    </span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Projects &amp; Case Studies
+                    </span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Technical Services Catalog
+                    </span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Blog Articles (Markdown)
+                    </span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Verified Certificates &amp; Coursework
+                    </span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Contact Inquiries &amp; Submissions
+                    </span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      Custom Password Hash &amp; AI Key
+                    </span>
+                  </div>
+                </div>
+
                 <p className="text-[10px] text-slate-500 mt-4 leading-relaxed max-w-2xl">
-                  <strong>Backup</strong> queries Redis and saves local JSON files to <code className="bg-slate-200 px-1 py-0.5 rounded">.data/backups/</code>.<br/>
-                  <strong>Restore</strong> reads <code className="bg-slate-200 px-1 py-0.5 rounded">latest.json</code> and forcefully overwrites your live Redis database. Use with caution.
+                  <strong>Download Backup:</strong> Exports all databases and configuration as a single, portable JSON file to your device.<br/>
+                  <strong>Upload &amp; Restore:</strong> Allows you to pick any previously exported JSON backup to overwrite the live Redis store.<br/>
+                  <strong>Server Backup:</strong> Saves directly to <code className="bg-slate-200 px-1 py-0.5 rounded">.data/backups/latest.json</code> and timestamped files.
                 </p>
               </div>
             </div>

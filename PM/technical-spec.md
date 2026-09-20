@@ -156,6 +156,21 @@ interface CareerProfile {
 
 ---
 
+## 5. Media Library & Backup / Restore Specifications
+
+### 5.1 Local Storage Media Manager
+- **Upload Directory:** `/public/uploads/`
+- **Endpoints:**
+  - `GET /api/admin/media`: Returns array of uploaded files (`filename`, `url`, `sizeBytes`, `createdAt`).
+  - `DELETE /api/admin/media`: Deletes specified file from disk and repository.
+- **Cross-Reference In-Use Detection:** Compares uploaded file URLs against active references in settings, projects, blogs, and certificates to categorize files as `In Use` or `Unused`.
+
+### 5.2 Backup & Restore Endpoints
+- `POST /api/admin/backup`: Dumps all Redis/JSON store state into `.data/backups/latest.json`.
+- `POST /api/admin/restore`: Restores site state from `.data/backups/latest.json` into active storage.
+
+---
+
 ## 4. Security & Performance Directives
 
 1. **Strict Input Sanitization:** All markdown inputs processed through unified DOMPurify pipelines.

@@ -6,11 +6,35 @@ interface HeaderProps {
   currentView: string;
   onViewChange: (view: string) => void;
   isAdminLoggedIn: boolean;
+  isServicesDomain?: boolean;
 }
 
-export default function Header({ currentView, onViewChange, isAdminLoggedIn }: HeaderProps) {
+export default function Header({ currentView, onViewChange, isAdminLoggedIn, isServicesDomain }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHomeHovered, setIsHomeHovered] = useState(false);
+  const [hoverTimer, setHoverTimer] = useState<any>(null);
+
+  const handleMouseEnterHome = () => {
+    if (hoverTimer) clearTimeout(hoverTimer);
+    const timer = setTimeout(() => {
+      setIsHomeHovered(true);
+    }, 300);
+    setHoverTimer(timer);
+  };
+
+  const handleMouseLeaveHome = () => {
+    if (hoverTimer) clearTimeout(hoverTimer);
+    const timer = setTimeout(() => {
+      setIsHomeHovered(false);
+    }, 600); // 600ms grace delay so user can easily move cursor and click
+    setHoverTimer(timer);
+  };
+
+  const handleMouseEnterDropdown = () => {
+    if (hoverTimer) clearTimeout(hoverTimer);
+    setIsHomeHovered(true);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,13 +60,11 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 no-print ${
-        isScrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs py-3'
-          : 'bg-white/90 backdrop-blur-sm sm:bg-transparent py-4 sm:py-5 border-b sm:border-b-0 border-slate-100 shadow-xs sm:shadow-none'
-      }`}
+      className="fixed top-0 left-0 w-full z-50 transition-all duration-300 no-print bg-white shadow-sm"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${
+        isScrolled ? 'py-2.5' : 'py-3.5'
+      }`}>
         {/* Brand/Logo */}
         <button
           onClick={() => handleNavClick('home')}
@@ -55,6 +77,47 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn }: H
         <nav className="hidden md:flex items-center gap-1 bg-slate-50 border border-slate-100 p-1 rounded-2xl relative">
           {navItems.map((item) => {
             const isActive = currentView === item.value;
+            if (item.value === 'home') {
+              return (
+                <div
+                  key="home"
+                  className="relative"
+                  onMouseEnter={handleMouseEnterHome}
+                  onMouseLeave={handleMouseLeaveHome}
+                >
+                  <button
+                    onClick={() => handleNavClick('home')}
+                    className={`relative px-4 py-2 text-xs font-semibold rounded-xl tracking-wide cursor-pointer transition-all ${
+                      isActive ? 'text-primary' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute inset-0 bg-white border border-slate-100 rounded-lg shadow-xs -z-10 animate-fade-in" />
+                    )}
+                    {item.label}
+                  </button>
+
+                  {/* Small clean dropdown for Portfolio */}
+                  {isHomeHovered && (
+                    <div 
+                      onMouseEnter={handleMouseEnterDropdown}
+                      onMouseLeave={handleMouseLeaveHome}
+                      className="absolute top-full left-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5 z-50 animate-fade-in"
+                    >
+                      <a
+                        href="/?domain=portfolio"
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors group"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <ExternalLink className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
+                          Rajat Portfolio
+                        </span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              );
+            }
             return (
               <button
                 key={item.value}

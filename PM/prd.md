@@ -68,6 +68,12 @@ A full-stack, responsive platform combining:
 - **FR-2.4 Site & Hero Configuration:** Zero-downtime editing of typewriter rotating tagline roles via comma-separated input (`#set-tagline`), hero text, experience history, skills, contact coordinates, and brand assets.
 - **FR-2.5 Career Profiles & Personas Manager:** Add, customize, and set default resume persona (e.g., Product Manager, Full-Stack, Technical SEO) with customized summaries and category mappings.
 - **FR-2.6 Contact CRM:** Lead management with priority tagging, note taking, status workflows (*unread, read, replied, archived*), and estimated deal values.
+- **FR-2.7 Media Library & Storage Manager:** Local file repository management in `/public/uploads/` with automated saving, cross-reference usage tracking (In Use vs. Unused), and 1-click single/bulk cleanup.
+- **FR-2.8 Backup & Restore Engine:** Automated JSON snapshots (`.data/backups/latest.json`) and atomic live database restoration covering all site settings, projects, blogs, certificates, contacts, and AI API keys.
+
+### 4.3 SEO, AEO & GEO Optimization (P0)
+- **FR-4.1 Regional GEO Targeting:** Optimized meta headers for Delhi NCR, India (`IN-DL`, coordinates `28.6139;77.2090`).
+- **FR-4.2 AI Search Engine Directives:** Enhanced robot crawling rules and structured JSON-LD schemas (`Person`, `ProfilePage`, `TechArticle`) for ChatGPT, Claude, and Perplexity citation.
 
 ### 4.3 Model Context Protocol (MCP) AI Server (P0)
 - **FR-3.1 Dual Transport Engine:** Support for both HTTP POST (JSON-RPC 2.0) and Server-Sent Events (SSE) on `/api/mcp` and `/api/sse`.

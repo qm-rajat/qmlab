@@ -6,6 +6,7 @@ import {
   getBlogs,
   saveBlogs,
   getCertificates,
+  getServices,
 } from "../lib/store.js";
 import { recordPageView, recordResumeDownload, getResumeDownloads } from "../services/telemetry.service.js";
 import { recordBotCrawl, identifyBot } from "../services/crawler.service.js";
@@ -49,15 +50,25 @@ const interactionRateLimiter = rateLimiter("blog-interaction", {
 
 router.get("/content", async (req, res) => {
   try {
-    const [settings, projects, blogs, certificates] = await Promise.all([
+    const [settings, projects, blogs, certificates, services] = await Promise.all([
       getSettings(),
       getProjects(),
       getBlogs(),
       getCertificates(),
+      getServices(),
     ]);
-    res.json({ success: true, storeConfigured: isStoreConfigured(), settings, projects, blogs, certificates });
+    res.json({ success: true, storeConfigured: isStoreConfigured(), settings, projects, blogs, certificates, services });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Failed to load site content." });
+  }
+});
+
+router.get("/services", async (req, res) => {
+  try {
+    const services = await getServices();
+    res.json({ success: true, services });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to load services." });
   }
 });
 

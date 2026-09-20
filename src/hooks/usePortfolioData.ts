@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SiteSettings, Project, Blog, Certificate } from '../types';
+import { SiteSettings, Project, Blog, Certificate, FreelanceService } from '../types';
 
 const EMPTY_SETTINGS: SiteSettings = {
   hero_name: "",
@@ -59,6 +59,68 @@ export function usePortfolioData() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [services, setServices] = useState<FreelanceService[]>(() => {
+    const saved = localStorage.getItem('qmlabs_portfolio_services');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: "srv-1",
+        title: "Full-Stack Web Engineering & SaaS",
+        slug: "fullstack-web-engineering",
+        short_description: "High-performance React, TypeScript, and Node.js applications built for speed, scalability, and conversion.",
+        full_description: "End-to-end development of modern web apps, dashboards, and SaaS platforms. Built with robust REST APIs, secure authentication, and responsive Tailwind layouts.",
+        icon: "Code2",
+        deliverables: ["Production-ready Web App", "Responsive Tailwind UI", "REST/GraphQL API", "Secure Auth & Database"],
+        pricing_type: "fixed",
+        starting_price: "$2,500",
+        turnaround_time: "2-4 Weeks",
+        is_active: true,
+        sort_order: 1
+      },
+      {
+        id: "srv-2",
+        title: "AI & LLM / MCP Integration",
+        slug: "ai-llm-mcp-integration",
+        short_description: "Custom AI agents, Gemini API integration, Model Context Protocol (MCP) servers, and smart automation.",
+        full_description: "Supercharge your software with generative AI. Implement custom embeddings, RAG pipelines, automated workflows, and intelligent assistant features securely.",
+        icon: "Cpu",
+        deliverables: ["Custom Gemini/OpenAI Integration", "Model Context Protocol (MCP) Server", "RAG & Document Search", "Secure Server-Side Proxy"],
+        pricing_type: "fixed",
+        starting_price: "$3,000",
+        turnaround_time: "2-3 Weeks",
+        is_active: true,
+        sort_order: 2
+      },
+      {
+        id: "srv-3",
+        title: "Technical SEO, AEO & GEO Optimization",
+        slug: "technical-seo-aeo-geo",
+        short_description: "Dominate search engines and AI answer engines (ChatGPT, Perplexity) with advanced technical auditing.",
+        full_description: "Optimize your web presence for both traditional search and AI answer engines. Structured JSON-LD schemas, lightning-fast Core Web Vitals, and regional GEO targeting.",
+        icon: "Search",
+        deliverables: ["Complete Technical SEO Audit", "Schema.org JSON-LD Implementation", "AEO / AI Citation Optimization", "Core Web Vitals Tuning"],
+        pricing_type: "fixed",
+        starting_price: "$1,500",
+        turnaround_time: "1-2 Weeks",
+        is_active: true,
+        sort_order: 3
+      },
+      {
+        id: "srv-4",
+        title: "Cloud Architecture & DevOps Advisory",
+        slug: "cloud-architecture-devops",
+        short_description: "Scalable cloud deployment, Dockerization, CI/CD pipelines, and high-availability server setups.",
+        full_description: "Expert guidance and setup for Cloud Run, Vercel, AWS, Redis, and PostgreSQL with enterprise-grade security and automated deployment pipelines.",
+        icon: "Server",
+        deliverables: ["Cloud Architecture Blueprint", "Docker & CI/CD Pipelines", "Database Security Hardening", "Monitoring & Telemetry"],
+        pricing_type: "hourly",
+        starting_price: "$150/hr",
+        turnaround_time: "Flexible",
+        is_active: true,
+        sort_order: 4
+      }
+    ];
+  });
+
   // Client Reactions State Tracking (Bookmarked and Liked Blogs)
   const [likedBlogs, setLikedBlogs] = useState<string[]>(() => {
     const saved = localStorage.getItem('qmlabs_portfolio_liked_blogs');
@@ -99,6 +161,10 @@ export function usePortfolioData() {
   }, [certificates]);
 
   useEffect(() => {
+    localStorage.setItem('qmlabs_portfolio_services', JSON.stringify(services));
+  }, [services]);
+
+  useEffect(() => {
     localStorage.setItem('qmlabs_portfolio_liked_blogs', JSON.stringify(likedBlogs));
   }, [likedBlogs]);
 
@@ -125,6 +191,7 @@ export function usePortfolioData() {
           setProjects(data.projects || []);
           setBlogs(data.blogs || []);
           setCertificates(data.certificates || []);
+          if (data.services) setServices(data.services);
         })
         .catch(err => {
           if (!isMounted) return;
@@ -177,6 +244,7 @@ export function usePortfolioData() {
   const handleUpdateProjects = persistUpdate<Project[]>(setProjects, '/api/admin/projects');
   const handleUpdateBlogs = persistUpdate<Blog[]>(setBlogs, '/api/admin/blogs');
   const handleUpdateCertificates = persistUpdate<Certificate[]>(setCertificates, '/api/admin/certificates');
+  const handleUpdateServices = persistUpdate<FreelanceService[]>(setServices, '/api/admin/services');
 
   // Route Telemetry Tracking: record real page views
   useEffect(() => {
@@ -265,6 +333,8 @@ export function usePortfolioData() {
     setBlogs,
     certificates,
     setCertificates,
+    services,
+    setServices,
     likedBlogs,
     bookmarkedBlogs,
     currentView,
@@ -287,6 +357,7 @@ export function usePortfolioData() {
     handleUpdateProjects,
     handleUpdateBlogs,
     handleUpdateCertificates,
+    handleUpdateServices,
     handleLikeToggle,
     handleBookmarkToggle,
     handleReadBlog

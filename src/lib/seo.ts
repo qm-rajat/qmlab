@@ -1,4 +1,4 @@
-import { SiteSettings, Blog, Project } from '../types';
+import { SiteSettings, Blog, Project, FreelanceService, Certificate } from '../types';
 
 /**
  * Dynamically resolves the base URL on the client side.
@@ -196,3 +196,136 @@ export function generateProjectSchema(project: Project, settings: SiteSettings, 
     keywords: project.technologies?.join(', '),
   };
 }
+
+/**
+ * Dynamic ProfessionalService / OfferCatalog Schema for Services Page
+ */
+export function generateServicesSchema(services: FreelanceService[], settings: SiteSettings, baseUrl: string) {
+  const serviceUrl = `${baseUrl}/services`;
+  const activeServices = (services || []).filter(s => s.is_active);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    '@id': `${serviceUrl}#service`,
+    name: `${settings.company_name || 'QM Labs'} — Engineering & Consulting Services`,
+    description: settings.seo_services_description || settings.company_tagline || 'Full-stack engineering, AI & MCP integration, technical SEO, and cloud DevOps consulting services.',
+    url: serviceUrl,
+    provider: {
+      '@id': `${baseUrl}/#person`,
+    },
+    areaServed: 'Worldwide',
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Consulting & Engineering Packages',
+      itemListElement: activeServices.map((srv, idx) => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: srv.title,
+          description: srv.short_description || srv.full_description,
+        },
+        price: srv.starting_price?.replace(/[^0-9.]/g, '') || undefined,
+        priceCurrency: 'USD',
+        position: idx + 1,
+      })),
+    },
+  };
+}
+
+/**
+ * Dynamic CollectionPage & ItemList Schema for Projects Hub
+ */
+export function generateProjectsCollectionSchema(projects: Project[], settings: SiteSettings, baseUrl: string) {
+  const projectsUrl = `${baseUrl}/projects`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${projectsUrl}#collection`,
+    name: settings.seo_projects_title || `Engineering Portfolio & Technical Case Studies | ${settings.hero_name || 'Rajat Kumar Dash'}`,
+    description: settings.seo_projects_description || 'High-end catalog of data classification dashboards, automated QA suites, technical SEO implementations, and full-stack software systems.',
+    url: projectsUrl,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: (projects || []).slice(0, 20).map((proj, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        url: `${baseUrl}/projects#${proj.id}`,
+        name: proj.title,
+      })),
+    },
+  };
+}
+
+/**
+ * Dynamic Resume / ProfilePage Schema
+ */
+export function generateResumeSchema(settings: SiteSettings, baseUrl: string) {
+  const resumeUrl = `${baseUrl}/resume`;
+  const heroName = settings.hero_name || 'Rajat Kumar Dash';
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    '@id': `${resumeUrl}#resume-profile`,
+    url: resumeUrl,
+    name: settings.seo_resume_title || `Interactive Resume & Career Trajectory | ${heroName}`,
+    description: settings.seo_resume_description || `Verified career trajectory, MBA Product Management coursework, software engineering experience, and technical competencies for ${heroName}.`,
+    mainEntity: {
+      '@id': `${baseUrl}/#person`,
+    },
+  };
+}
+
+/**
+ * Dynamic Credentials Schema for Certificates
+ */
+export function generateCertificatesSchema(certificates: Certificate[], settings: SiteSettings, baseUrl: string) {
+  const certsUrl = `${baseUrl}/certificates`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${certsUrl}#credentials`,
+    url: certsUrl,
+    name: settings.seo_certificates_title || `Verified Professional Credentials & Certifications | ${settings.hero_name || 'Rajat Kumar Dash'}`,
+    description: settings.seo_certificates_description || 'Official verification hub for degrees, machine learning coursework, cybersecurity modules, and engineering certifications.',
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: (certificates || []).map((c, idx) => ({
+        '@type': 'EducationalOccupationalCredential',
+        position: idx + 1,
+        name: c.title,
+        credentialCategory: c.issuer,
+        dateCreated: c.issue_date,
+      })),
+    },
+  };
+}
+
+/**
+ * Dynamic ContactPage Schema
+ */
+export function generateContactSchema(settings: SiteSettings, baseUrl: string) {
+  const contactUrl = `${baseUrl}/contact`;
+  const heroName = settings.hero_name || 'Rajat Kumar Dash';
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    '@id': `${contactUrl}#contact-page`,
+    url: contactUrl,
+    name: settings.seo_contact_title || `Contact & Project Inquiries | ${heroName}`,
+    description: settings.seo_contact_description || 'Get in touch for technical product management leadership, consulting sprints, full-stack development, or advisory roles.',
+    mainEntity: {
+      '@type': 'ContactPoint',
+      contactType: 'technical inquiries',
+      email: settings.contact_email ? `mailto:${settings.contact_email}` : undefined,
+      telephone: settings.contact_phone || undefined,
+      areaServed: 'Worldwide',
+      availableLanguage: ['English', 'Hindi', 'Odia'],
+    },
+  };
+}
+

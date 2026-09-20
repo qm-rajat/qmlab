@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Shield, LayoutDashboard, FileCode, Award, Inbox, Settings, LogOut, Mail, BookOpen, Bot, Sparkles, BarChart2,
-  Briefcase, GraduationCap, Cpu, Layers
+  Briefcase, GraduationCap, Cpu, Layers, HardDrive
 } from 'lucide-react';
-import { Project, Blog, Certificate, Contact, SiteSettings } from '../types';
+import { Project, Blog, Certificate, Contact, SiteSettings, FreelanceService } from '../types';
 import { AdminLoginView } from './admin/AdminLoginView';
 import { AdminDashboardTab } from './admin/AdminDashboardTab';
 import { AdminProjectsTab } from './admin/AdminProjectsTab';
@@ -13,8 +13,10 @@ import { AdminContactsTab } from './admin/AdminContactsTab';
 import { AdminSmtpTab } from './admin/AdminSmtpTab';
 import { AdminSettingsTab, SettingsSubTab } from './admin/AdminSettingsTab';
 import { AdminAiTab } from './admin/AdminAiTab';
+import { AdminMediaTab } from './admin/AdminMediaTab';
 import { AdminDeleteModal } from './admin/AdminDeleteModal';
 import AdminAnalyticsTab from './admin/AdminAnalyticsTab';
+import AdminServicesTab from './admin/AdminServicesTab';
 
 interface AdminConsoleProps {
   settings: SiteSettings;
@@ -25,6 +27,8 @@ interface AdminConsoleProps {
   onUpdateBlogs: (blogs: Blog[]) => void;
   certificates: Certificate[];
   onUpdateCertificates: (certs: Certificate[]) => void;
+  services: FreelanceService[];
+  onUpdateServices: (services: FreelanceService[]) => void;
   isAdminLoggedIn: boolean;
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
@@ -39,9 +43,11 @@ export type AdminTab =
   | 'projects' 
   | 'blogs' 
   | 'certs' 
+  | 'services'
   | 'contacts' 
   | 'ai' 
   | 'smtp' 
+  | 'media'
   | 'settings';
 
 export default function AdminConsole({
@@ -53,6 +59,8 @@ export default function AdminConsole({
   onUpdateBlogs,
   certificates,
   onUpdateCertificates,
+  services,
+  onUpdateServices,
   isAdminLoggedIn,
   onAdminLoginToggle
 }: AdminConsoleProps) {
@@ -205,11 +213,13 @@ export default function AdminConsole({
             { label: 'Academic History', value: 'education', icon: GraduationCap },
             { label: 'Skills lists', value: 'skills', icon: Cpu },
             { label: 'Project Portfolio', value: 'projects', icon: FileCode },
+            { label: 'Freelance Services', value: 'services', icon: Briefcase },
             { label: 'Technical Blogs', value: 'blogs', icon: BookOpen },
             { label: 'Certifications', value: 'certs', icon: Award },
             { label: 'Contacts Enquiries', value: 'contacts', icon: Inbox, alert: unreadContactCount > 0 ? `${unreadContactCount}` : null },
             { label: 'MCP Server', value: 'ai', icon: Bot },
             { label: 'SMTP Connection', value: 'smtp', icon: Mail },
+            { label: 'Media Library', value: 'media', icon: HardDrive },
             { label: 'Site settings', value: 'settings', icon: Settings },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -294,6 +304,13 @@ export default function AdminConsole({
             />
           )}
 
+          {activeTab === 'services' && (
+            <AdminServicesTab
+              services={services}
+              onUpdateServices={onUpdateServices}
+            />
+          )}
+
           {activeTab === 'contacts' && (
             <AdminContactsTab
               contacts={contacts}
@@ -319,6 +336,15 @@ export default function AdminConsole({
             <AdminSmtpTab
               smtpStatus={smtpStatus}
               setSmtpStatus={setSmtpStatus}
+            />
+          )}
+
+          {activeTab === 'media' && (
+            <AdminMediaTab
+              settings={settings}
+              projects={projects}
+              blogs={blogs}
+              certificates={certificates}
             />
           )}
 

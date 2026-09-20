@@ -15,10 +15,16 @@ import {
   generateWebSiteSchema,
   generateProfilePageSchema,
   generateBlogPostingSchema,
+  generateServicesSchema,
+  generateProjectsCollectionSchema,
+  generateResumeSchema,
+  generateCertificatesSchema,
+  generateContactSchema,
 } from './lib/seo';
 
 // Views
 import OverviewView from './components/views/OverviewView';
+import ServicesHomePage from './components/ServicesHomePage';
 import ProjectGallery from './components/ProjectGallery';
 import BlogHub from './components/BlogHub';
 import BlogPost from './components/BlogPost';
@@ -38,6 +44,7 @@ export default function App() {
     projects,
     blogs,
     certificates,
+    services,
     likedBlogs,
     bookmarkedBlogs,
     isAdminLoggedIn,
@@ -50,6 +57,7 @@ export default function App() {
     handleUpdateProjects,
     handleUpdateBlogs,
     handleUpdateCertificates,
+    handleUpdateServices,
     handleLikeToggle,
     handleBookmarkToggle,
   } = usePortfolioData();
@@ -57,7 +65,13 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Map current pathname to old 'currentView' logic for backwards compatibility in Header/Footer if needed, or we just pass location.pathname
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const queryParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const domainParam = queryParams.get('domain');
+
+  const isServicesDomain = domainParam !== 'portfolio';
+  
+  // Map current pathname to active view
   const path = location.pathname;
   let currentView = 'home';
   if (path.startsWith('/projects')) currentView = 'projects';
@@ -66,54 +80,110 @@ export default function App() {
   else if (path.startsWith('/certificates')) currentView = 'certificates';
   else if (path.startsWith('/contact')) currentView = 'contact';
   else if (path.startsWith('/admin')) currentView = 'admin';
+  else if (path.startsWith('/services')) currentView = 'services';
 
   const baseUrl = getClientBaseUrl(settings);
   const heroName = settings.hero_name || "Rajat Kumar Dash";
   const brandName = settings.company_name || "QM Labs";
+  const isServicesView = currentView === 'services' || (currentView === 'home' && isServicesDomain);
 
-  let seoTitle = `${heroName} | Technical Product Manager & Software Engineer`;
+  let seoTitle = settings.seo_home_title || `${heroName} | Technical Product Manager & Software Engineer`;
   let seoDesc = settings.seo_home_description || "Technical Product Manager (MBA Candidate) & Full-Stack Software Engineer. Specializing in PRD strategy, sprint execution, web scalability, and product analytics.";
-  
-  if (currentView === 'blog') {
-    seoTitle = `Engineering & Product Strategy Blog | ${brandName}`;
-    seoDesc = "Deep-dive articles on Technical Product Management, PRD blueprints, full-stack architecture, and technical SEO performance.";
-  } else if (currentView === 'projects') {
-    seoTitle = `Case Studies & Projects | ${heroName}`;
-    seoDesc = "Explore software engineering builds, product requirement documents (PRD), agile sprints, and automated test architectures.";
-  } else if (currentView === 'resume') {
-    seoTitle = `Interactive Resume & Career Path | ${heroName}`;
-    seoDesc = "Explore the verified career trajectory, MBA in Product Management specialization, technical competencies, and achievements of Rajat Kumar Dash.";
-  } else if (currentView === 'contact') {
-    seoTitle = `Contact & Project Inquiries | ${heroName}`;
-    seoDesc = "Get in touch for technical product management leadership, consulting sprints, full-stack development, or advisory roles.";
-  } else if (currentView === 'certificates') {
-    seoTitle = `Verified Credentials & Degrees | ${heroName}`;
-    seoDesc = "Official verification hub for academic degrees, MBA Product Management coursework, and professional engineering certifications.";
-  }
-
-  const rootSchemas = [
+  let seoKeywords = settings.seo_home_keywords || "Technical Product Manager, MBA Product Management, PRD, Full-Stack Developer, Technical SEO, React, TypeScript, Python";
+  let seoType: 'website' | 'article' | 'profile' = 'website';
+  let dynamicSchemas: any[] = [
     generatePersonSchema(settings, baseUrl),
     generateWebSiteSchema(settings, baseUrl),
     generateProfilePageSchema(settings, baseUrl)
   ];
 
+  if (isServicesView) {
+    seoTitle = settings.seo_services_title || `${brandName} | Full-Stack Engineering, AI Integration & Technical Consulting`;
+    seoDesc = settings.seo_services_description || "High-performance software engineering, AI/MCP server integrations, technical SEO architecture, and cloud advisory services.";
+    seoKeywords = settings.seo_services_keywords || "Full-stack web engineering, AI agents, MCP integration, technical SEO, React, Node.js, Cloud Run, consulting";
+    dynamicSchemas = [
+      generatePersonSchema(settings, baseUrl),
+      generateWebSiteSchema(settings, baseUrl),
+      generateServicesSchema(services, settings, baseUrl)
+    ];
+  } else if (currentView === 'projects') {
+    seoTitle = settings.seo_projects_title || `Case Studies & Projects Portfolio | ${heroName}`;
+    seoDesc = settings.seo_projects_description || "Explore software engineering builds, product requirement documents (PRD), agile sprints, and automated test architectures.";
+    seoKeywords = settings.seo_projects_keywords || "software engineering portfolio, PRD case studies, automated QA, React, TypeScript, Python, data analytics";
+    dynamicSchemas = [
+      generatePersonSchema(settings, baseUrl),
+      generateProjectsCollectionSchema(projects, settings, baseUrl)
+    ];
+  } else if (currentView === 'blog') {
+    seoTitle = settings.seo_blog_title || `Engineering & Product Strategy Blog | ${brandName}`;
+    seoDesc = settings.seo_blog_description || "Deep-dive articles on Technical Product Management, PRD blueprints, full-stack architecture, and technical SEO performance.";
+    seoKeywords = settings.seo_blog_keywords || "technical product management blog, PRD writing, software engineering, tech SEO, web scalability";
+    dynamicSchemas = [
+      generatePersonSchema(settings, baseUrl),
+      generateWebSiteSchema(settings, baseUrl)
+    ];
+  } else if (currentView === 'resume') {
+    seoTitle = settings.seo_resume_title || `Interactive Resume & Career Path | ${heroName}`;
+    seoDesc = settings.seo_resume_description || "Explore the verified career trajectory, MBA in Product Management specialization, technical competencies, and achievements of Rajat Kumar Dash.";
+    seoKeywords = settings.seo_resume_keywords || "Rajat Kumar Dash resume, Technical Product Manager CV, MBA Product Management, full stack developer credentials";
+    seoType = 'profile';
+    dynamicSchemas = [
+      generatePersonSchema(settings, baseUrl),
+      generateResumeSchema(settings, baseUrl)
+    ];
+  } else if (currentView === 'certificates') {
+    seoTitle = settings.seo_certificates_title || `Verified Credentials & Degrees | ${heroName}`;
+    seoDesc = settings.seo_certificates_description || "Official verification hub for academic degrees, MBA Product Management coursework, and professional engineering certifications.";
+    seoKeywords = settings.seo_certificates_keywords || "verified credentials, degrees, GIET University, Amity University, machine learning certificates, QA testing";
+    dynamicSchemas = [
+      generatePersonSchema(settings, baseUrl),
+      generateCertificatesSchema(certificates, settings, baseUrl)
+    ];
+  } else if (currentView === 'contact') {
+    seoTitle = settings.seo_contact_title || `Contact & Project Inquiries | ${heroName}`;
+    seoDesc = settings.seo_contact_description || "Get in touch for technical product management leadership, consulting sprints, full-stack development, or advisory roles.";
+    seoKeywords = settings.seo_contact_keywords || "contact Rajat Kumar Dash, hire technical product manager, project inquiry, engineering consulting";
+    dynamicSchemas = [
+      generatePersonSchema(settings, baseUrl),
+      generateContactSchema(settings, baseUrl)
+    ];
+  } else if (currentView === 'admin') {
+    seoTitle = `Admin Control Console | ${brandName}`;
+    seoDesc = "Secure administrator portal for managing content, projects, blogs, certificates, services, and system configuration.";
+  }
+
+  const isIndividualBlogPost = path.startsWith('/blog/') && path !== '/blog';
+
   const handleViewChange = (v: string) => {
-    if (v === 'home') navigate('/');
-    else navigate(`/${v}`);
+    if (v === 'home') {
+      navigate('/');
+    } else {
+      navigate(`/${v}`);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/40 text-slate-800 font-sans flex flex-col pt-24 sm:pt-28 tech-grid-pattern selection:bg-[#0084ff]/10">
-      <SEO title={seoTitle} description={seoDesc} settings={settings} schemaData={rootSchemas} />
+    <div className="min-h-screen bg-slate-50/40 text-slate-800 font-sans flex flex-col pt-16 sm:pt-20 tech-grid-pattern selection:bg-[#0084ff]/10">
+      {!isIndividualBlogPost && (
+        <SEO 
+          title={seoTitle} 
+          description={seoDesc} 
+          keywords={seoKeywords} 
+          type={seoType} 
+          settings={settings} 
+          schemaData={dynamicSchemas} 
+        />
+      )}
       <Analytics />
       <SpeedInsights />
-      
+
       {/* GLOBAL SCROLLING HEADER NAVIGATION */}
       {(!settings.is_under_maintenance || path.startsWith('/admin')) && (
       <Header
         currentView={currentView}
         onViewChange={handleViewChange}
         isAdminLoggedIn={isAdminLoggedIn}
+        isServicesDomain={isServicesDomain}
       />
       )}
 
@@ -135,16 +205,25 @@ export default function App() {
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
             <Route path="/" element={
-              <OverviewView
-                settings={settings}
-                projects={projects}
-                certificatesCount={(certificates || []).length}
-                uniqueBlogCatsCount={(uniqueBlogCats || []).length}
-                skillSearch={skillSearch}
-                selectedSkillCat={selectedSkillCat}
-                onSelectSkillCat={setSelectedSkillCat}
-                onNavigate={handleViewChange}
-              />
+              isServicesDomain ? (
+                <ServicesHomePage
+                  settings={settings}
+                  projects={projects}
+                  blogs={blogs}
+                  services={services}
+                />
+              ) : (
+                <OverviewView
+                  settings={settings}
+                  projects={projects}
+                  certificatesCount={(certificates || []).length}
+                  uniqueBlogCatsCount={(uniqueBlogCats || []).length}
+                  skillSearch={skillSearch}
+                  selectedSkillCat={selectedSkillCat}
+                  onSelectSkillCat={setSelectedSkillCat}
+                  onNavigate={handleViewChange}
+                />
+              )
             } />
 
             <Route path="/projects" element={
@@ -297,7 +376,7 @@ export default function App() {
                           allowFullScreen={false}
                           loading="lazy"
                           referrerPolicy="no-referrer-when-downgrade"
-                          title="Rajat Dash Location Coordinates Mapping"
+                          title="Rajat Kumar Dash Location Coordinates Mapping"
                         />
                       </div>
                     )}
@@ -324,6 +403,8 @@ export default function App() {
                   onUpdateBlogs={handleUpdateBlogs}
                   certificates={certificates}
                   onUpdateCertificates={handleUpdateCertificates}
+                  services={services}
+                  onUpdateServices={handleUpdateServices}
                   isAdminLoggedIn={isAdminLoggedIn}
                   onAdminLoginToggle={setIsAdminLoggedIn}
                 />

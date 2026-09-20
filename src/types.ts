@@ -145,6 +145,36 @@ export interface SiteSettings {
   seo_home_description: string;
   seo_home_keywords: string;
   seo_og_image_url: string;
+  seo_twitter_handle?: string;
+  seo_theme_color?: string;
+  seo_author?: string;
+
+  // Dynamic Route & View-specific SEO Overrides
+  seo_services_title?: string;
+  seo_services_description?: string;
+  seo_services_keywords?: string;
+
+  seo_projects_title?: string;
+  seo_projects_description?: string;
+  seo_projects_keywords?: string;
+
+  seo_blog_title?: string;
+  seo_blog_description?: string;
+  seo_blog_keywords?: string;
+
+  seo_resume_title?: string;
+  seo_resume_description?: string;
+  seo_resume_keywords?: string;
+
+  seo_certificates_title?: string;
+  seo_certificates_description?: string;
+  seo_certificates_keywords?: string;
+
+  seo_contact_title?: string;
+  seo_contact_description?: string;
+  seo_contact_keywords?: string;
+
+  seo_extra_meta?: Array<{ name?: string; property?: string; content: string }>;
   custom_domain?: string;
   ai_api_key?: string;
   skills: Skill[];
@@ -193,6 +223,21 @@ export interface AnalyticsSummary {
   today_views: number;
   top_pages: { page_path: string; count: number }[];
   views_last_7_days: { date: string; count: number }[];
+}
+
+export interface FreelanceService {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  full_description: string;
+  icon: string;
+  deliverables: string[];
+  pricing_type: 'fixed' | 'hourly' | 'retainer';
+  starting_price?: string;
+  turnaround_time: string;
+  is_active: boolean;
+  sort_order: number;
 }
 
 export interface DashboardStats {

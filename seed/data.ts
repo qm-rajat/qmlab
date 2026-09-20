@@ -10,6 +10,26 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   seo_home_description: "Professional portfolio and CRM console for Rajat Kumar Dash — Technical Product Manager (MBA Candidate), Computer Science graduate, developer, and analytics strategist.",
   seo_home_keywords: "Rajat Kumar Dash, technical product manager, MBA product management, PRD, product strategy, full stack developer, technical SEO, data analytics, QA automation, React, Python, portfolio",
   seo_og_image_url: "",
+  seo_twitter_handle: "@rajatdash",
+  seo_theme_color: "#0f172a",
+  seo_services_title: "QM Labs | Full-Stack Engineering, AI Systems & Technical Consulting",
+  seo_services_description: "Custom software engineering, generative AI & MCP server integrations, technical SEO audits, and cloud DevOps consulting services.",
+  seo_services_keywords: "full-stack development, AI agent integration, MCP server, technical SEO audits, cloud architecture, freelance consultant",
+  seo_projects_title: "Case Studies & Applied Systems | Rajat Kumar Dash",
+  seo_projects_description: "Explore software engineering builds, product requirement documents (PRD), agile sprints, and automated test architectures.",
+  seo_projects_keywords: "software engineering projects, PRD case studies, automated QA, React, TypeScript, data analytics portfolio",
+  seo_blog_title: "Engineering & Product Strategy Blog | QM Labs",
+  seo_blog_description: "Deep-dive articles on Technical Product Management, PRD blueprints, full-stack architecture, and technical SEO performance.",
+  seo_blog_keywords: "technical product management blog, PRD writing, software engineering, tech SEO, agile sprint management",
+  seo_resume_title: "Interactive Resume & Career Path | Rajat Kumar Dash",
+  seo_resume_description: "Explore the verified career trajectory, MBA in Product Management specialization, technical competencies, and achievements of Rajat Kumar Dash.",
+  seo_resume_keywords: "Rajat Kumar Dash resume, Technical Product Manager CV, MBA Product Management, full stack developer resume",
+  seo_certificates_title: "Verified Credentials & Degrees | Rajat Kumar Dash",
+  seo_certificates_description: "Official verification hub for academic degrees, MBA Product Management coursework, and professional engineering certifications.",
+  seo_certificates_keywords: "verified credentials, degrees, GIET University, Amity University, machine learning certificates, QA testing",
+  seo_contact_title: "Contact & Project Inquiries | Rajat Kumar Dash",
+  seo_contact_description: "Get in touch for technical product management leadership, consulting sprints, full-stack development, or advisory roles.",
+  seo_contact_keywords: "contact Rajat Kumar Dash, hire technical product manager, software consulting, freelance web development",
   skills: [
     {
       category: "Product Management & Strategy",
@@ -199,6 +219,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   overview_fourth_stat: {
     label: "TryHackMe Context Rank",
     value: "Top 9%"
+  },
+  overview_fifth_stat: {
+    label: "Dev Stack",
+    value: "REACT & PYTHON"
+  },
+  overview_sixth_stat: {
+    label: "QA Suites",
+    value: "100% SUCCESS"
   }
 };
 

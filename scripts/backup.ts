@@ -6,7 +6,10 @@ import {
   getProjects,
   getBlogs,
   getCertificates,
-  getContacts
+  getContacts,
+  getServices,
+  getCustomPassword,
+  getStoredAiApiKey
 } from "../server/lib/store";
 
 const BACKUP_DIR = path.join(process.cwd(), ".data", "backups");
@@ -21,6 +24,9 @@ async function runBackup() {
     const blogs = await getBlogs();
     const certificates = await getCertificates();
     const contacts = await getContacts();
+    const services = await getServices();
+    const customPassword = await getCustomPassword();
+    const aiApiKey = await getStoredAiApiKey();
 
     // 2. Validate exported data
     if (!settings || typeof settings !== "object") {
@@ -30,6 +36,7 @@ async function runBackup() {
     if (!Array.isArray(blogs)) throw new Error("Invalid blogs data retrieved.");
     if (!Array.isArray(certificates)) throw new Error("Invalid certificates data retrieved.");
     if (!Array.isArray(contacts)) throw new Error("Invalid contacts data retrieved.");
+    if (!Array.isArray(services)) throw new Error("Invalid services data retrieved.");
 
     const backupData = {
       timestamp: new Date().toISOString(),
@@ -39,6 +46,9 @@ async function runBackup() {
         blogs,
         certificates,
         contacts,
+        services,
+        customPassword,
+        aiApiKey,
       }
     };
 
@@ -63,6 +73,8 @@ async function runBackup() {
     console.log(`  - Blogs: ${blogs.length}`);
     console.log(`  - Certificates: ${certificates.length}`);
     console.log(`  - Contacts: ${contacts.length}`);
+    console.log(`  - Services: ${services.length}`);
+    console.log(`  - Settings: Complete (with dynamic SEO & metadata)`);
 
     process.exit(0);
   } catch (error) {

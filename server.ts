@@ -12,9 +12,9 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Set payload limit to prevent denial of service (DoS) via huge payload memory consumption
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+// Set payload limit to 25mb to support larger PNG/JPEG image uploads
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 app.use(cookieParser());
 
 // Security middleware: defensive HTTP headers & CORS
@@ -26,6 +26,9 @@ app.use("/", rootRoutes);
 app.use("/api", apiRoutes);
 
 // --- VITE DEV AND PROD MIDDLEWARE SETUP ---
+
+// Serve uploads folder statically
+app.use('/uploads', express.static(path.join(process.cwd(), "public", "uploads")));
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
