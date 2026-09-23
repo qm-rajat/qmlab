@@ -25,7 +25,7 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({
             <Sparkles className="w-3.5 h-3.5" />
             FLAGSHIP CASE STUDIES
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-sans">
+          <h3 className="text-fluid-h2 font-black text-slate-900 tracking-tight font-sans">
             Featured Engineering Work
           </h3>
         </div>
@@ -43,7 +43,7 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid-fluid-cards">
         {featured.map((proj, idx) => (
           <motion.div
             key={proj.id || idx}

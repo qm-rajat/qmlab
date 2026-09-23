@@ -422,8 +422,45 @@
   }
   html {
     @apply font-sans;
+    font-size: clamp(14px, 0.875rem + 0.25vw, 16.5px);
   }
-}/* Global Cursor Hide only on desktop fine pointer devices */
+}
+
+/* Fluid Typography Utilities using clamp() for seamless scaling from mobile to 16-inch laptops */
+.text-fluid-hero {
+  font-size: clamp(2rem, 1.25rem + 3.2vw, 3.75rem);
+  line-height: 1.08;
+}
+
+.text-fluid-h2 {
+  font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.text-fluid-h3 {
+  font-size: clamp(1.2rem, 0.95rem + 1.1vw, 1.75rem);
+  line-height: 1.25;
+}
+
+.text-fluid-body {
+  font-size: clamp(0.875rem, 0.82rem + 0.3vw, 1.0625rem);
+  line-height: 1.65;
+}
+
+/* Fluid Auto-Fit Grid Mixins */
+.grid-fluid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: clamp(1rem, 0.8rem + 1vw, 1.75rem);
+}
+
+.grid-fluid-bento {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: clamp(1rem, 0.8rem + 1vw, 1.75rem);
+}
+
+/* Global Cursor Hide only on desktop fine pointer devices */
 @media (pointer: fine) {
   *,
   *::before,

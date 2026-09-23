@@ -48,7 +48,7 @@ export default function TechnicalSkillsMatrix({
 
       {/* Bento Grid */}
       <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start"
+        className="grid-fluid-bento items-start"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}

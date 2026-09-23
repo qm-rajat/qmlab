@@ -175,7 +175,7 @@ export default function OverviewView({
             
             <motion.h1 
               variants={heroItemVariants}
-              className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.08] font-sans"
+              className="text-fluid-hero font-black text-slate-950 tracking-tight font-sans"
             >
               Hi, I'm <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-[#0084ff] to-cyan-500 animate-gradient-xy font-extrabold">{settings.hero_name}</span>
             </motion.h1>
@@ -189,7 +189,7 @@ export default function OverviewView({
           {/* Portfolio bio text sentence */}
           <motion.p 
             variants={heroItemVariants}
-            className="text-sm md:text-base text-slate-500 leading-relaxed max-w-2xl font-normal border-l-2 border-blue-500/30 pl-4 py-1"
+            className="text-fluid-body text-slate-500 leading-relaxed max-w-2xl font-normal border-l-2 border-blue-500/30 pl-4 py-1"
           >
             {settings.hero_bio}
           </motion.p>
@@ -197,7 +197,7 @@ export default function OverviewView({
           {/* HIGH-CREDIBILITY MICRO-STATS STRIP */}
           <motion.div 
             variants={heroItemVariants}
-            className="grid grid-cols-3 gap-3 pt-1 max-w-xl"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 max-w-xl"
           >
             <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-3 shadow-2xs hover:border-blue-500/30 transition-all">
               <div className="flex items-center gap-1.5 text-blue-600 mb-1">

@@ -266,11 +266,11 @@ export default function ServicesHomePage({
               <span>QM LABS - ENGINEERING &amp; ADVISORY</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[2.65rem] xl:text-[3.1rem] font-black tracking-tight text-white leading-[1.1] max-w-[560px]">
+            <h1 className="text-fluid-hero font-black tracking-tight text-white leading-[1.1] max-w-[560px]">
               High-Performance Software, AI &amp; Technical SEO <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500">Consulting</span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-[1.05rem] text-slate-300 max-w-[500px] leading-relaxed font-normal">
+            <p className="text-fluid-body text-slate-300 max-w-[500px] leading-relaxed font-normal">
               {settings.hero_bio || "High-performance software engineering, AI agent & MCP integrations, and technical SEO consulting by Rajat Kumar Dash. Helping startups and enterprises scale with precision."}
             </p>
 
@@ -404,7 +404,7 @@ export default function ServicesHomePage({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid-fluid-cards">
           {filteredServices.map(service => (
             <motion.div
               key={service.id}
@@ -529,7 +529,7 @@ export default function ServicesHomePage({
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid-fluid-cards">
             {featuredProjects.map(project => (
               <div key={project.id} className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
                 <div className="space-y-2.5">
