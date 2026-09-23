@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, ExternalLink, Search, X } from 'lucide-react';
 import { Blog } from '../../types';
 import MarkdownEditor from './MarkdownEditor';
 import { ImageUploadInput } from './ImageUploadInput';
@@ -19,6 +19,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
   const [blogForm, setBlogForm] = useState<Partial<Blog>>({});
   const [tagsInput, setTagsInput] = useState<string>('');
   const [categoriesInput, setCategoriesInput] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleBlogEditStart = (blog?: Blog) => {
     if (blog) {
@@ -83,21 +84,54 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
     setCategoriesInput('');
   };
 
+  const filteredBlogs = blogs.filter(b => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const titleMatch = b.title?.toLowerCase().includes(q);
+    const excerptMatch = b.excerpt?.toLowerCase().includes(q);
+    const slugMatch = b.slug?.toLowerCase().includes(q);
+    const statusMatch = b.status?.toLowerCase().includes(q);
+    const catMatch = (b.categories || []).some(c => c.toLowerCase().includes(q));
+    const tagMatch = (b.tags || []).some(t => t.toLowerCase().includes(q));
+    return titleMatch || excerptMatch || slugMatch || statusMatch || catMatch || tagMatch;
+  });
+
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {editingBlogId === null ? (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Technical Articles</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Technical Articles ({filteredBlogs.length}{filteredBlogs.length !== blogs.length ? ` / ${blogs.length}` : ''})</h3>
               <p className="text-xs text-slate-400 mt-0.5">Control published drafts, tags, and descriptive paragraphs.</p>
             </div>
-            <button
-              onClick={() => handleBlogEditStart()}
-              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm"
-            >
-              <Plus className="w-4 h-4" /> Draft Article
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search articles, tags, category..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 pr-7 py-2 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-primary transition-all w-48 sm:w-64"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => handleBlogEditStart()}
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Draft Article
+              </button>
+            </div>
           </div>
 
           {/* List Articles */}
@@ -114,7 +148,14 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-650">
-                  {blogs.map((b) => (
+                  {filteredBlogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-8 text-center text-slate-400 font-medium">
+                        No articles found matching &ldquo;{searchQuery}&rdquo;.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredBlogs.map((b) => (
                     <tr key={b.id} className="hover:bg-slate-50/40">
                       <td className="px-5 py-4 font-bold text-slate-900 text-sm max-w-xs truncate">{b.title}</td>
                       <td className="px-5 py-4 text-slate-500">{b.categories?.join(', ') || 'General'}</td>
@@ -157,7 +198,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, Sparkles, X, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, Sparkles, X, Check, Search } from 'lucide-react';
 import { Project, SiteSettings } from '../../types';
 import { DEFAULT_PROFILES } from './AdminProfilesTab';
 import { ImageUploadInput } from './ImageUploadInput';
@@ -23,25 +23,17 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
   const [featuresInput, setFeaturesInput] = useState<string>('');
   const [archInput, setArchInput] = useState<string>('');
   const [secondaryImagesInput, setSecondaryImagesInput] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Available domain profiles and existing categories list
+  // Available domain profiles configured in the system (Profiles & Domains tab)
   const availableProfiles = settings?.profiles && settings.profiles.length > 0 
     ? settings.profiles 
     : DEFAULT_PROFILES;
 
-  // Collect unique categories across existing projects + profiles
-  const existingCategories = Array.from(
-    new Set([
-      ...availableProfiles.map(p => (typeof p?.name === 'string' ? p.name : '')).filter(Boolean),
-      ...projects.map(p => (typeof p?.category === 'string' ? p.category : '')).filter(Boolean),
-      'Product Strategy & Case Studies',
-      'QA Automation & Testing',
-      'AI & Machine Learning',
-      'Cybersecurity & Pentesting',
-      'BI & Data Analytics',
-      'Full-Stack & Web Systems'
-    ])
-  ).filter(Boolean);
+  // Clean domain profiles list for direct one-click assignment
+  const profileDomainNames = availableProfiles
+    .map(p => (typeof p?.name === 'string' ? p.name.trim() : ''))
+    .filter(Boolean);
 
   // Collect all existing skills / technologies from settings, projects, and profiles
   const availableSkillsList = Array.from(
@@ -136,21 +128,53 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
     setSecondaryImagesInput('');
   };
 
+  const filteredProjects = projects.filter(p => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const titleMatch = p.title?.toLowerCase().includes(q);
+    const descMatch = p.description?.toLowerCase().includes(q);
+    const catMatch = p.category?.toLowerCase().includes(q);
+    const slugMatch = p.slug?.toLowerCase().includes(q);
+    const techMatch = (p.technologies || []).some(t => t.toLowerCase().includes(q));
+    return titleMatch || descMatch || catMatch || slugMatch || techMatch;
+  });
+
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {editingProjectId === null ? (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Featured Projects</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Featured Projects ({filteredProjects.length}{filteredProjects.length !== projects.length ? ` / ${projects.length}` : ''})</h3>
               <p className="text-xs text-slate-400 mt-0.5">Control shown cards, image references and repository connections.</p>
             </div>
-            <button
-              onClick={() => handleProjectEditStart()}
-              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm"
-            >
-              <Plus className="w-4 h-4" /> Add Project
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search projects, stack, category..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 pr-7 py-2 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-primary transition-all w-48 sm:w-64"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => handleProjectEditStart()}
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Project
+              </button>
+            </div>
           </div>
 
           {/* List Projects */}
@@ -167,7 +191,14 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-650">
-                  {projects.map((proj) => (
+                  {filteredProjects.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-8 text-center text-slate-400 font-medium">
+                        No projects found matching &ldquo;{searchQuery}&rdquo;.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProjects.map((proj) => (
                     <tr key={proj.id} className="hover:bg-slate-50/40">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
@@ -227,7 +258,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -365,7 +396,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
                 <select
                   aria-label="Quick Select Domain Category"
-                  value={existingCategories.includes(projectForm.category || '') ? (projectForm.category || '') : ''}
+                  value={profileDomainNames.includes(projectForm.category || '') ? (projectForm.category || '') : ''}
                   onChange={(e) => {
                     if (e.target.value) {
                       setProjectForm({ ...projectForm, category: e.target.value });
@@ -373,10 +404,10 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                   }}
                   className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 focus:outline-hidden cursor-pointer shrink-0"
                 >
-                  <option value="">⚡ Quick Select Domain...</option>
-                  {existingCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                  <option value="">⚡ Quick Select Profile Domain...</option>
+                  {profileDomainNames.map((domain) => (
+                    <option key={domain} value={domain}>
+                      {domain}
                     </option>
                   ))}
                 </select>
@@ -384,27 +415,27 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
               {/* Quick Select Domain Badges */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono mr-1">Available Domains:</span>
-                {existingCategories.map((cat) => {
-                  const isSelected = (projectForm.category || '').toLowerCase() === cat.toLowerCase();
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono mr-1">Configured Domains:</span>
+                {profileDomainNames.map((domain) => {
+                  const isSelected = (projectForm.category || '').toLowerCase() === domain.toLowerCase();
                   return (
                     <button
-                      key={cat}
+                      key={domain}
                       type="button"
                       onClick={() => {
                         setProjectForm({ 
                           ...projectForm, 
-                          category: isSelected ? '' : cat 
+                          category: isSelected ? '' : domain 
                         });
                       }}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 border ${
                         isSelected
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-semibold'
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                     >
                       {isSelected && <Check className="w-3 h-3" />}
-                      <span>{cat}</span>
+                      <span>{domain}</span>
                     </button>
                   );
                 })}

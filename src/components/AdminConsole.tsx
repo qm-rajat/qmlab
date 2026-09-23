@@ -232,7 +232,7 @@ export default function AdminConsole({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white border border-slate-100 rounded-3xl shadow-xs no-print">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Left Side Navigation Panel */}
-        <div className="lg:col-span-1 space-y-2 border-r border-slate-150/40 pr-0 lg:pr-6 flex flex-row lg:flex-col overflow-x-auto gap-2 lg:gap-0 select-none pb-4 lg:pb-0 scrollbar-none">
+        <div className="lg:col-span-1 space-y-2 border-r border-slate-150/40 pr-0 lg:pr-6 flex flex-row lg:flex-col overflow-x-auto lg:overflow-y-auto lg:max-h-[calc(100vh-140px)] gap-2 lg:gap-0 select-none pb-4 lg:pb-2 scrollbar-none sticky top-24">
           <div className="hidden lg:flex items-center gap-2 px-3 py-4 mb-2">
             <div className="p-1.5 bg-primary-light text-primary rounded-lg">
               <Shield className="w-4 h-4" />
@@ -300,7 +300,7 @@ export default function AdminConsole({
         </div>
 
         {/* Right Dynamic Viewport */}
-        <div className="lg:col-span-4 min-h-[500px]">
+        <div className="lg:col-span-4 min-h-[500px] lg:max-h-[calc(100vh-140px)] overflow-y-auto pr-1 lg:pr-2 scrollbar-thin">
           {activeTab === 'dashboard' && (
             <AdminDashboardTab
               projects={projects}

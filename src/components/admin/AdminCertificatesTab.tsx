@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save, X, Check, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Check, Sparkles, Search } from 'lucide-react';
 import { Certificate, SiteSettings } from '../../types';
 import { DEFAULT_PROFILES } from './AdminProfilesTab';
 
@@ -19,25 +19,17 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [certForm, setCertForm] = useState<Partial<Certificate>>({});
   const [skillsInput, setSkillsInput] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Available domain profiles and existing categories list
+  // Available domain profiles configured in the system (Profiles & Domains tab)
   const availableProfiles = settings?.profiles && settings.profiles.length > 0 
     ? settings.profiles 
     : DEFAULT_PROFILES;
 
-  // Collect unique category tags across existing certificates + profiles
-  const existingCategories = Array.from(
-    new Set([
-      ...availableProfiles.map(p => (typeof p?.name === 'string' ? p.name : '')).filter(Boolean),
-      ...certificates.map(c => (typeof c?.category === 'string' ? c.category : '')).filter(Boolean),
-      'Cybersecurity & Defenses',
-      'Data Science & Analytics',
-      'Web Development',
-      'SEO & Digital Strategy',
-      'AI & Machine Learning',
-      'Product Management'
-    ])
-  ).filter(Boolean);
+  // Clean domain profiles list for direct one-click assignment
+  const profileDomainNames = availableProfiles
+    .map(p => (typeof p?.name === 'string' ? p.name.trim() : ''))
+    .filter(Boolean);
 
   // Collect all existing skills from settings, certificates, and profiles
   const availableSkillsList = Array.from(
@@ -111,21 +103,53 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
     setSkillsInput('');
   };
 
+  const filteredCertificates = certificates.filter(c => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const titleMatch = c.title?.toLowerCase().includes(q);
+    const issuerMatch = c.issuer?.toLowerCase().includes(q);
+    const catMatch = c.category?.toLowerCase().includes(q);
+    const credMatch = c.credential_id?.toLowerCase().includes(q);
+    const skillMatch = (c.skills || []).some(s => s.toLowerCase().includes(q));
+    return titleMatch || issuerMatch || catMatch || credMatch || skillMatch;
+  });
+
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {editingCertId === null ? (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Managed Certifications</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Managed Certifications ({filteredCertificates.length}{filteredCertificates.length !== certificates.length ? ` / ${certificates.length}` : ''})</h3>
               <p className="text-xs text-slate-400 mt-0.5">Control dynamic credentials validation pathways and issuer authorities.</p>
             </div>
-            <button
-              onClick={() => handleCertEditStart()}
-              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm"
-            >
-              <Plus className="w-4 h-4" /> Log Credential
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search certifications, issuer, skills..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 pr-7 py-2 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-primary transition-all w-48 sm:w-64"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => handleCertEditStart()}
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Log Credential
+              </button>
+            </div>
           </div>
 
           {/* List Certs */}
@@ -141,7 +165,14 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-650">
-                  {certificates.map((c) => (
+                  {filteredCertificates.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-8 text-center text-slate-400 font-medium">
+                        No certifications found matching &ldquo;{searchQuery}&rdquo;.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCertificates.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50/40">
                       <td className="px-5 py-4 font-bold text-slate-900 text-sm max-w-xs truncate">{c.title}</td>
                       <td className="px-5 py-4 text-slate-600">{c.issuer}</td>
@@ -163,7 +194,7 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -247,7 +278,7 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
 
                 <select
                   aria-label="Quick Select Certificate Category Tag"
-                  value={existingCategories.includes(certForm.category || '') ? (certForm.category || '') : ''}
+                  value={profileDomainNames.includes(certForm.category || '') ? (certForm.category || '') : ''}
                   onChange={(e) => {
                     if (e.target.value) {
                       setCertForm({ ...certForm, category: e.target.value });
@@ -255,10 +286,10 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
                   }}
                   className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 focus:outline-hidden cursor-pointer shrink-0"
                 >
-                  <option value="">⚡ Quick Select Category...</option>
-                  {existingCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                  <option value="">⚡ Quick Select Profile Domain...</option>
+                  {profileDomainNames.map((domain) => (
+                    <option key={domain} value={domain}>
+                      {domain}
                     </option>
                   ))}
                 </select>
@@ -266,27 +297,27 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
 
               {/* Quick Select Category Badges */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono mr-1">Available Domains:</span>
-                {existingCategories.map((cat) => {
-                  const isSelected = (certForm.category || '').toLowerCase() === cat.toLowerCase();
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono mr-1">Configured Domains:</span>
+                {profileDomainNames.map((domain) => {
+                  const isSelected = (certForm.category || '').toLowerCase() === domain.toLowerCase();
                   return (
                     <button
-                      key={cat}
+                      key={domain}
                       type="button"
                       onClick={() => {
                         setCertForm({ 
                           ...certForm, 
-                          category: isSelected ? '' : cat 
+                          category: isSelected ? '' : domain 
                         });
                       }}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 border ${
                         isSelected
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-semibold'
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                     >
                       {isSelected && <Check className="w-3 h-3" />}
-                      <span>{cat}</span>
+                      <span>{domain}</span>
                     </button>
                   );
                 })}
