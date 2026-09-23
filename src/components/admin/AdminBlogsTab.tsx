@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, ExternalLink } from 'lucide-react';
 import { Blog } from '../../types';
 import MarkdownEditor from './MarkdownEditor';
 import { ImageUploadInput } from './ImageUploadInput';
@@ -131,6 +131,15 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <a
+                            href={`/blog/${b.slug || b.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-slate-450 hover:text-primary hover:bg-slate-150/45 rounded-lg cursor-pointer"
+                            title="View published article"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
                           <button
                             onClick={() => handleBlogEditStart(b)}
                             className="p-1.5 text-slate-450 hover:text-primary hover:bg-slate-150/45 rounded-lg cursor-pointer"

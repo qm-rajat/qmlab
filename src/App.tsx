@@ -12,6 +12,8 @@ import SEO from './components/SEO';
 import {
   getClientBaseUrl,
   generatePersonSchema,
+  generateOrganizationSchema,
+  generateFaqSchema,
   generateWebSiteSchema,
   generateProfilePageSchema,
   generateBlogPostingSchema,
@@ -45,6 +47,9 @@ export default function App() {
     blogs,
     certificates,
     services,
+    faqs,
+    workflowSteps,
+    trustGuarantees,
     likedBlogs,
     bookmarkedBlogs,
     isAdminLoggedIn,
@@ -58,6 +63,9 @@ export default function App() {
     handleUpdateBlogs,
     handleUpdateCertificates,
     handleUpdateServices,
+    handleUpdateFaqs,
+    handleUpdateWorkflowSteps,
+    handleUpdateTrustGuarantees,
     handleLikeToggle,
     handleBookmarkToggle,
   } = usePortfolioData();
@@ -69,7 +77,13 @@ export default function App() {
   const queryParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const domainParam = queryParams.get('domain');
 
-  const isServicesDomain = domainParam !== 'portfolio';
+  // Check if current hostname is specifically the portfolio subdomain or query
+  const isPortfolioDomain = 
+    hostname.toLowerCase().startsWith('rajat.') || 
+    hostname.toLowerCase().startsWith('portfolio.') || 
+    domainParam === 'portfolio';
+
+  const isServicesDomain = !isPortfolioDomain;
   
   // Map current pathname to active view
   const path = location.pathname;
@@ -82,14 +96,19 @@ export default function App() {
   else if (path.startsWith('/admin')) currentView = 'admin';
   else if (path.startsWith('/services')) currentView = 'services';
 
+  // Scroll to top on every route transition
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
   const baseUrl = getClientBaseUrl(settings);
   const heroName = settings.hero_name || "Rajat Kumar Dash";
   const brandName = settings.company_name || "QM Labs";
   const isServicesView = currentView === 'services' || (currentView === 'home' && isServicesDomain);
 
-  let seoTitle = settings.seo_home_title || `${heroName} | Technical Product Manager & Software Engineer`;
-  let seoDesc = settings.seo_home_description || "Technical Product Manager (MBA Candidate) & Full-Stack Software Engineer. Specializing in PRD strategy, sprint execution, web scalability, and product analytics.";
-  let seoKeywords = settings.seo_home_keywords || "Technical Product Manager, MBA Product Management, PRD, Full-Stack Developer, Technical SEO, React, TypeScript, Python";
+  let seoTitle = settings.seo_home_title || `${heroName} | Freelance Software Engineer & Technical Product Manager`;
+  let seoDesc = settings.seo_home_description || "Freelance Full-Stack Software Engineer & Technical Product Manager. Delivering custom web services, React/Node.js web applications, AI integrations, and technical SEO architecture.";
+  let seoKeywords = settings.seo_home_keywords || "freelance software engineer, freelance developer, web development services, custom web services, software engineer for hire, freelance full-stack developer, Technical Product Manager, React, Node.js, TypeScript, AI systems, QM Labs, Rajat Kumar Dash";
   let seoType: 'website' | 'article' | 'profile' = 'website';
   let dynamicSchemas: any[] = [
     generatePersonSchema(settings, baseUrl),
@@ -98,13 +117,15 @@ export default function App() {
   ];
 
   if (isServicesView) {
-    seoTitle = settings.seo_services_title || `${brandName} | Full-Stack Engineering, AI Integration & Technical Consulting`;
-    seoDesc = settings.seo_services_description || "High-performance software engineering, AI/MCP server integrations, technical SEO architecture, and cloud advisory services.";
-    seoKeywords = settings.seo_services_keywords || "Full-stack web engineering, AI agents, MCP integration, technical SEO, React, Node.js, Cloud Run, consulting";
+    seoTitle = settings.seo_services_title || `${brandName} | Web Development Services, Freelance Software Engineer & AI Consulting`;
+    seoDesc = settings.seo_services_description || "High-performance software engineering studio and freelance web services by Rajat Kumar Dash. Specializing in custom web applications, AI/MCP integrations, and technical SEO.";
+    seoKeywords = settings.seo_services_keywords || "web development services, freelance software engineer, custom web services, hire freelance developer, software engineering consulting, full-stack web engineering, React, Node.js, Cloud Run, QM Labs, Rajat Kumar Dash";
     dynamicSchemas = [
+      generateOrganizationSchema(settings, baseUrl),
+      generateServicesSchema(services, settings, baseUrl),
+      generateFaqSchema(settings, baseUrl),
       generatePersonSchema(settings, baseUrl),
-      generateWebSiteSchema(settings, baseUrl),
-      generateServicesSchema(services, settings, baseUrl)
+      generateWebSiteSchema(settings, baseUrl)
     ];
   } else if (currentView === 'projects') {
     seoTitle = settings.seo_projects_title || `Case Studies & Projects Portfolio | ${heroName}`;
@@ -202,8 +223,7 @@ export default function App() {
              </p>
           </div>
         ) : (
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
+          <Routes>
             <Route path="/" element={
               isServicesDomain ? (
                 <ServicesHomePage
@@ -211,6 +231,9 @@ export default function App() {
                   projects={projects}
                   blogs={blogs}
                   services={services}
+                  faqs={faqs}
+                  workflowSteps={workflowSteps}
+                  trustGuarantees={trustGuarantees}
                 />
               ) : (
                 <OverviewView
@@ -231,7 +254,6 @@ export default function App() {
                 key="projects"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 className="space-y-10 py-6"
               >
                 <div className="text-center space-y-2">
@@ -249,12 +271,11 @@ export default function App() {
                 key="blog"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
               >
                 <BlogHub
                   blogs={blogs}
                   settings={settings}
-                  onReadBlog={(b) => navigate(`/blog/${b.id}`)}
+                  onReadBlog={(b) => navigate(`/blog/${b.slug || b.id}`)}
                   likedBlogs={likedBlogs}
                   bookmarkedBlogs={bookmarkedBlogs}
                   onLikeToggle={handleLikeToggle}
@@ -272,7 +293,7 @@ export default function App() {
                 onLikeToggle={handleLikeToggle}
                 onBookmarkToggle={handleBookmarkToggle}
                 onBack={() => navigate('/blog')}
-                onSelectBlog={(b) => navigate(`/blog/${b.id}`)}
+                onSelectBlog={(b) => navigate(`/blog/${b.slug || b.id}`)}
               />
             } />
 
@@ -405,6 +426,12 @@ export default function App() {
                   onUpdateCertificates={handleUpdateCertificates}
                   services={services}
                   onUpdateServices={handleUpdateServices}
+                  faqs={faqs}
+                  onUpdateFaqs={handleUpdateFaqs}
+                  workflowSteps={workflowSteps}
+                  onUpdateWorkflowSteps={handleUpdateWorkflowSteps}
+                  trustGuarantees={trustGuarantees}
+                  onUpdateTrustGuarantees={handleUpdateTrustGuarantees}
                   isAdminLoggedIn={isAdminLoggedIn}
                   onAdminLoginToggle={setIsAdminLoggedIn}
                 />
@@ -412,7 +439,6 @@ export default function App() {
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AnimatePresence>
         )}
       </main>
 
@@ -426,7 +452,7 @@ export default function App() {
   );
 }
 
-// Wrapper component to handle finding the correct blog by ID
+// Wrapper component to handle finding the correct blog by ID or slug
 function BlogPostRouteWrapper({ 
   blogs, 
   settings, 
@@ -437,14 +463,55 @@ function BlogPostRouteWrapper({
   onBack, 
   onSelectBlog 
 }: any) {
-  const { id } = useParams();
-  const selectedBlog = blogs.find((b: any) => b.id === id);
+  const { id } = useParams<{ id: string }>();
+  const decodedId = id ? decodeURIComponent(id) : '';
+
+  // Match by id OR slug (case-insensitive fallback)
+  const selectedBlog = (blogs || []).find((b: any) => 
+    b.id === decodedId || 
+    b.slug === decodedId || 
+    (b.slug && b.slug.toLowerCase() === decodedId.toLowerCase()) ||
+    (b.id && b.id.toLowerCase() === decodedId.toLowerCase())
+  );
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (selectedBlog) {
+      // Record telemetry & view count on blog view
+      fetch(`/api/blogs/${selectedBlog.id}/view`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => {});
+
+      fetch('/api/telemetry/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: `/blog/${selectedBlog.slug || selectedBlog.id}` })
+      }).catch(() => {});
+    }
+  }, [decodedId, selectedBlog?.id]);
 
   if (!selectedBlog) {
+    if (!blogs || blogs.length === 0) {
+      return (
+        <div className="py-24 text-center space-y-4 animate-in fade-in duration-200">
+          <div className="w-8 h-8 border-3 border-[#0084ff] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-slate-500 font-mono">Loading technical publication...</p>
+        </div>
+      );
+    }
     return (
-      <div className="py-20 text-center space-y-4">
+      <div className="py-20 text-center space-y-4 animate-in fade-in duration-200">
         <h2 className="text-2xl font-bold text-slate-800">Blog post not found</h2>
-        <button onClick={onBack} className="text-primary hover:underline">Return to blog</button>
+        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          The requested article could not be located. It may have been updated or moved.
+        </p>
+        <button 
+          onClick={onBack} 
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          Return to All Articles
+        </button>
       </div>
     );
   }
@@ -453,7 +520,12 @@ function BlogPostRouteWrapper({
   const blogSchema = generateBlogPostingSchema(selectedBlog, settings, blogBaseUrl);
 
   return (
-    <>
+    <motion.div
+      key={selectedBlog.id}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
       <SEO 
         title={`${selectedBlog.title} | ${settings?.company_name || 'QM Labs'}`} 
         description={selectedBlog.excerpt || selectedBlog.seo_description}
@@ -473,6 +545,6 @@ function BlogPostRouteWrapper({
         onLikeToggle={onLikeToggle}
         onBookmarkToggle={onBookmarkToggle}
       />
-    </>
+    </motion.div>
   );
 }

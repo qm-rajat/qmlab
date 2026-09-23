@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Check, Database, RefreshCw, DownloadCloud, UploadCloud, 
   Shield, Briefcase, GraduationCap, ChevronUp, ChevronDown, Calendar, MapPin, 
-  Building, BookOpen, Award, Sparkles, Globe, ExternalLink, FileCode, Search, Cpu 
+  Building, BookOpen, Award, Sparkles, Globe, ExternalLink, FileCode, Search, Cpu,
+  HardDrive, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { SiteSettings, Experience, Education } from '../../types';
 import RichTextEditor from '../RichTextEditor';
@@ -44,7 +45,64 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isPruning, setIsPruning] = useState(false);
   const [sysMessage, setSysMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  const [storageData, setStorageData] = useState<{
+    redis?: {
+      connected: boolean;
+      usedMemoryHuman: string;
+      peakMemoryHuman: string;
+      totalKeys: number;
+      uptimeInDays: number;
+    };
+    localBackup?: {
+      exists: boolean;
+      lastModified: string | null;
+      size: string;
+    };
+  } | null>(null);
+
+  const fetchStorageHealth = () => {
+    fetch('/api/admin/storage-health', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setStorageData(data);
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    if (currentSubTab === 'database') {
+      fetchStorageHealth();
+    }
+  }, [currentSubTab]);
+
+  const handlePruneLogs = async () => {
+    if (!window.confirm("Safely prune temporary telemetry & rate keys from Redis to free up memory? (All content, blogs, projects & settings will remain 100% untouched).")) {
+      return;
+    }
+    setIsPruning(true);
+    setSysMessage(null);
+    try {
+      const res = await fetch('/api/admin/prune-ephemeral', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSysMessage({ text: data.message, type: 'success' });
+        fetchStorageHealth();
+      } else {
+        setSysMessage({ text: data.error || 'Prune failed', type: 'error' });
+      }
+    } catch (err: any) {
+      setSysMessage({ text: err.message || 'Pruning failed', type: 'error' });
+    }
+    setIsPruning(false);
+  };
 
   const handleBackup = async () => {
     setIsBackingUp(true);
@@ -57,6 +115,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       const data = await response.json();
       if (data.success) {
         setSysMessage({ text: 'Backup created in .data/backups/latest.json successfully!', type: 'success' });
+        fetchStorageHealth();
       } else {
         setSysMessage({ text: data.error || 'Backup failed.', type: 'error' });
       }
@@ -68,6 +127,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
   const handleDownloadBackup = () => {
     window.location.href = '/api/admin/backup/download';
+  };
+
+  const handleDownloadSqliteBackup = () => {
+    window.location.href = '/api/admin/backup/download-sqlite';
   };
 
   const handleFileUploadRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1507,6 +1570,90 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             </div>
           </div>
           
+          {/* Section: Redis Storage Health, Memory Usage & Backup Action */}
+          <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-md relative overflow-hidden mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-primary/20 text-primary border border-primary/30 rounded-xl">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-black uppercase tracking-wider text-slate-100">Storage Health &amp; Redis Memory</h4>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      storageData?.redis?.connected ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${storageData?.redis?.connected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                      {storageData?.redis?.connected ? 'Redis Online' : 'Connecting...'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">Live memory buffer, local SQLite sync, and one-click data safety backup.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleDownloadSqliteBackup}
+                  className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <DownloadCloud className="w-4 h-4" />
+                  <span>Download SQLite Archive (.sqlite)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePruneLogs}
+                  disabled={isPruning}
+                  title="Purge temporary analytics logs from Redis while keeping all projects, blogs, and settings safe"
+                  className="flex items-center gap-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 px-3.5 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {isPruning ? <RefreshCw className="w-4 h-4 animate-spin text-rose-400" /> : <Trash2 className="w-4 h-4 text-rose-400" />}
+                  <span>{isPruning ? 'Pruning...' : 'Prune Temp Logs'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Live Metrics Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-5">
+              <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Redis Memory Used</span>
+                <div className="text-xl font-black text-slate-100 font-mono">
+                  {storageData?.redis?.usedMemoryHuman || '—'}
+                </div>
+                <span className="text-[10px] text-slate-500 font-mono">Peak: {storageData?.redis?.peakMemoryHuman || '—'}</span>
+              </div>
+
+              <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Active Redis Keys</span>
+                <div className="text-xl font-black text-slate-100 font-mono">
+                  {storageData?.redis?.totalKeys ?? '—'}
+                </div>
+                <span className="text-[10px] text-slate-500 font-mono">Uptime: {storageData?.redis?.uptimeInDays ? `${storageData.redis.uptimeInDays}d` : '—'}</span>
+              </div>
+
+              <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Local Backup Snapshot</span>
+                <div className="text-xl font-black text-emerald-400 font-mono">
+                  {storageData?.localBackup?.exists ? storageData.localBackup.size : 'None'}
+                </div>
+                <span className="text-[10px] text-slate-500 font-mono truncate block">
+                  {storageData?.localBackup?.lastModified ? new Date(storageData.localBackup.lastModified).toLocaleDateString() : 'Run backup to create'}
+                </span>
+              </div>
+
+              <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Local SQLite Archive</span>
+                <div className="text-xs font-mono font-bold text-sky-300">
+                  npm run sync:sqlite
+                </div>
+                <span className="text-[10px] text-slate-400 leading-tight block mt-1">
+                  Downloads from Redis into local <code className="text-slate-300">portfolio_archive.sqlite</code>.
+                </span>
+              </div>
+            </div>
+          </div>
+          
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left">
             <div className="flex items-center gap-2 mb-4">
               <Database className="w-5 h-5 text-slate-600" />
@@ -1515,15 +1662,24 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
             <div className="grid grid-cols-1 gap-6">
               <div>
-                {/* 4 PRIMARY BACKUP / RESTORE ACTIONS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* PRIMARY BACKUP / RESTORE ACTIONS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <button 
+                    type="button"
+                    onClick={handleDownloadSqliteBackup}
+                    className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white py-3 px-4 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
+                  >
+                    <Database className="w-4 h-4" />
+                    Download SQLite (.sqlite)
+                  </button>
+
                   <button 
                     type="button"
                     onClick={handleDownloadBackup}
                     className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
                   >
                     <DownloadCloud className="w-4 h-4" />
-                    Download Full JSON Backup
+                    Download JSON Backup
                   </button>
 
                   <button 
@@ -1532,13 +1688,13 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     disabled={isBackingUp || isRestoring}
                     className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    {isBackingUp ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4 text-blue-500" />}
+                    {isBackingUp ? <RefreshCw className="w-4 h-4 animate-spin" /> : <HardDrive className="w-4 h-4 text-blue-500" />}
                     Save to Server (.data/backups)
                   </button>
 
                   <label className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-3 px-4 rounded-xl font-bold transition-all cursor-pointer">
                     {isRestoring ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4 text-emerald-600" />}
-                    <span>Upload &amp; Restore JSON File</span>
+                    <span>Upload &amp; Restore JSON</span>
                     <input 
                       type="file" 
                       accept=".json,application/json" 
@@ -1585,12 +1741,17 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
                       Custom Password Hash &amp; AI Key
                     </span>
+                    <span className="px-2.5 py-1 bg-sky-50 text-sky-700 rounded-lg font-medium border border-sky-200">
+                      Local SQLite Archive (npm run sync:sqlite)
+                    </span>
                   </div>
                 </div>
 
                 <p className="text-[10px] text-slate-500 mt-4 leading-relaxed max-w-2xl">
-                  <strong>Download Backup:</strong> Exports all databases and configuration as a single, portable JSON file to your device.<br/>
-                  <strong>Upload &amp; Restore:</strong> Allows you to pick any previously exported JSON backup to overwrite the live Redis store.<br/>
+                  <strong>Download SQLite (.sqlite):</strong> Directly packages all live Redis entities into a structured relational SQLite binary database file ready for DB Browser / TablePlus / local queries.<br/>
+                  <strong>Download JSON:</strong> Exports all databases and configuration as a single, portable JSON file.<br/>
+                  <strong>Local SQLite Archive:</strong> Run <code className="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">npm run sync:sqlite</code> locally to append contacts, articles, and snapshots into <code className="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">.data/portfolio_archive.sqlite</code> and safely free Redis RAM.<br/>
+                  <strong>Upload &amp; Restore:</strong> Pick any previously exported JSON backup to overwrite the live Redis store.<br/>
                   <strong>Server Backup:</strong> Saves directly to <code className="bg-slate-200 px-1 py-0.5 rounded">.data/backups/latest.json</code> and timestamped files.
                 </p>
               </div>

@@ -1,0 +1,32 @@
+# QM Labs & Rajat Kumar Dash
+
+> High-Performance Software Engineering, AI & MCP Systems, Product Strategy, and Technical SEO Consulting by Rajat Kumar Dash.
+
+QM Labs is a modern software engineering studio and technical advisory consultancy founded and led by Rajat Kumar Dash. This document provides structured discovery data for Large Language Models (LLMs), AI Agents, and automated tools across our dual-domain ecosystem.
+
+## Web Ecosystem & Domain Routing
+- [Rajat Kumar Dash Portfolio & CV](https://rajat.qmlab.in/): Primary personal portfolio hub for Rajat Kumar Dash. Features verified academic credentials, B.Tech CSE & MBA in Product Management coursework, software engineering case studies, interactive resume, and technical competency matrix.
+- [QM Labs Services & Solutions](https://qmlab.in/): Primary agency and services hub. Showcases full-stack web engineering packages, AI/MCP server integration, technical SEO audits, cloud architecture advisory, and client booking console.
+
+## Core Services & Solutions
+- [Full-Stack Web Engineering & SaaS](https://qmlab.in/#services): Production-ready React 19, TypeScript, and Node.js applications with robust REST APIs, secure authentication, and responsive Tailwind UI.
+- [AI & LLM / MCP Server Integration](https://qmlab.in/#services): Custom AI agents, Google Gemini 2.5/3.0 API integrations, Model Context Protocol (MCP) server deployments, RAG document search, and smart automation pipelines.
+- [Technical SEO, AEO & GEO Optimization](https://qmlab.in/#services): Schema.org JSON-LD structured data, Core Web Vitals optimization, and Answer Engine Optimization for ChatGPT, Perplexity, and Google SGE.
+- [Cloud Architecture & DevOps Advisory](https://qmlab.in/#services): Cloud Run, Docker containerization, CI/CD automated pipelines, and high-availability database setups.
+
+## Case Studies & Engineering Portfolio
+- [Data Classification & Privacy Dashboard](https://rajat.qmlab.in/projects): Real-time governance dashboard processing PII datasets with automated risk classification.
+- [Automated E2E Testing Suite](https://rajat.qmlab.in/projects): Robust QA automation framework with cross-browser regression testing and CI/CD integration.
+- [Model Context Protocol (MCP) CMS Engine](https://qmlab.in/openapi.json): Programmatic API & MCP server enabling AI agents to manage CMS records safely.
+
+## Technical Knowledge & Blog Articles
+- [From Idea to Product: How I Turn Problems into Digital Solutions](https://qmlab.in/blog): Actionable product strategy blueprint covering PRD drafting, sprint planning, and system architecture.
+
+## Founder Profile & Verification
+- [Interactive Resume & Career Trajectory](https://rajat.qmlab.in/resume): Verified career history, technical leadership skills, and achievements of Rajat Kumar Dash.
+- [Verified Degrees & Certifications](https://rajat.qmlab.in/certificates): GIET University B.Tech in CSE, Amity University MBA in Product Management, machine learning coursework, and cybersecurity credentials.
+
+## Developer & AI Agent APIs
+- [OpenAPI 3.0 Specification](https://qmlab.in/openapi.json): Complete machine-readable REST API documentation for projects, blogs, certificates, and telemetry.
+- [Model Context Protocol Endpoint](https://qmlab.in/mcp): Live MCP tool interface for Claude Desktop, ChatGPT Custom GPTs, and autonomous agent workflows.
+- [Dynamic XML Sitemap](https://qmlab.in/sitemap.xml): Complete URL index of all published articles, case studies, and service offerings.

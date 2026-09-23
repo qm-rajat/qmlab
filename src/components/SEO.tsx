@@ -34,52 +34,15 @@ const SEO: React.FC<SEOProps> = ({
 }) => {
   const baseUrl = getClientBaseUrl(settings);
   const effectiveUrl = url || (typeof window !== 'undefined' ? window.location.href : baseUrl);
-  const effectiveTitle = title || settings?.seo_home_title || `${settings?.hero_name || "Rajat Kumar Dash"} | Technical Product Manager & Software Engineer`;
-  const effectiveDesc = description || settings?.seo_home_description || "Technical Product Manager (MBA Candidate) & Full-Stack Engineer specializing in PRD drafting, roadmap prioritization, high-performance web systems, and analytics.";
+  const effectiveTitle = title || settings?.seo_home_title || `${settings?.hero_name || "Rajat Kumar Dash"} | Freelance Software Engineer & Technical Product Manager`;
+  const effectiveDesc = description || settings?.seo_home_description || "Freelance Full-Stack Software Engineer & Technical Product Manager (MBA Candidate) providing custom web services, high-performance React/Node.js apps, AI integrations, and technical SEO.";
   const ogImage = image || settings?.seo_og_image_url || `${baseUrl}/logo.png`;
-  const metaKeywords = keywords || settings?.seo_home_keywords || "Technical Product Manager, MBA Product Management, PRD, Full-Stack Developer, Technical SEO, React, TypeScript, Python";
+  const metaKeywords = keywords || settings?.seo_home_keywords || "freelance software engineer, freelance developer, web development services, custom web services, software engineer for hire, freelance full-stack developer, Technical Product Manager, React, Node.js, TypeScript, AI systems, Rajat Kumar Dash, QM Labs";
   const authorName = author || settings?.seo_author || settings?.hero_name || "Rajat Kumar Dash";
   const brandName = settings?.company_name || "QM Labs";
   const effectiveThemeColor = themeColor || settings?.seo_theme_color || "#0f172a";
   const effectiveTwitter = twitterHandle || settings?.seo_twitter_handle || (settings?.social_links?.twitter ? settings.social_links.twitter.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//i, '@') : undefined);
   const combinedExtraMeta = [...(settings?.seo_extra_meta || []), ...extraMeta];
-
-  // Defensive cleanup: Ensure no non-Helmet static meta duplicates remain in the DOM
-  React.useEffect(() => {
-    if (typeof document !== 'undefined') {
-      try {
-        const legacyStaticTags = document.querySelectorAll(
-          'head meta:not([data-rh="true"]):is([name="description"], [name="keywords"], [name="author"], [property^="og:"], [name^="twitter:"], [property^="twitter:"])'
-        );
-        legacyStaticTags.forEach((el) => el.remove());
-
-        // Ensure only one title element in head
-        const allTitles = document.querySelectorAll('head title');
-        if (allTitles.length > 1) {
-          // Remove any non-rh titles
-          const nonRhTitles = document.querySelectorAll('head title:not([data-rh="true"])');
-          nonRhTitles.forEach((el) => el.remove());
-        }
-      } catch (e) {
-        // Fallback for older browsers not supporting :is()
-        const metaList = Array.from(document.querySelectorAll('head meta:not([data-rh="true"])'));
-        metaList.forEach((el) => {
-          const name = el.getAttribute('name') || '';
-          const prop = el.getAttribute('property') || '';
-          if (
-            name === 'description' ||
-            name === 'keywords' ||
-            name === 'author' ||
-            prop.startsWith('og:') ||
-            name.startsWith('twitter:') ||
-            prop.startsWith('twitter:')
-          ) {
-            el.remove();
-          }
-        });
-      }
-    }
-  }, [effectiveTitle, effectiveDesc]);
 
   return (
     <Helmet>

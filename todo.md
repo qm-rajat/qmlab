@@ -10,3 +10,8 @@
 - [x] Restart dev server and verify the UI functions identically, but powered by the database.
 - [x] Fix DB seed logic in store.ts to seed individual missing keys
 - [x] Add 'contact_location' to SiteSettings and Admin CRM to remove hardcoded location string in App.tsx
+- [x] Add Redis Memory and Storage Health telemetry monitor (`/api/admin/storage-health`).
+- [x] Create local SQLite Archive & Safe Prune pipeline (`scripts/sync-sqlite.ts`, `npm run sync:sqlite`).
+- [x] Implement safe two-phase Redis ephemeral log purger (`/api/admin/prune-ephemeral`) preserving 100% of core CMS content.
+- [x] Add prominent One-Click Backup, Snapshot, and Memory Health dashboard widget in Admin Console.
+- [x] Implement live SQLite database export utility (`GET /api/admin/backup/download-sqlite`) for direct in-browser `.sqlite` file downloads from the Admin Console.

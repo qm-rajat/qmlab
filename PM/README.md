@@ -15,7 +15,7 @@ Welcome to the **Product Management Documentation Hub** for the **Rajat Technica
 | 📊 [`metrics-and-analytics.md`](./metrics-and-analytics.md) | **Product Metrics & Telemetry:** Google HEART framework, conversion funnels, event taxonomy, and experimentation backlog. | ✅ Active |
 | 🚀 [`gtm-and-release-plan.md`](./gtm-and-release-plan.md) | **GTM Strategy & Release Plan:** Distribution matrix, pre-release checklists, rollback procedures, and launch criteria. | ✅ Active |
 | 🧭 [`competitive-analysis.md`](./competitive-analysis.md) | **Competitive Analysis & SWOT:** Competitor comparison matrix, SWOT analysis, and Unique Value Proposition (UVP). | ✅ Active |
-| 💼 [`services-hireme-plan.md`](./services-hireme-plan.md) | **Hire Me & Freelance Services Plan:** Product architecture, data model, and admin workflow for the upcoming dynamic services page. | ✅ Planned |
+| 💼 [`services-hireme-plan.md`](./services-hireme-plan.md) | **Hire Me & Freelance Services Plan:** Product architecture, data model, and admin workflow for the dynamic services offering & workflow engine. | ✅ Active |
 
 ---
 

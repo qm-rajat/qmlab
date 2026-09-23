@@ -1,77 +1,102 @@
-# Product & Technical Plan: "Hire Me & Freelance Services" Dynamic Page
+# Product & Technical Plan: "Hire Me & Freelance Services" Dynamic Platform
+
+**Status:** ✅ Implemented & Live in Production (v2.5.0)  
+**Target Routing:** `/` (Services Landing View) & `/services` | Direct Navigation via Header & CTA links  
+**Admin Controller:** Admin Console > "Freelance Services" Tab (`/admin` tab: `services`)  
+**Currency Standard:** Indian Rupee (INR - `₹`) with dynamic tier ranges  
+
+---
 
 ## 1. Executive Summary
-This document outlines the product requirements, architectural design, data structures, and admin management workflow for the upcoming **"Hire Me & Freelance Services"** dedicated landing page. 
-
-The goal is to provide a high-converting, professional service offering page (accessible at `/services` or `/hire`) where potential clients can explore specialized freelance services, review featured case-study projects, read relevant expert blog posts, inspect verified technical skills, and book or inquire directly through an integrated project consultation form—**with 100% dynamic control from the Admin CRM console**.
+The **"Hire Me & Freelance Services"** dynamic platform delivers a high-converting, professional service catalog where potential clients can explore specialized freelance packages, review verified client case studies, inspect technical domain competencies, browse dynamic FAQs & engineering workflow sprints, and submit structured project inquiries—**with 100% dynamic control from the Admin CRM console**.
 
 ---
 
-## 2. Core Features & User Experience (Frontend)
+## 2. Implemented Features & User Experience
 
-### 2.1 Hero & Value Proposition Section
-- **Dynamic Headline & Subheading:** Editable via admin (e.g., *"Senior Full-Stack Engineer & AI Architect available for contract & advisory"*).
-- **Quick Action Call-to-Actions (CTAs):** "Book a Consultation", "View Packages", "Request Custom Quote".
-- **Trust Badges & Availability Status:** Real-time availability indicator (e.g., *"🟢 Available for Q3 Projects"*), client satisfaction score, completed projects count, and years of experience.
+### 2.1 Hero & Service Value Proposition
+- **High-Impact Identity:** "Engineering Scalable AI Systems & Modern Web Platforms" with live availability indicator (e.g. *Available for Q3 Projects*).
+- **Quick Action Navigation:** Direct consultation modals, package discovery, and verified portfolio routing.
+- **Trust & Satisfaction Guarantees:** 4-pillar trust badge row covering 100% IP Ownership, Code Quality Audits, SLA Support, and Clear Milestone Billing.
 
-### 2.2 Freelance Services & Offerings Matrix
-- **Service Cards:** Cards displaying service titles, short descriptions, deliverables list, pricing model (Hourly, Fixed-price, Retainer), and typical turnaround time.
-- **Service Categories:** E.g., Full-Stack Web Development, AI & LLM Integration (MCP, Gemini), Technical SEO & AEO Optimization, Cloud Architecture & DevOps.
+### 2.2 Dynamic Freelance Services Catalog
+- **Curated Service Packages:** Full-Stack Web Development, AI & LLM Systems (MCP/Gemini), Technical SEO & AEO Architecture, Cloud Infrastructure & DevOps.
+- **Pricing Model:** Transparent INR (`₹`) fixed packages, hourly consulting, and monthly retainers.
+- **Deliverables & Sprints:** Interactive pill badges for each package showing specific deliverables and estimated turnaround times.
 
-### 2.3 Curated Featured Projects
-- **Dynamic Selection:** Admin can toggle which portfolio projects are marked as `is_featured_service` to showcase on this page.
-- **Case Study Preview:** Tech stack badges, live demo links, key metrics/results achieved.
+### 2.3 Interactive Project Consultation / Inquiry Workflow
+- **Service-Linked Lead Generation:** Clicking "Inquire Now" on any service card auto-populates the inquiry context with the exact service ID and estimated budget tier.
+- **Seamless Admin CRM Integration:** Inquiries route into `AdminContactsTab` with priority flags, deal value tracking in INR (`₹`), canned response generators, and status workflows.
 
-### 2.4 Featured Expert Blog Posts
-- **Thought Leadership Feed:** Dynamically displays articles tagged for freelance clients (e.g., architectural guides, scalability case studies).
+### 2.4 Dynamic Engineering Workflow & Sprints
+- **4-Stage Delivery Blueprint:** Discovery & Architecture, Rapid Prototyping, Production Hardening, and Handover & Monitoring.
+- **Fully Admin-Editable:** Step titles, descriptions, and deliverable badges manageable via Admin Console.
 
-### 2.5 Skills & Tech Stack Matrix
-- **Categorized Expertise:** Frontend, Backend, AI/ML, Cloud & DevOps, Databases.
-- **Proficiency / Years of Experience:** Visual indicators of mastery level.
-
-### 2.6 Interactive Consultation / Booking Form
-- **Project Scope Selector:** Budget range dropdown, timeline estimate, project type checkboxes.
-- **Direct Lead Capture:** Submissions route directly into the existing Admin Contact CRM with priority tags (`High-Value Freelance Inquiry`).
+### 2.5 Dynamic FAQ & AEO Engine
+- **Schema-Optimized FAQs:** Structured questions and answers addressing IP rights, source code ownership, communication cadences, and milestone billing.
+- **Search Engine & LLM Crawlability:** Ingestible by AI search engines (Perplexity, ChatGPT, Claude) with rich Schema.org metadata.
 
 ---
 
-## 3. Data Structures & Database Schema (Redis / JSON Store)
+## 3. Data Architecture & Database Schemas (`server/lib/store.ts` & `src/types.ts`)
 
-### 3.1 New Store Collections / Keys
-1. **`qmlabs:services`**: Array of service offerings.
-   ```ts
-   interface FreelanceService {
-     id: string;
-     title: string;
-     slug: string;
-     short_description: string;
-     full_description: string;
-     icon: string;
-     deliverables: string[];
-     pricing_type: 'fixed' | 'hourly' | 'retainer';
-     starting_price?: string;
-     turnaround_time: string;
-     is_active: boolean;
-     sort_order: number;
-   }
-   ```
-2. **`qmlabs:service_settings`**: Page configuration (hero title, subtitle, availability status, booking banner text, meta tags).
+### 3.1 Freelance Service Schema
+```typescript
+interface FreelanceService {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  full_description: string;
+  icon: 'Code2' | 'Cpu' | 'Search' | 'Server' | string;
+  deliverables: string[];
+  pricing_type: 'fixed' | 'hourly' | 'retainer';
+  starting_price?: string; // Standardized in INR: e.g. "₹15,000" or "₹1,500/hr"
+  turnaround_time: string;
+  is_active: boolean;
+  sort_order: number;
+}
+```
+
+### 3.2 FAQ Schema
+```typescript
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  category?: 'general' | 'pricing' | 'technical' | 'workflow';
+  sort_order: number;
+  is_active: boolean;
+}
+```
+
+### 3.3 Workflow Step Schema
+```typescript
+interface WorkflowStep {
+  id: string;
+  step_number: number;
+  title: string;
+  description: string;
+  deliverables: string[];
+}
+```
+
+### 3.4 Trust Guarantee Schema
+```typescript
+interface TrustGuarantee {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+```
 
 ---
 
-## 4. Admin CRM Management Workflow
+## 4. Admin Management Hub (`AdminServicesTab.tsx`, `AdminWorkflowTab.tsx`, `AdminTrustTab.tsx`, `AdminFaqTab.tsx`)
 
-A new tab in the Admin Console (**"Services & Freelancing"**):
-- **Services Manager:** Create, edit, reorder, and toggle active status for freelance service packages.
-- **Featured Items Curation:** Select which existing projects and blog posts are featured on the Services page.
-- **Inquiry Analytics:** Track leads generated specifically from the `/services` page.
+1. **Service Package CRUD:** Instant creation, editing, icon selection, deliverable tags, and active status toggling.
+2. **One-Click Currency Conversions:** Built-in actions to batch-convert existing legacy catalog pricing to standardized INR (`₹`) tiers.
+3. **Workflow & Trust Guarantees Editors:** Full single-pane editing for delivery stages and client assurance guarantees.
+4. **Auto-Sanitized Data Sync:** Live bidirectional synchronization between persistent Redis store, atomic backup files, and client-side React state.
 
----
-
-## 5. Proposed Implementation Phases
-
-- **Phase 1:** Define TypeScript interfaces & mock/default service data.
-- **Phase 2:** Build backend API routes (`GET /api/services`, `PUT /api/admin/services`).
-- **Phase 3:** Build frontend public page (`/src/components/ServicesView.tsx` or `/src/pages/ServicesPage.tsx`) with routing.
-- **Phase 4:** Build Admin CRM management tab (`/src/components/admin/AdminServicesTab.tsx`).
-- **Phase 5:** Testing, SEO optimization, and integration with Contact CRM.

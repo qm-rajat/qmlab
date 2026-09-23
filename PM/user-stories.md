@@ -174,3 +174,46 @@
   And the message should be recorded in the Admin CRM with status "unread"
   And an automated SMTP notification should be dispatched to the admin
   ```
+
+#### US-5.2: Pipeline Valuation in INR (₹)
+- **As the** Admin,
+- **I want to** categorize inquiries with priority tags, notes, and INR estimated deal values (e.g., Under ₹5k, ₹5k - ₹15k, ₹15k - ₹25k, ₹25k+),
+- **So that** I can maintain accurate pipeline valuation and forecast revenue in Indian Rupees.
+- **Priority:** Must Have (P0) | **Points:** 3
+- **Acceptance Criteria (Gherkin):**
+  ```gherkin
+  Given I open an inquiry card in the Admin Contacts CRM
+  When I select an estimated deal value tier (e.g., "₹5k - ₹15k (Core)")
+  Then the inquiry updates immediately without page refresh
+  And the Admin Dashboard Active Pipeline total recalculates using the new INR valuation
+  ```
+
+---
+
+### EPIC-6: Dynamic Freelance Services, Workflow & FAQ/AEO Engine
+
+#### US-6.1: Freelance Service Catalog & Direct Consultation Inquiries
+- **As a** Startup Founder or Enterprise Client,
+- **I want to** explore specialized service packages with deliverable badges, turnaround estimates, and INR pricing,
+- **So that** I can book or inquire directly for tailored engineering solutions.
+- **Priority:** Must Have (P0) | **Points:** 5
+- **Acceptance Criteria (Gherkin):**
+  ```gherkin
+  Given I am on the Services landing view
+  When I click "Inquire Now" on a service package card
+  Then the project consultation form opens pre-filled with the service ID and budget tier
+  And submitting routes directly into the Admin Contacts CRM with service metadata
+  ```
+
+#### US-6.2: Admin Freelance Catalog & Sprint Workflow Management
+- **As the** Admin,
+- **I want to** create and edit freelance services, customize deliverables, reorder sprint stages, and manage trust guarantees,
+- **So that** my public service offerings always reflect current bandwidth and technical specializations.
+- **Priority:** Must Have (P0) | **Points:** 5
+- **Acceptance Criteria (Gherkin):**
+  ```gherkin
+  Given I am on the Admin Freelance Services tab
+  When I edit a service price, deliverables, or active status and save
+  Then the changes persist to Redis/JSON storage immediately
+  And the public landing page renders the updated offerings in real time
+  ```

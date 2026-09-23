@@ -68,15 +68,17 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
 
           {/* Directory Navigation */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-4">
               Explore Map
             </h4>
             <ul className="space-y-2.5">
               {[
                 { label: 'Home Page', value: 'home' },
+                { label: 'Services & Packages', value: 'services' },
                 { label: 'Projects Gallery', value: 'projects' },
                 { label: 'Technical Blogs', value: 'blog' },
                 { label: 'Certifications', value: 'certificates' },
+                { label: 'Interactive Resume', value: 'resume' },
                 { label: 'Get In Touch', value: 'contact' },
               ].map((link) => (
                 <li key={link.value}>
@@ -85,7 +87,7 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
                       onViewChange(link.value);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="text-sm text-slate-500 hover:text-primary tracking-wide text-left cursor-pointer transition-colors"
+                    className="text-sm text-slate-600 hover:text-primary tracking-wide text-left cursor-pointer transition-colors"
                   >
                     {link.label}
                   </button>
@@ -96,23 +98,38 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
 
           {/* Career focus info */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-              Core Specialty
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-4">
+              Core Specialty & Portals
             </h4>
-            <ul className="space-y-2.5 text-sm text-slate-500 tracking-wide">
-              <li>• Technical SEO & Audits</li>
+            <ul className="space-y-2.5 text-sm text-slate-600 tracking-wide">
+              <li>• Technical SEO & AEO Audits</li>
+              <li>• AI Agents & MCP Server Architecture</li>
+              <li>• Full-Stack Web Development</li>
               <li>• Core Web Vitals Refactoring</li>
-              <li>• Selenium Web Automation</li>
-              <li>• Predictive Health Analytics</li>
-              <li>• Simulated Network Defense</li>
+              <li>• Cloud Architecture & DevOps</li>
             </ul>
+            <div className="mt-4 pt-3 border-t border-slate-200">
+              <a
+                href="https://rajat.qmlab.in"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+              >
+                Founder CV: rajat.qmlab.in ↗
+              </a>
+            </div>
           </div>
         </div>
 
         {/* Bottom copyright details */}
-        <div className="border-t border-slate-200/50 pt-8 flex flex-col sm:flex-row items-center sm:justify-between gap-4">
-          <p className="text-xs text-slate-400 tracking-wide">
-            © {currentYear} Rajat Kumar Dash. All rights reserved. Powered by QM LABS & fueled by excessive caffeine.
+        <div className="border-t border-slate-200/80 pt-8 flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+          <p className="text-xs text-slate-500 tracking-tight sm:tracking-normal inline-flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <span>© {currentYear} <strong className="font-semibold text-slate-700">Rajat Kumar Dash</strong>. All rights reserved.</span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50/80 border border-blue-100 text-slate-700 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse shadow-sm" />
+              Powered by QM LABS
+            </span>
           </p>
           <div className="flex items-center gap-4">
             <button
@@ -120,14 +137,14 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
                 onViewChange('admin');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="text-xs font-semibold text-slate-400 hover:text-primary transition-colors cursor-pointer"
+              className="text-xs font-semibold text-slate-600 hover:text-primary transition-colors cursor-pointer"
             >
               Console Login
             </button>
-            <span className="text-slate-200">|</span>
+            <span className="text-slate-300">|</span>
             <button
               onClick={handleBackToTop}
-              className="p-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-500 shadow-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+              className="p-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 shadow-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center"
               title="Scroll back to top of the page"
             >
               <ArrowUp className="w-3.5 h-3.5" />

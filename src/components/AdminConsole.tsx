@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Shield, LayoutDashboard, FileCode, Award, Inbox, Settings, LogOut, Mail, BookOpen, Bot, Sparkles, BarChart2,
-  Briefcase, GraduationCap, Cpu, Layers, HardDrive
+  Briefcase, GraduationCap, Cpu, Layers, HardDrive, HelpCircle, Compass, ShieldCheck
 } from 'lucide-react';
-import { Project, Blog, Certificate, Contact, SiteSettings, FreelanceService } from '../types';
+import { Project, Blog, Certificate, Contact, SiteSettings, FreelanceService, FAQItem, WorkflowStep, TrustGuarantee } from '../types';
 import { AdminLoginView } from './admin/AdminLoginView';
 import { AdminDashboardTab } from './admin/AdminDashboardTab';
 import { AdminProjectsTab } from './admin/AdminProjectsTab';
@@ -17,6 +17,9 @@ import { AdminMediaTab } from './admin/AdminMediaTab';
 import { AdminDeleteModal } from './admin/AdminDeleteModal';
 import AdminAnalyticsTab from './admin/AdminAnalyticsTab';
 import AdminServicesTab from './admin/AdminServicesTab';
+import AdminFaqTab from './admin/AdminFaqTab';
+import AdminWorkflowTab from './admin/AdminWorkflowTab';
+import AdminTrustTab from './admin/AdminTrustTab';
 
 interface AdminConsoleProps {
   settings: SiteSettings;
@@ -29,6 +32,12 @@ interface AdminConsoleProps {
   onUpdateCertificates: (certs: Certificate[]) => void;
   services: FreelanceService[];
   onUpdateServices: (services: FreelanceService[]) => void;
+  faqs?: FAQItem[];
+  onUpdateFaqs?: (faqs: FAQItem[]) => void;
+  workflowSteps?: WorkflowStep[];
+  onUpdateWorkflowSteps?: (steps: WorkflowStep[]) => void;
+  trustGuarantees?: TrustGuarantee[];
+  onUpdateTrustGuarantees?: (guarantees: TrustGuarantee[]) => void;
   isAdminLoggedIn: boolean;
   onAdminLoginToggle: (loggedIn: boolean) => void;
 }
@@ -44,6 +53,9 @@ export type AdminTab =
   | 'blogs' 
   | 'certs' 
   | 'services'
+  | 'workflow'
+  | 'trust'
+  | 'faqs'
   | 'contacts' 
   | 'ai' 
   | 'smtp' 
@@ -61,6 +73,12 @@ export default function AdminConsole({
   onUpdateCertificates,
   services,
   onUpdateServices,
+  faqs = [],
+  onUpdateFaqs = () => {},
+  workflowSteps = [],
+  onUpdateWorkflowSteps = () => {},
+  trustGuarantees = [],
+  onUpdateTrustGuarantees = () => {},
   isAdminLoggedIn,
   onAdminLoginToggle
 }: AdminConsoleProps) {
@@ -71,7 +89,7 @@ export default function AdminConsole({
   // Custom Deletion Confirmation Modal State
   const [deleteConfirm, setDeleteConfirm] = useState<{
     id: string;
-    type: 'contact' | 'project' | 'blog' | 'certificate';
+    type: 'contact' | 'project' | 'blog' | 'certificate' | 'service' | 'workflow' | 'trust' | 'faq';
     title: string;
   } | null>(null);
 
@@ -149,6 +167,18 @@ export default function AdminConsole({
     } else if (type === 'certificate') {
       const updated = certificates.filter(c => c.id !== id);
       onUpdateCertificates(updated);
+    } else if (type === 'service') {
+      const updated = services.filter(s => s.id !== id);
+      onUpdateServices(updated);
+    } else if (type === 'workflow') {
+      const updated = workflowSteps.filter(w => w.id !== id);
+      onUpdateWorkflowSteps(updated);
+    } else if (type === 'trust') {
+      const updated = trustGuarantees.filter(t => t.id !== id);
+      onUpdateTrustGuarantees(updated);
+    } else if (type === 'faq') {
+      const updated = faqs.filter(f => f.id !== id);
+      onUpdateFaqs(updated);
     }
     setDeleteConfirm(null);
   };
@@ -156,10 +186,18 @@ export default function AdminConsole({
   // Metrics aggregations
   const unreadContactCount = contacts.filter(c => c.status === 'unread').length;
   const ESTIMATED_VALUE_MIDPOINTS: { [key: string]: number } = {
-    '< $1,000': 500,
-    '$1,000 - $5,000': 3000,
-    '$5,000 - $10,000': 7500,
-    '$10,000+': 15000,
+    // INR Ranges
+    'Under ₹5k': 3000,
+    '₹5k - ₹15k': 10000,
+    '₹15k - ₹25k': 20000,
+    '₹25k+': 30000,
+    // Backward compatibility for legacy tags
+    'Under $2k': 3000,
+    '$2k - $10k': 10000,
+    '$10k+': 25000,
+    '< $1,000': 1500,
+    '$1,000 - $5,000': 5000,
+    '$5,000 - $10,000': 10000,
   };
   const activeLeads = contacts.filter(c => c.status !== 'archived');
   const taggedActiveLeads = activeLeads.filter(c => c.estimated_value && ESTIMATED_VALUE_MIDPOINTS[c.estimated_value] !== undefined);
@@ -214,6 +252,9 @@ export default function AdminConsole({
             { label: 'Skills lists', value: 'skills', icon: Cpu },
             { label: 'Project Portfolio', value: 'projects', icon: FileCode },
             { label: 'Freelance Services', value: 'services', icon: Briefcase },
+            { label: 'Workflow & Sprints', value: 'workflow', icon: Compass },
+            { label: 'Trust & Guarantees', value: 'trust', icon: ShieldCheck },
+            { label: 'FAQ & AEO Engine', value: 'faqs', icon: HelpCircle },
             { label: 'Technical Blogs', value: 'blogs', icon: BookOpen },
             { label: 'Certifications', value: 'certs', icon: Award },
             { label: 'Contacts Enquiries', value: 'contacts', icon: Inbox, alert: unreadContactCount > 0 ? `${unreadContactCount}` : null },
@@ -308,6 +349,31 @@ export default function AdminConsole({
             <AdminServicesTab
               services={services}
               onUpdateServices={onUpdateServices}
+              onDeleteServiceRequest={(id, title) => setDeleteConfirm({ id, type: 'service', title: `service "${title}"` })}
+            />
+          )}
+
+          {activeTab === 'workflow' && (
+            <AdminWorkflowTab
+              workflowSteps={workflowSteps}
+              onUpdateWorkflowSteps={onUpdateWorkflowSteps}
+              onDeleteWorkflowRequest={(id, title) => setDeleteConfirm({ id, type: 'workflow', title: `workflow step "${title}"` })}
+            />
+          )}
+
+          {activeTab === 'trust' && (
+            <AdminTrustTab
+              trustGuarantees={trustGuarantees}
+              onUpdateTrustGuarantees={onUpdateTrustGuarantees}
+              onDeleteTrustRequest={(id, title) => setDeleteConfirm({ id, type: 'trust', title: `guarantee "${title}"` })}
+            />
+          )}
+
+          {activeTab === 'faqs' && (
+            <AdminFaqTab
+              faqs={faqs}
+              onUpdateFaqs={onUpdateFaqs}
+              onDeleteFaqRequest={(id, title) => setDeleteConfirm({ id, type: 'faq', title: `FAQ "${title}"` })}
             />
           )}
 
@@ -322,6 +388,7 @@ export default function AdminConsole({
           {activeTab === 'ai' && (
             <AdminAiTab
               settings={settings}
+              onUpdateSettings={onUpdateSettings}
               projects={projects}
               blogs={blogs}
               certificates={certificates}

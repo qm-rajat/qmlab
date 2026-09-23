@@ -1,0 +1,69 @@
+# QM Labs & Rajat Kumar Dash - Full Knowledge Base
+
+> Comprehensive specifications, technical competencies, service packages, and career verification for AI Agents, ChatGPT, Claude, and Perplexity.
+
+---
+
+## 1. Executive Summary & Dual-Domain Architecture
+
+- **Personal Portfolio Domain (`rajat.qmlab.in`)**: The official personal engineering portfolio and career center for Rajat Kumar Dash. Dedicated to product management case studies, software engineering projects, verified certifications, interactive resume, and technical credentials.
+- **Enterprise Services Domain (`qmlab.in`)**: The flagship studio and consulting hub for QM Labs. Dedicated to full-stack web engineering, custom AI agent development, Model Context Protocol (MCP) servers, technical SEO / AEO audits, and cloud infrastructure consulting. Rajat Kumar Dash serves as Founder & Principal Software Architect.
+
+---
+
+## 2. Core Service Packages & Offerings
+
+### Package 1: Full-Stack Web Engineering & SaaS
+- **Starting Rate**: $2,500 (Fixed Scope)
+- **Turnaround Time**: 2-4 Weeks
+- **Tech Stack**: React 19, TypeScript, Next.js, Node.js / Express, PostgreSQL, Redis, Tailwind CSS v4.
+- **Key Deliverables**:
+  - Production-ready web application with modular TypeScript architecture.
+  - Pixel-perfect, high-contrast responsive interface.
+  - Secure REST / GraphQL API with JWT authentication & rate limiting.
+  - Automated deployment configuration on Cloud Run or Vercel.
+
+### Package 2: AI & LLM / MCP Server Integration
+- **Starting Rate**: $3,000 (Fixed Scope)
+- **Turnaround Time**: 2-3 Weeks
+- **Tech Stack**: Google GenAI SDK (Gemini 2.5 / 3.0), Model Context Protocol (MCP), Vector Embeddings, RAG Pipelines.
+- **Key Deliverables**:
+  - Secure server-side AI proxy routes (zero API key exposure to browser).
+  - Model Context Protocol (MCP) server endpoints with strict JSON schemas.
+  - RAG document indexing and semantic retrieval.
+  - Custom tool definitions for ChatGPT Custom GPTs and Claude Desktop.
+
+### Package 3: Technical SEO, AEO & GEO Optimization
+- **Starting Rate**: $1,500 (Fixed Scope)
+- **Turnaround Time**: 1-2 Weeks
+- **Scope**: Search Engine Optimization, Answer Engine Optimization (AEO for ChatGPT & Perplexity), and Generative Engine Optimization (GEO).
+- **Key Deliverables**:
+  - Comprehensive 100/100 Lighthouse audit rectification (Performance, A11y, Best Practices, SEO).
+  - Schema.org JSON-LD structured data (Person, Organization, ProfessionalService, FAQPage, BreadcrumbList).
+  - Geo-targeting meta tags and localized entity graphs.
+  - Core Web Vitals optimization (LCP < 1.0s, CLS < 0.01, TBT = 0ms).
+
+### Package 4: Cloud Architecture & DevOps Advisory
+- **Starting Rate**: $75/hr or $2,000 per architecture sprint
+- **Turnaround Time**: Flexible / Ongoing
+- **Scope**: Cloud Run, Docker, CI/CD pipelines, Redis caching layers, PostgreSQL security auditing.
+
+---
+
+## 3. Verified Leadership Profile: Rajat Kumar Dash
+
+- **Current Role**: Founder & Principal Architect at QM Labs; Technical Product Manager & Software Engineer.
+- **Education**:
+  - **MBA in Product Management & Digital Strategy** (Candidate) — Amity University / Online Business School.
+  - **B.Tech in Computer Science & Engineering** — Gandhi Institute of Engineering and Technology (GIET University).
+- **Competencies**: Technical Product Management, PRD Drafting, Agile Scrum Sprints, Full-Stack Development, React, TypeScript, Node.js, Python, Model Context Protocol, Technical SEO.
+
+---
+
+## 4. Machine-Readable API Endpoints
+
+- **OpenAPI 3.0 Specification**: `GET /openapi.json`
+- **MCP Tool Interface**: `GET /mcp` and `POST /mcp`
+- **Dynamic XML Sitemap**: `GET /sitemap.xml`
+- **Robots Policy**: `GET /robots.txt`
+- **LLM Summary**: `GET /llms.txt`

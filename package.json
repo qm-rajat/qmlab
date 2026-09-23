@@ -11,6 +11,8 @@
     "lint": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "backup": "tsx scripts/backup.ts",
+    "backup:sqlite": "tsx scripts/sync-sqlite.ts",
+    "sync:sqlite": "tsx scripts/sync-sqlite.ts",
     "restore": "tsx scripts/restore.ts"
   },
   "dependencies": {

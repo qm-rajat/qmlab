@@ -30,12 +30,21 @@ import {
   getStoredAiApiKey,
   getServices,
   saveServices,
+  getFaqs,
+  saveFaqs,
+  getWorkflowSteps,
+  saveWorkflowSteps,
+  getTrustGuarantees,
+  saveTrustGuarantees,
+  getRedisStorageInfo,
+  getRedisClient,
 } from "../lib/store.js";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { getBotTelemetry, recordBotCrawl } from "../services/crawler.service.js";
 import { getTrafficTelemetry } from "../services/telemetry.service.js";
+import { generateSqliteArchiveBuffer } from "../services/sqlite-archive.service.js";
 
 const router = Router();
 
@@ -165,6 +174,42 @@ router.put("/services", requireAdmin, async (req, res) => {
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Failed to save services." });
+  }
+});
+
+router.put("/faqs", requireAdmin, async (req, res) => {
+  try {
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: "FAQs payload must be an array." });
+    }
+    await saveFaqs(req.body);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to save FAQs." });
+  }
+});
+
+router.put("/workflow-steps", requireAdmin, async (req, res) => {
+  try {
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: "Workflow steps payload must be an array." });
+    }
+    await saveWorkflowSteps(req.body);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to save workflow steps." });
+  }
+});
+
+router.put("/trust-guarantees", requireAdmin, async (req, res) => {
+  try {
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: "Trust guarantees payload must be an array." });
+    }
+    await saveTrustGuarantees(req.body);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to save trust guarantees." });
   }
 });
 
@@ -360,13 +405,16 @@ router.delete("/media", requireAdmin, async (req, res) => {
 // Backup All Data to JSON
 router.post("/backup", requireAdmin, async (req, res) => {
   try {
-    const [settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey] = await Promise.all([
+    const [settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees, customPassword, aiApiKey] = await Promise.all([
       getSettings(),
       getProjects(),
       getBlogs(),
       getCertificates(),
       getContacts(),
       getServices(),
+      getFaqs(),
+      getWorkflowSteps(),
+      getTrustGuarantees(),
       getCustomPassword(),
       getStoredAiApiKey(),
     ]);
@@ -380,6 +428,9 @@ router.post("/backup", requireAdmin, async (req, res) => {
       certificates,
       contacts,
       services,
+      faqs,
+      workflowSteps,
+      trustGuarantees,
       customPassword,
       aiApiKey,
     };
@@ -411,13 +462,16 @@ router.post("/backup", requireAdmin, async (req, res) => {
 // Download latest backup JSON file directly
 router.get("/backup/download", requireAdmin, async (req, res) => {
   try {
-    const [settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey] = await Promise.all([
+    const [settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees, customPassword, aiApiKey] = await Promise.all([
       getSettings(),
       getProjects(),
       getBlogs(),
       getCertificates(),
       getContacts(),
       getServices(),
+      getFaqs(),
+      getWorkflowSteps(),
+      getTrustGuarantees(),
       getCustomPassword(),
       getStoredAiApiKey(),
     ]);
@@ -431,6 +485,9 @@ router.get("/backup/download", requireAdmin, async (req, res) => {
       certificates,
       contacts,
       services,
+      faqs,
+      workflowSteps,
+      trustGuarantees,
       customPassword,
       aiApiKey,
     };
@@ -442,6 +499,20 @@ router.get("/backup/download", requireAdmin, async (req, res) => {
   } catch (error: any) {
     console.error("Download backup error:", error);
     res.status(500).json({ success: false, error: error.message || "Failed to download backup." });
+  }
+});
+
+// Download latest full Redis state as a local SQLite (.sqlite) database file
+router.get("/backup/download-sqlite", requireAdmin, async (req, res) => {
+  try {
+    const { buffer, filename } = await generateSqliteArchiveBuffer();
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/x-sqlite3");
+    res.setHeader("Content-Length", buffer.length.toString());
+    res.send(buffer);
+  } catch (error: any) {
+    console.error("Download SQLite backup error:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to generate SQLite archive." });
   }
 });
 
@@ -473,16 +544,79 @@ router.post("/restore", requireAdmin, async (req, res) => {
     if (payload.certificates && Array.isArray(payload.certificates)) await saveCertificates(payload.certificates);
     if (payload.contacts && Array.isArray(payload.contacts)) await saveContacts(payload.contacts);
     if (payload.services && Array.isArray(payload.services)) await saveServices(payload.services);
+    if (payload.faqs && Array.isArray(payload.faqs)) await saveFaqs(payload.faqs);
+    if (payload.workflowSteps && Array.isArray(payload.workflowSteps)) await saveWorkflowSteps(payload.workflowSteps);
+    if (payload.trustGuarantees && Array.isArray(payload.trustGuarantees)) await saveTrustGuarantees(payload.trustGuarantees);
     if (payload.customPassword) await saveCustomPassword(payload.customPassword);
     if (payload.aiApiKey) await saveStoredAiApiKey(payload.aiApiKey);
 
     res.json({ 
       success: true, 
-      message: "Restored all database records successfully (settings, projects, blogs, certificates, contacts, services)." 
+      message: "Restored all database records successfully (settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees)." 
     });
   } catch (error: any) {
     console.error("Restore error:", error);
     res.status(500).json({ success: false, error: error.message || "Restore failed." });
+  }
+});
+
+// Storage Health: Get live Redis memory statistics and local backup state
+router.get("/storage-health", requireAdmin, async (req, res) => {
+  try {
+    const redisInfo = await getRedisStorageInfo();
+
+    // Check local backup existence
+    const backupsDir = path.join(process.cwd(), ".data", "backups");
+    let latestBackupTime: string | null = null;
+    let latestBackupSize = "0 KB";
+    const latestPath = path.join(backupsDir, "latest.json");
+
+    if (fs.existsSync(latestPath)) {
+      const stat = fs.statSync(latestPath);
+      latestBackupTime = stat.mtime.toISOString();
+      latestBackupSize = `${Math.round(stat.size / 1024)} KB`;
+    }
+
+    res.json({
+      success: true,
+      redis: redisInfo,
+      localBackup: {
+        exists: Boolean(latestBackupTime),
+        lastModified: latestBackupTime,
+        size: latestBackupSize,
+      }
+    });
+  } catch (error: any) {
+    console.error("Storage health check error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Safe Purge: Clear high-volume ephemeral telemetry from Redis (leaves content 100% intact)
+router.post("/prune-ephemeral", requireAdmin, async (req, res) => {
+  try {
+    const redis = getRedisClient();
+    if (!redis) {
+      return res.status(503).json({ success: false, error: "Redis not connected." });
+    }
+
+    // Identify ephemeral keys only
+    const ephemeralKeys = await redis.keys("qmlabs:telemetry:*");
+    const sessionKeys = await redis.keys("qmlabs:rate:*");
+    const allEphemeral = [...ephemeralKeys, ...sessionKeys];
+
+    if (allEphemeral.length > 0) {
+      await redis.del(...allEphemeral);
+    }
+
+    res.json({
+      success: true,
+      message: `Safely pruned ${allEphemeral.length} temporary telemetry/rate keys from Redis. All CMS content is preserved.`,
+      prunedCount: allEphemeral.length,
+    });
+  } catch (error: any) {
+    console.error("Prune error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

@@ -1,11 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Project } from '../types';
 import { ArrowUpRight, ExternalLink, Github, Sparkles, Layers, ShieldCheck, TrendingUp, Cpu } from 'lucide-react';
 
 interface FeaturedProjectsProps {
   projects: Project[];
-  onViewAll: () => void;
+  onViewAll?: () => void;
   onSelectProject?: (project: Project) => void;
 }
 
@@ -29,13 +30,17 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({
           </h3>
         </div>
 
-        <button
-          onClick={onViewAll}
+        <Link
+          to="/projects"
+          onClick={() => {
+            if (onViewAll) onViewAll();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           className="group inline-flex items-center gap-1.5 text-xs font-bold text-[#0084ff] hover:text-blue-700 uppercase tracking-wider font-mono cursor-pointer transition-colors"
         >
           View All {projects.length} Projects
           <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

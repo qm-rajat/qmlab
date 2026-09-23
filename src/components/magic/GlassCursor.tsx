@@ -99,7 +99,11 @@ export default function GlassCursor() {
         r.style.left = e.clientX + 'px';
         r.style.top = e.clientY + 'px';
         rippleLayerRef.current.appendChild(r);
-        r.addEventListener('animationend', () => r.remove());
+        r.addEventListener('animationend', () => {
+          if (r.parentNode) {
+            r.parentNode.removeChild(r);
+          }
+        });
       }
     };
 

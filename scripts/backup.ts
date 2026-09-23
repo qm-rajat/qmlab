@@ -8,6 +8,9 @@ import {
   getCertificates,
   getContacts,
   getServices,
+  getFaqs,
+  getWorkflowSteps,
+  getTrustGuarantees,
   getCustomPassword,
   getStoredAiApiKey
 } from "../server/lib/store";
@@ -25,6 +28,9 @@ async function runBackup() {
     const certificates = await getCertificates();
     const contacts = await getContacts();
     const services = await getServices();
+    const faqs = await getFaqs();
+    const workflowSteps = await getWorkflowSteps();
+    const trustGuarantees = await getTrustGuarantees();
     const customPassword = await getCustomPassword();
     const aiApiKey = await getStoredAiApiKey();
 
@@ -47,6 +53,9 @@ async function runBackup() {
         certificates,
         contacts,
         services,
+        faqs,
+        workflowSteps,
+        trustGuarantees,
         customPassword,
         aiApiKey,
       }
@@ -74,6 +83,9 @@ async function runBackup() {
     console.log(`  - Certificates: ${certificates.length}`);
     console.log(`  - Contacts: ${contacts.length}`);
     console.log(`  - Services: ${services.length}`);
+    console.log(`  - FAQs: ${faqs.length}`);
+    console.log(`  - Workflow Steps: ${workflowSteps.length}`);
+    console.log(`  - Trust Guarantees: ${trustGuarantees.length}`);
     console.log(`  - Settings: Complete (with dynamic SEO & metadata)`);
 
     process.exit(0);

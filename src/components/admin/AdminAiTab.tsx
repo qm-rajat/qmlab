@@ -21,12 +21,24 @@ import {
   Play,
   FileJson,
   Layers,
-  Activity
+  Activity,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Lock,
+  Unlock,
+  Key,
+  Eye,
+  EyeOff,
+  Power,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import { SiteSettings, Project, Blog, Certificate } from '../../types';
 
 interface AdminAiTabProps {
   settings: SiteSettings;
+  onUpdateSettings?: (settings: SiteSettings) => Promise<boolean | void> | void;
   projects: Project[];
   blogs: Blog[];
   certificates: Certificate[];
@@ -37,6 +49,8 @@ type ClientTab = 'chatgpt' | 'claude' | 'cursor' | 'generic';
 type ToolCategory = 'All' | 'Overview' | 'Projects' | 'Blogs' | 'Credentials' | 'Resume' | 'Settings';
 
 export const AdminAiTab: React.FC<AdminAiTabProps> = ({
+  settings,
+  onUpdateSettings,
   projects,
   blogs,
   certificates,
@@ -47,6 +61,16 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
   const [toolSearchQuery, setToolSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<ToolCategory>('All');
 
+  // MCP Security & Access State
+  const [mcpEnabled, setMcpEnabled] = useState<boolean>(settings.mcp_enabled ?? true);
+  const [mcpEditPolicy, setMcpEditPolicy] = useState<'disabled' | 'auth_required' | 'enabled'>(settings.mcp_edit_policy || 'disabled');
+  const [mcpRequireAuthForView, setMcpRequireAuthForView] = useState<boolean>(settings.mcp_require_auth_for_view ?? false);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [isGeneratingKey, setIsGeneratingKey] = useState<boolean>(false);
+  const [isSavingSettings, setIsSavingSettings] = useState<boolean>(false);
+  const [saveSettingsSuccess, setSaveSettingsSuccess] = useState<string | null>(null);
+
   // MCP Test Console State
   const [selectedMcpMethod, setSelectedMcpMethod] = useState<'initialize' | 'tools/list' | 'tools/call' | 'ping'>('tools/list');
   const [selectedTool, setSelectedTool] = useState<string>('get_portfolio_overview');
@@ -55,6 +79,26 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
   const [testLoading, setTestLoading] = useState<boolean>(false);
   const [testLatency, setTestLatency] = useState<number | null>(null);
   const [testStatus, setTestStatus] = useState<number | null>(null);
+  const [testAuthMode, setTestAuthMode] = useState<'public' | 'authenticated'>('public');
+
+  // Load active API Key from server
+  React.useEffect(() => {
+    fetch('/api/admin/ai-key', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.apiKey) {
+          setApiKey(data.apiKey);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Sync internal state if prop updates
+  React.useEffect(() => {
+    if (settings.mcp_enabled !== undefined) setMcpEnabled(settings.mcp_enabled);
+    if (settings.mcp_edit_policy) setMcpEditPolicy(settings.mcp_edit_policy);
+    if (settings.mcp_require_auth_for_view !== undefined) setMcpRequireAuthForView(settings.mcp_require_auth_for_view);
+  }, [settings]);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const mcpUrl = `${baseUrl}/api/mcp`;
@@ -66,7 +110,16 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
     setTimeout(() => setCopiedField(null), 2500);
   };
 
-  const sampleClaudeMcpJson = `{
+  const sampleClaudeMcpJson = mcpEditPolicy === 'auth_required' && apiKey ? `{
+  "mcpServers": {
+    "rajat-portfolio": {
+      "url": "${mcpUrl}",
+      "headers": {
+        "x-api-key": "${apiKey}"
+      }
+    }
+  }
+}` : `{
   "mcpServers": {
     "rajat-portfolio": {
       "url": "${mcpUrl}"
@@ -74,7 +127,18 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
   }
 }`;
 
-  const sampleCursorMcpJson = `{
+  const sampleCursorMcpJson = mcpEditPolicy === 'auth_required' && apiKey ? `{
+  "mcp": {
+    "servers": {
+      "rajat-portfolio": {
+        "url": "${mcpUrl}",
+        "headers": {
+          "x-api-key": "${apiKey}"
+        }
+      }
+    }
+  }
+}` : `{
   "mcp": {
     "servers": {
       "rajat-portfolio": {
@@ -84,7 +148,16 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
   }
 }`;
 
-  const sampleGenericJson = `{
+  const sampleGenericJson = mcpEditPolicy === 'auth_required' && apiKey ? `{
+  "name": "rajat-portfolio-mcp",
+  "type": "http",
+  "url": "${mcpUrl}",
+  "sseUrl": "${sseUrl}",
+  "headers": {
+    "x-api-key": "${apiKey}"
+  },
+  "authentication": "api-key"
+}` : `{
   "name": "rajat-portfolio-mcp",
   "type": "http",
   "url": "${mcpUrl}",
@@ -413,11 +486,17 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
         };
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (testAuthMode === 'authenticated' && apiKey) {
+        headers['x-api-key'] = apiKey;
+      }
+
       const res = await fetch('/api/mcp', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
+        credentials: testAuthMode === 'authenticated' ? 'include' : 'omit',
         body: JSON.stringify(rpcBody)
       });
 
@@ -467,6 +546,62 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
       setTestToolArgs(JSON.stringify(parsed, null, 2));
     } catch (e) {
       // ignore invalid json formatting
+    }
+  };
+
+  const handleSaveMcpSettings = async (overrides?: Partial<SiteSettings>) => {
+    setIsSavingSettings(true);
+    setSaveSettingsSuccess(null);
+
+    const nextMcpEnabled = overrides?.mcp_enabled !== undefined ? overrides.mcp_enabled : mcpEnabled;
+    const nextMcpEditPolicy = overrides?.mcp_edit_policy || mcpEditPolicy;
+    const nextRequireAuthForView = overrides?.mcp_require_auth_for_view !== undefined ? overrides.mcp_require_auth_for_view : mcpRequireAuthForView;
+
+    const newSettings: SiteSettings = {
+      ...settings,
+      mcp_enabled: nextMcpEnabled,
+      mcp_edit_policy: nextMcpEditPolicy,
+      mcp_require_auth_for_view: nextRequireAuthForView,
+    };
+
+    try {
+      if (onUpdateSettings) {
+        await onUpdateSettings(newSettings);
+      } else {
+        await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(newSettings),
+        });
+      }
+      setSaveSettingsSuccess('MCP security policies successfully saved.');
+      setTimeout(() => setSaveSettingsSuccess(null), 3500);
+    } catch (err: any) {
+      setSaveSettingsSuccess(`Error saving: ${err.message}`);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const handleRegenerateApiKey = async () => {
+    if (!window.confirm('Regenerate AI / MCP API Key? Any external clients using the previous key will need to be updated with the new key.')) return;
+    setIsGeneratingKey(true);
+    try {
+      const res = await fetch('/api/admin/ai-key/generate', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success && data.apiKey) {
+        setApiKey(data.apiKey);
+        setSaveSettingsSuccess('New AI API key generated and stored securely.');
+        setTimeout(() => setSaveSettingsSuccess(null), 3500);
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsGeneratingKey(false);
     }
   };
 
@@ -583,6 +718,276 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
               <div>
                 <div className="text-lg font-bold text-white font-mono leading-none">{certificates.length}</div>
                 <div className="text-[11px] text-slate-400 font-medium mt-1">Credentials</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MCP SECURITY & MUTATION ACCESS CONTROLS */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-2xl ${
+              !mcpEnabled
+                ? 'bg-rose-50 text-rose-600 border border-rose-200/70'
+                : mcpEditPolicy === 'disabled'
+                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/70'
+                  : 'bg-indigo-50 text-indigo-600 border border-indigo-200/70'
+            }`}>
+              {!mcpEnabled ? (
+                <ShieldAlert className="w-6 h-6" />
+              ) : mcpEditPolicy === 'disabled' ? (
+                <ShieldCheck className="w-6 h-6" />
+              ) : (
+                <Shield className="w-6 h-6" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-lg font-bold text-slate-900">MCP Security & Mutation Controls</h3>
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                  !mcpEnabled
+                    ? 'bg-rose-100 text-rose-800'
+                    : mcpEditPolicy === 'disabled'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-indigo-100 text-indigo-800'
+                }`}>
+                  {!mcpEnabled
+                    ? 'Server Offline (503)'
+                    : mcpEditPolicy === 'disabled'
+                      ? 'Strict View-Only (Zero Edit Access)'
+                      : 'Protected Edits (API Key Required)'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Protect your public MCP URL so unauthorized users and AI discovery crawlers can never modify or delete your portfolio.
+              </p>
+            </div>
+          </div>
+
+          {/* Master Turn On / Off Toggle */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                const nextState = !mcpEnabled;
+                setMcpEnabled(nextState);
+                handleSaveMcpSettings({ mcp_enabled: nextState });
+              }}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95 ${
+                mcpEnabled
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+              }`}
+            >
+              <Power className="w-4 h-4" />
+              <span>{mcpEnabled ? 'MCP Server Active' : 'MCP Server Disabled'}</span>
+            </button>
+          </div>
+        </div>
+
+        {saveSettingsSuccess && (
+          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{saveSettingsSuccess}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Policy Radio Options */}
+          <div className="lg:col-span-7 space-y-4">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">
+              1. Select Access & Mutation Policy
+            </label>
+
+            <div className="space-y-3">
+              {/* Option 1: Strict View-Only (Default & Recommended) */}
+              <div
+                onClick={() => setMcpEditPolicy('disabled')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                  mcpEditPolicy === 'disabled'
+                    ? 'bg-emerald-50/50 border-emerald-300 ring-2 ring-emerald-200/50 shadow-xs'
+                    : 'bg-slate-50/60 border-slate-200/80 hover:bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className={`p-2 rounded-xl mt-0.5 shrink-0 ${
+                  mcpEditPolicy === 'disabled' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  <Lock className="w-4 h-4" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">
+                      Strict View-Only Mode
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      Recommended
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Public visitors, ChatGPT, and Claude discovering your MCP URL can <strong>ONLY read</strong> your portfolio overview, projects, blogs, credentials, and resume. All create, edit, and delete operations are <strong>completely blocked with 403 Forbidden</strong> and hidden from tools discovery.
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 2: Protected Edits (API Key Required) */}
+              <div
+                onClick={() => setMcpEditPolicy('auth_required')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                  mcpEditPolicy === 'auth_required'
+                    ? 'bg-indigo-50/50 border-indigo-300 ring-2 ring-indigo-200/50 shadow-xs'
+                    : 'bg-slate-50/60 border-slate-200/80 hover:bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className={`p-2 rounded-xl mt-0.5 shrink-0 ${
+                  mcpEditPolicy === 'auth_required' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  <Key className="w-4 h-4" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">
+                      Protected Edits (API Key Required)
+                    </span>
+                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-full">
+                      Dual-Mode
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Anyone can read your portfolio tools without keys. However, any edit/write operation strictly requires your secret Admin API Key (via <code className="text-indigo-700 bg-indigo-50 px-1 py-0.5 rounded font-mono">x-api-key</code> header). Unauthorized write calls are rejected with 403 Forbidden.
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 3: Private MCP (Auth for all) */}
+              <div
+                onClick={() => {
+                  setMcpRequireAuthForView(!mcpRequireAuthForView);
+                }}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  mcpRequireAuthForView
+                    ? 'bg-amber-50/60 border-amber-300 ring-2 ring-amber-200/50'
+                    : 'bg-slate-50/60 border-slate-200/80 hover:bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-1.5 rounded-lg ${mcpRequireAuthForView ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-800">Require Authentication for View Access Too</div>
+                    <div className="text-[11px] text-slate-500">If checked, unauthenticated visitors cannot even read portfolio data via MCP.</div>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={mcpRequireAuthForView}
+                  onChange={(e) => setMcpRequireAuthForView(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => handleSaveMcpSettings()}
+                disabled={isSavingSettings}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer active:scale-98"
+              >
+                {isSavingSettings ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving Security Policies...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Apply & Save Security Settings</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Column 2: Secret API Key Management */}
+          <div className="lg:col-span-5 space-y-4">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">
+              2. Private AI / MCP Admin Key
+            </label>
+
+            <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5 text-indigo-600" />
+                  Master API Key
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">Header: x-api-key</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-inner">
+                <span className="text-xs font-mono text-slate-800 truncate flex-1 select-all">
+                  {apiKey ? (showApiKey ? apiKey : `${apiKey.slice(0, 8)}••••••••••••••••`) : 'No key generated'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                  title={showApiKey ? 'Hide key' : 'Reveal key'}
+                >
+                  {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(apiKey, 'mcp_api_key')}
+                  disabled={!apiKey}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 disabled:opacity-50"
+                >
+                  {copiedField === 'mcp_api_key' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedField === 'mcp_api_key' ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={handleRegenerateApiKey}
+                  disabled={isGeneratingKey}
+                  className="text-[11px] text-slate-500 hover:text-rose-600 flex items-center gap-1 font-medium cursor-pointer transition-colors"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isGeneratingKey ? 'animate-spin' : ''}`} />
+                  <span>Regenerate Key</span>
+                </button>
+
+                <span className="text-[10px] text-slate-400">Stored securely on server</span>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/60 space-y-1.5 text-[11px] text-slate-600">
+                <div className="flex items-center gap-1.5 text-slate-700 font-semibold">
+                  <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  Live Security Enforcement:
+                </div>
+                <div className="space-y-1 pl-5">
+                  <div>
+                    &bull; Public View Access:{' '}
+                    <span className="font-semibold text-emerald-700">
+                      {!mcpRequireAuthForView ? 'Enabled (Read-Only)' : 'Protected (Requires Key)'}
+                    </span>
+                  </div>
+                  <div>
+                    &bull; Edit / Mutation Access:{' '}
+                    <span className={`font-semibold ${mcpEditPolicy === 'disabled' ? 'text-emerald-700' : 'text-indigo-700'}`}>
+                      {mcpEditPolicy === 'disabled'
+                        ? 'Disabled (Zero Edits via MCP)'
+                        : 'Locked (Requires Admin Key)'}
+                    </span>
+                  </div>
+                  <div>
+                    &bull; Unauthenticated Edit Attempt:{' '}
+                    <span className="font-semibold text-rose-700 font-mono">HTTP 403 Forbidden</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -874,7 +1279,25 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
             >
               <Activity className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Overview</span>
+              <span>Test View (Overview)</span>
+            </button>
+            <button
+              onClick={() => {
+                setSelectedMcpMethod('tools/call');
+                setSelectedTool('create_project');
+                const sampleArgs = JSON.stringify({
+                  title: 'Autonomous AI Agent',
+                  description: 'Production system built with LangChain and Python',
+                  category: 'ai'
+                }, null, 2);
+                setTestToolArgs(sampleArgs);
+                handleRunMcpTest('tools/call', 'create_project', sampleArgs);
+              }}
+              disabled={testLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50 border border-rose-200"
+            >
+              <Lock className="w-3.5 h-3.5 text-rose-500" />
+              <span>Test Mutation (Create Project)</span>
             </button>
           </div>
         </div>
@@ -882,6 +1305,54 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Controls Column */}
           <div className="lg:col-span-5 space-y-4">
+            {/* Caller Identity Simulator */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-indigo-600" />
+                  Simulated Caller Identity
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                  testAuthMode === 'public'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-indigo-100 text-indigo-800'
+                }`}>
+                  {testAuthMode === 'public' ? 'Public (No Auth)' : 'Admin Key (Auth)'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setTestAuthMode('public')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    testAuthMode === 'public'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200 font-extrabold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Unlock className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Public Visitor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTestAuthMode('authenticated')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    testAuthMode === 'authenticated'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200 font-extrabold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Key className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Admin Key</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-tight">
+                {testAuthMode === 'public'
+                  ? 'Simulates an unauthenticated stranger or discovery crawler without admin cookie. Mutation tools will verify 403 Forbidden.'
+                  : 'Simulates an authorized admin or trusted IDE agent using your master API key.'}
+              </p>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">JSON-RPC Method</label>
               <select
@@ -1103,9 +1574,17 @@ export const AdminAiTab: React.FC<AdminAiTabProps> = ({
                       {tool.category}
                     </span>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
-                      tool.readOnly ? 'bg-slate-100 text-slate-600' : 'bg-amber-100/70 text-amber-800'
+                      tool.readOnly
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                        : mcpEditPolicy === 'disabled'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200/60'
                     }`}>
-                      {tool.readOnly ? 'Read-Only' : 'Read / Write'}
+                      {tool.readOnly
+                        ? 'Public Read'
+                        : mcpEditPolicy === 'disabled'
+                          ? 'Edit Blocked (403)'
+                          : 'Key Required'}
                     </span>
                   </div>
 

@@ -9,6 +9,9 @@ import {
   saveCertificates,
   saveContacts,
   saveServices,
+  saveFaqs,
+  saveWorkflowSteps,
+  saveTrustGuarantees,
   saveCustomPassword,
   saveStoredAiApiKey
 } from "../server/lib/store";
@@ -51,7 +54,7 @@ async function runRestore() {
     }
 
     const payload = backup.data ? backup.data : backup;
-    const { settings, projects, blogs, certificates, contacts, services, customPassword, aiApiKey } = payload;
+    const { settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees, customPassword, aiApiKey } = payload;
 
     if (!settings || typeof settings !== "object") throw new Error("Invalid settings in backup.");
     if (projects && !Array.isArray(projects)) throw new Error("Invalid projects array in backup.");
@@ -68,6 +71,9 @@ async function runRestore() {
     console.log(`- Certificates: ${certificates?.length || 0}`);
     console.log(`- Contacts: ${contacts?.length || 0}`);
     console.log(`- Services: ${services?.length || 0}`);
+    console.log(`- FAQs: ${faqs?.length || 0}`);
+    console.log(`- Workflow Steps: ${workflowSteps?.length || 0}`);
+    console.log(`- Trust Guarantees: ${trustGuarantees?.length || 0}`);
 
     // 3. Require explicit confirmation
     console.log("\n⚠️  WARNING: This will OVERWRITE current data in Redis.");
@@ -107,6 +113,21 @@ async function runRestore() {
     if (services && Array.isArray(services)) {
       await saveServices(services);
       console.log("✅ Restored Services");
+    }
+
+    if (faqs && Array.isArray(faqs)) {
+      await saveFaqs(faqs);
+      console.log("✅ Restored FAQs");
+    }
+
+    if (workflowSteps && Array.isArray(workflowSteps)) {
+      await saveWorkflowSteps(workflowSteps);
+      console.log("✅ Restored Workflow Steps");
+    }
+
+    if (trustGuarantees && Array.isArray(trustGuarantees)) {
+      await saveTrustGuarantees(trustGuarantees);
+      console.log("✅ Restored Trust Guarantees");
     }
 
     if (customPassword) {

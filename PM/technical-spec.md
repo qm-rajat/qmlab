@@ -154,6 +154,48 @@ interface CareerProfile {
 }
 ```
 
+### 2.4 Freelance Service & Dynamic Workflow Schemas
+```typescript
+interface FreelanceService {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  full_description: string;
+  icon: 'Code2' | 'Cpu' | 'Search' | 'Server' | string;
+  deliverables: string[];
+  pricing_type: 'fixed' | 'hourly' | 'retainer';
+  starting_price?: string; // Standardized in INR: e.g. "₹15,000" or "₹1,500/hr"
+  turnaround_time: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  category?: 'general' | 'pricing' | 'technical' | 'workflow';
+  sort_order: number;
+  is_active: boolean;
+}
+
+interface WorkflowStep {
+  id: string;
+  step_number: number;
+  title: string;
+  description: string;
+  deliverables: string[];
+}
+
+interface TrustGuarantee {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+```
+
 ---
 
 ## 5. Media Library & Backup / Restore Specifications

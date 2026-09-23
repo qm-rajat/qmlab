@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { aiTools } from "../services/aiTools.service.js";
-import { requireAiOrAdminAuth, getActiveAiApiKey, isValidSession } from "../lib/auth.js";
+import { requireAiOrAdminAuth, getActiveAiApiKey, isValidSession, verifyAiOrAdminAuth } from "../lib/auth.js";
 import { getSettings, saveStoredAiApiKey } from "../lib/store.js";
 import { resolveBaseUrl } from "../lib/domain.js";
 
@@ -1281,7 +1281,38 @@ const MCP_TOOLS_CATALOG = [
   },
 ];
 
+export const MCP_READ_ONLY_TOOL_NAMES = new Set([
+  "get_portfolio_overview",
+  "list_projects",
+  "list_blogs",
+  "list_certificates",
+  "get_resume",
+]);
+
 export const handleMcpGetRequest = async (req: Request, res: Response) => {
+  const settings = await getSettings().catch(() => null);
+  const mcpEnabled = settings?.mcp_enabled ?? true;
+  const editPolicy = settings?.mcp_edit_policy || "disabled";
+  const requireAuthForView = !!settings?.mcp_require_auth_for_view;
+
+  // Master switch check
+  if (!mcpEnabled) {
+    return res.status(503).json({
+      status: "disabled",
+      message: "Model Context Protocol (MCP) server has been turned off by the administrator in the Admin Dashboard.",
+      admin_note: "Turn on the MCP server in Admin Console -> MCP Server tab to restore access.",
+    });
+  }
+
+  const isAuthorized = await verifyAiOrAdminAuth(req);
+
+  if (requireAuthForView && !isAuthorized) {
+    return res.status(401).json({
+      status: "unauthorized",
+      message: "MCP server requires authentication. Provide an 'x-api-key' header or '?api_key=' query parameter.",
+    });
+  }
+
   const acceptsSse =
     req.headers.accept?.includes("text/event-stream") ||
     req.query.transport === "sse" ||
@@ -1317,18 +1348,31 @@ export const handleMcpGetRequest = async (req: Request, res: Response) => {
     return;
   }
 
+  // Determine tools visible to this caller
+  const canEdit = isAuthorized && editPolicy !== "disabled";
+  const accessibleToolsCount = canEdit
+    ? MCP_TOOLS_CATALOG.length
+    : MCP_TOOLS_CATALOG.filter((t) => MCP_READ_ONLY_TOOL_NAMES.has(t.name)).length;
+
   // General GET: Return server status and info
   res.json({
     status: "online",
     name: "rajat-dash-portfolio-mcp",
     protocolVersion: "2024-11-05",
     transports: ["streamable-http", "sse", "json-rpc-2.0"],
+    security: {
+      mcp_enabled: mcpEnabled,
+      edit_policy: editPolicy,
+      view_access: requireAuthForView ? "private" : "public",
+      caller_authenticated: isAuthorized,
+      edit_access_granted: canEdit,
+    },
     endpoints: {
       mcp_url: "/api/mcp",
       sse_url: "/api/mcp?transport=sse",
       openapi_url: "/api/openapi.json",
     },
-    toolsCount: MCP_TOOLS_CATALOG.length,
+    toolsCount: accessibleToolsCount,
     capabilities: {
       tools: { listChanged: false },
       resources: { subscribe: false, listChanged: false },
@@ -1354,6 +1398,37 @@ export const handleMcpPostRequest = async (req: Request, res: Response) => {
       jsonrpc: "2.0",
       id: id || null,
       error: { code: -32600, message: "Invalid Request: jsonrpc must be '2.0'" },
+    });
+  }
+
+  const settings = await getSettings().catch(() => null);
+  const mcpEnabled = settings?.mcp_enabled ?? true;
+  const editPolicy = settings?.mcp_edit_policy || "disabled";
+  const requireAuthForView = !!settings?.mcp_require_auth_for_view;
+
+  // Master switch check
+  if (!mcpEnabled) {
+    return res.status(503).json({
+      jsonrpc: "2.0",
+      id: id || null,
+      error: {
+        code: -32000,
+        message: "MCP Server is currently turned off in the Admin Dashboard.",
+      },
+    });
+  }
+
+  const isAuthorized = await verifyAiOrAdminAuth(req);
+
+  // If view is private and caller is unauthorized
+  if (requireAuthForView && !isAuthorized) {
+    return res.status(401).json({
+      jsonrpc: "2.0",
+      id: id || null,
+      error: {
+        code: -32001,
+        message: "Unauthorized: MCP server requires authentication. Provide a valid 'x-api-key' header.",
+      },
     });
   }
 
@@ -1388,19 +1463,52 @@ export const handleMcpPostRequest = async (req: Request, res: Response) => {
         };
         break;
 
-      case "tools/list":
+      case "tools/list": {
+        const canEdit = isAuthorized && editPolicy !== "disabled";
+        const accessibleTools = canEdit
+          ? MCP_TOOLS_CATALOG
+          : MCP_TOOLS_CATALOG.filter((t) => MCP_READ_ONLY_TOOL_NAMES.has(t.name));
+
         responseData = {
           jsonrpc: "2.0",
           id: id ?? 1,
           result: {
-            tools: MCP_TOOLS_CATALOG,
+            tools: accessibleTools,
           },
         };
         break;
+      }
 
       case "tools/call": {
         const toolName = params?.name;
         const toolArgs = params?.arguments || {};
+        const isMutation = !MCP_READ_ONLY_TOOL_NAMES.has(toolName);
+
+        // Security check for edit / mutation operations
+        if (isMutation) {
+          if (editPolicy === "disabled") {
+            return res.status(403).json({
+              jsonrpc: "2.0",
+              id: id || null,
+              error: {
+                code: -32002,
+                message: "MCP Edit Operations are disabled by the site owner. Portfolio can only be modified via the Admin Web Console.",
+              },
+            });
+          }
+
+          if (!isAuthorized) {
+            return res.status(403).json({
+              jsonrpc: "2.0",
+              id: id || null,
+              error: {
+                code: -32001,
+                message: "Forbidden: Edit operations via MCP require a valid private API key ('x-api-key' header or '?api_key=' parameter). Unauthenticated visitors have view-only access.",
+              },
+            });
+          }
+        }
+
         let output: any;
 
         switch (toolName) {

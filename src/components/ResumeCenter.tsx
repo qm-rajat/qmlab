@@ -346,7 +346,9 @@ export default function ResumeCenter({
     downloadAnchor.setAttribute("download", `${contactDetails.name.replace(/\s+/g, '_')}_Resume.txt`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
-    downloadAnchor.remove();
+    if (downloadAnchor.parentNode) {
+      downloadAnchor.parentNode.removeChild(downloadAnchor);
+    }
     URL.revokeObjectURL(url);
     setCopiedText(true);
     triggerTelemetryDownload();
@@ -387,7 +389,9 @@ export default function ResumeCenter({
     downloadAnchor.setAttribute("download", `${contactDetails.name.replace(/\s+/g, '_')}_Resume_${selectedPersona}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
-    downloadAnchor.remove();
+    if (downloadAnchor.parentNode) {
+      downloadAnchor.parentNode.removeChild(downloadAnchor);
+    }
   };
 
   useEffect(() => {

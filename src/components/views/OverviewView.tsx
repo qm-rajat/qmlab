@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Sparkles, FileText, Mail, ArrowUpRight, Briefcase, 
   Layers, Zap, TrendingUp, Cpu, CheckCircle, BookOpen, 
   GraduationCap, Code, Globe, Database, ShieldCheck, Terminal,
-  Target
+  Target, ExternalLink
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings, Project } from '../../types';
@@ -231,7 +232,8 @@ export default function OverviewView({
             variants={heroItemVariants}
             className="flex flex-wrap items-center gap-3.5 pt-2"
           >
-            <button
+            <Link
+              to="/projects"
               onClick={() => {
                 onNavigate('projects');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -240,8 +242,9 @@ export default function OverviewView({
             >
               Explore Projects
               <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </button>
-            <button
+            </Link>
+            <Link
+              to="/contact"
               onClick={() => {
                 onNavigate('contact');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -250,8 +253,9 @@ export default function OverviewView({
             >
               Get In Touch
               <Mail className="w-4 h-4 text-slate-400" />
-            </button>
-            <button
+            </Link>
+            <Link
+              to="/resume"
               onClick={() => {
                 onNavigate('resume');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -260,7 +264,7 @@ export default function OverviewView({
             >
               <FileText className="w-3.5 h-3.5 text-slate-500" />
               Resume
-            </button>
+            </Link>
           </motion.div>
         </div>
 

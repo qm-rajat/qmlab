@@ -216,6 +216,9 @@ export interface SiteSettings {
     label: string;
     value: string;
   };
+  mcp_enabled?: boolean;
+  mcp_edit_policy?: 'disabled' | 'auth_required' | 'enabled';
+  mcp_require_auth_for_view?: boolean;
 }
 
 export interface AnalyticsSummary {
@@ -237,6 +240,34 @@ export interface FreelanceService {
   starting_price?: string;
   turnaround_time: string;
   is_active: boolean;
+  sort_order: number;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface WorkflowStep {
+  id: string;
+  step: string;
+  title: string;
+  timeline: string;
+  description: string;
+  icon: string;
+  deliverables: string[];
+  sort_order: number;
+}
+
+export interface TrustGuarantee {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
   sort_order: number;
 }
 

@@ -1,14 +1,103 @@
 import React, { useState } from 'react';
 import { FreelanceService } from '../../types';
-import { Plus, Trash2, Edit3, Check, X, Shield, Code2, Cpu, Search, Server, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, Edit3, Check, X, Shield, Code2, Cpu, Search, Server, ArrowUp, ArrowDown, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface AdminServicesTabProps {
   services: FreelanceService[];
   onUpdateServices: (services: FreelanceService[]) => void;
+  onDeleteServiceRequest?: (id: string, title: string) => void;
 }
 
-export default function AdminServicesTab({ services, onUpdateServices }: AdminServicesTabProps) {
+const DEFAULT_INR_SERVICES: FreelanceService[] = [
+  {
+    id: "srv-1",
+    title: "Full-Stack Web Engineering & SaaS",
+    slug: "fullstack-web-engineering",
+    short_description: "High-performance React, TypeScript, and Node.js applications built for speed, scalability, and conversion.",
+    full_description: "End-to-end development of modern web apps, dashboards, and SaaS platforms. Built with robust REST APIs, secure authentication, and responsive Tailwind layouts.",
+    icon: "Code2",
+    deliverables: ["Production-ready Web App", "Responsive Tailwind UI", "REST/GraphQL API", "Secure Auth & Database"],
+    pricing_type: "fixed",
+    starting_price: "₹15,000",
+    turnaround_time: "2-4 Weeks",
+    is_active: true,
+    sort_order: 1
+  },
+  {
+    id: "srv-2",
+    title: "AI & LLM / MCP Integration",
+    slug: "ai-llm-mcp-integration",
+    short_description: "Custom AI agents, Gemini API integration, Model Context Protocol (MCP) servers, and smart automation.",
+    full_description: "Supercharge your software with generative AI. Implement custom embeddings, RAG pipelines, automated workflows, and intelligent assistant features securely.",
+    icon: "Cpu",
+    deliverables: ["Custom Gemini/OpenAI Integration", "Model Context Protocol (MCP) Server", "RAG & Document Search", "Secure Server-Side Proxy"],
+    pricing_type: "fixed",
+    starting_price: "₹18,000",
+    turnaround_time: "2-3 Weeks",
+    is_active: true,
+    sort_order: 2
+  },
+  {
+    id: "srv-3",
+    title: "Technical SEO, AEO & GEO Optimization",
+    slug: "technical-seo-aeo-geo",
+    short_description: "Dominate search engines and AI answer engines (ChatGPT, Perplexity) with advanced technical auditing.",
+    full_description: "Optimize your web presence for both traditional search and AI answer engines. Structured JSON-LD schemas, lightning-fast Core Web Vitals, and regional GEO targeting.",
+    icon: "Search",
+    deliverables: ["Complete Technical SEO Audit", "Schema.org JSON-LD Implementation", "AEO / AI Citation Optimization", "Core Web Vitals Tuning"],
+    pricing_type: "fixed",
+    starting_price: "₹8,000",
+    turnaround_time: "1-2 Weeks",
+    is_active: true,
+    sort_order: 3
+  },
+  {
+    id: "srv-4",
+    title: "Cloud Architecture & DevOps Advisory",
+    slug: "cloud-architecture-devops",
+    short_description: "Scalable cloud deployment, Dockerization, CI/CD pipelines, and high-availability server setups.",
+    full_description: "Expert guidance and setup for Cloud Run, Vercel, AWS, Redis, and PostgreSQL with enterprise-grade security and automated deployment pipelines.",
+    icon: "Server",
+    deliverables: ["Cloud Architecture Blueprint", "Docker & CI/CD Pipelines", "Database Security Hardening", "Monitoring & Telemetry"],
+    pricing_type: "hourly",
+    starting_price: "₹1,500/hr",
+    turnaround_time: "Flexible",
+    is_active: true,
+    sort_order: 4
+  },
+  {
+    id: "srv-5",
+    title: "Product Strategy & Technical PRD Sprint",
+    slug: "product-strategy-prd-sprint",
+    short_description: "Bridge business vision and engineering with detailed PRDs, system schemas, user journeys, and sprint backlogs.",
+    full_description: "Leveraging a dual Computer Science and Product Management background, turn ambiguous ideas into an actionable, engineer-ready Product Requirements Document (PRD) with interactive wireframes and database schemas.",
+    icon: "Layers",
+    deliverables: ["Comprehensive Technical PRD", "System Architecture & ERD Schemas", "Prioritized Sprint Roadmap (Jira/Linear)", "Wireframes & User Flow Specs"],
+    pricing_type: "fixed",
+    starting_price: "₹10,000",
+    turnaround_time: "1-2 Weeks",
+    is_active: true,
+    sort_order: 5
+  },
+  {
+    id: "srv-6",
+    title: "Codebase Health, Speed & Security Audit",
+    slug: "codebase-health-security-audit",
+    short_description: "Rapid 3-day deep-dive audit uncovering security vulnerabilities, performance bottlenecks, and scale limits.",
+    full_description: "An intensive code and architecture review analyzing frontend bundle metrics, database query latency, API security risks, and technical debt with an actionable remediation playbook.",
+    icon: "ShieldCheck",
+    deliverables: ["Comprehensive Audit Report PDF", "Core Web Vitals Remediation Plan", "API Security & Vulnerability Scan", "1-on-1 Executive Walkthrough Call"],
+    pricing_type: "fixed",
+    starting_price: "₹5,000",
+    turnaround_time: "3-5 Days",
+    is_active: true,
+    sort_order: 6
+  }
+];
+
+export default function AdminServicesTab({ services, onUpdateServices, onDeleteServiceRequest }: AdminServicesTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FreelanceService>({
     id: '',
     title: '',
@@ -27,6 +116,7 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
   const [isCreating, setIsCreating] = useState(false);
 
   const handleStartCreate = () => {
+    setFormError(null);
     setFormData({
       id: `srv-${Date.now()}`,
       title: '',
@@ -36,7 +126,7 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
       icon: 'Code2',
       deliverables: ['Production-ready Code', 'Responsive UI', 'Secure API'],
       pricing_type: 'fixed',
-      starting_price: '$2,500',
+      starting_price: '₹5,000',
       turnaround_time: '2-4 Weeks',
       is_active: true,
       sort_order: services.length + 1
@@ -46,6 +136,7 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
   };
 
   const handleStartEdit = (service: FreelanceService) => {
+    setFormError(null);
     setFormData({ ...service });
     setEditingId(service.id);
     setIsCreating(false);
@@ -53,9 +144,10 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
 
   const handleSave = () => {
     if (!formData.title.trim()) {
-      window.alert("Service title is required.");
+      setFormError("Service title is required.");
       return;
     }
+    setFormError(null);
     const slug = formData.slug || formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const updatedService = { ...formData, slug };
 
@@ -71,10 +163,13 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
     setIsCreating(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this service package?")) return;
-    const updatedList = services.filter(s => s.id !== id);
-    onUpdateServices(updatedList);
+  const handleDelete = (id: string, title: string) => {
+    if (onDeleteServiceRequest) {
+      onDeleteServiceRequest(id, title);
+    } else {
+      const updatedList = services.filter(s => s.id !== id);
+      onUpdateServices(updatedList);
+    }
   };
 
   const handleAddDeliverable = () => {
@@ -113,12 +208,47 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
           <p className="text-xs text-slate-500">Configure service offerings, packages, pricing, and deliverables displayed on qmlab.in.</p>
         </div>
         {!isCreating && !editingId && (
-          <button
-            onClick={handleStartCreate}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition-all"
-          >
-            <Plus className="w-4 h-4" /> Add New Service
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                if (window.confirm("Convert all current service prices to INR (₹) rates?")) {
+                  const converted = services.map(s => {
+                    let newPrice = s.starting_price || '';
+                    if (newPrice.includes('$2,500')) newPrice = '₹15,000';
+                    else if (newPrice.includes('$3,000')) newPrice = '₹18,000';
+                    else if (newPrice.includes('$1,500')) newPrice = '₹8,000';
+                    else if (newPrice.includes('$150/hr')) newPrice = '₹1,500/hr';
+                    else if (newPrice.includes('$1,800')) newPrice = '₹10,000';
+                    else if (newPrice.includes('$1,200')) newPrice = '₹5,000';
+                    else newPrice = newPrice.replace(/\$/g, '₹');
+                    return { ...s, starting_price: newPrice };
+                  });
+                  onUpdateServices(converted);
+                }
+              }}
+              className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Convert existing dollar prices to INR"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-slate-500" /> Convert All to INR (₹)
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm("Reset services list to default curated Indian Rupee (₹) service packages?")) {
+                  onUpdateServices(DEFAULT_INR_SERVICES);
+                }
+              }}
+              className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Reset to default INR packages"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-slate-500" /> Reset to INR Defaults
+            </button>
+            <button
+              onClick={handleStartCreate}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add New Service
+            </button>
+          </div>
         )}
       </div>
 
@@ -130,12 +260,19 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
               {isCreating ? 'Create New Freelance Service' : 'Edit Service Package'}
             </h4>
             <button
-              onClick={() => { setIsCreating(false); setEditingId(null); }}
-              className="text-slate-400 hover:text-slate-600"
+              onClick={() => { setIsCreating(false); setEditingId(null); setFormError(null); }}
+              className="text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {formError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{formError}</span>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -192,7 +329,7 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
                 type="text"
                 value={formData.starting_price}
                 onChange={e => setFormData({ ...formData, starting_price: e.target.value })}
-                placeholder="e.g. $2,500 or $150/hr"
+                placeholder="e.g. ₹5,000 or ₹1,500/hr"
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -347,8 +484,8 @@ export default function AdminServicesTab({ services, onUpdateServices }: AdminSe
                   <Edit3 className="w-3.5 h-3.5" /> Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(service.id)}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs hover:bg-rose-100 transition-colors flex items-center gap-1.5"
+                  onClick={() => handleDelete(service.id, service.title)}
+                  className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Delete
                 </button>

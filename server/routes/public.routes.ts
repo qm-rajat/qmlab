@@ -7,6 +7,9 @@ import {
   saveBlogs,
   getCertificates,
   getServices,
+  getFaqs,
+  getWorkflowSteps,
+  getTrustGuarantees,
 } from "../lib/store.js";
 import { recordPageView, recordResumeDownload, getResumeDownloads } from "../services/telemetry.service.js";
 import { recordBotCrawl, identifyBot } from "../services/crawler.service.js";
@@ -50,14 +53,28 @@ const interactionRateLimiter = rateLimiter("blog-interaction", {
 
 router.get("/content", async (req, res) => {
   try {
-    const [settings, projects, blogs, certificates, services] = await Promise.all([
+    const [settings, projects, blogs, certificates, services, faqs, workflowSteps, trustGuarantees] = await Promise.all([
       getSettings(),
       getProjects(),
       getBlogs(),
       getCertificates(),
       getServices(),
+      getFaqs(),
+      getWorkflowSteps(),
+      getTrustGuarantees(),
     ]);
-    res.json({ success: true, storeConfigured: isStoreConfigured(), settings, projects, blogs, certificates, services });
+    res.json({ 
+      success: true, 
+      storeConfigured: isStoreConfigured(), 
+      settings, 
+      projects, 
+      blogs, 
+      certificates, 
+      services,
+      faqs,
+      workflowSteps,
+      trustGuarantees
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Failed to load site content." });
   }
@@ -69,6 +86,33 @@ router.get("/services", async (req, res) => {
     res.json({ success: true, services });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message || "Failed to load services." });
+  }
+});
+
+router.get("/faqs", async (req, res) => {
+  try {
+    const faqs = await getFaqs();
+    res.json({ success: true, faqs });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to load FAQs." });
+  }
+});
+
+router.get("/workflow-steps", async (req, res) => {
+  try {
+    const workflowSteps = await getWorkflowSteps();
+    res.json({ success: true, workflowSteps });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to load workflow steps." });
+  }
+});
+
+router.get("/trust-guarantees", async (req, res) => {
+  try {
+    const trustGuarantees = await getTrustGuarantees();
+    res.json({ success: true, trustGuarantees });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Failed to load trust guarantees." });
   }
 });
 

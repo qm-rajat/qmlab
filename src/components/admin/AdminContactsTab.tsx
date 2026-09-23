@@ -193,7 +193,7 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                       {lead.estimated_value && (
                         <span className="text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100/50 px-2 py-0.5 rounded-md flex items-center gap-0.5">
                           <IndianRupee className="w-2.5 h-2.5" />
-                          Value: ₹{lead.estimated_value}
+                          Value: {lead.estimated_value.startsWith('₹') ? lead.estimated_value : `₹${lead.estimated_value}`}
                         </span>
                       )}
                       <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
@@ -270,7 +270,7 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                         type="text"
                         value={lead.estimated_value || ''}
                         onChange={(e) => onUpdateContact(lead.id, { estimated_value: e.target.value })}
-                        placeholder="e.g. $5,000 or ₹40,000"
+                        placeholder="e.g. ₹5,000 or ₹25,000"
                         className="w-full px-3 py-2 text-xs bg-slate-50/40 hover:bg-slate-50/80 focus:bg-white border border-slate-205 focus:border-primary rounded-xl focus:outline-hidden text-slate-700"
                       />
                     </div>
@@ -352,9 +352,10 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
                         className="w-full px-2 py-1 bg-slate-50 border border-slate-150 rounded-lg text-xs text-slate-650 cursor-pointer focus:outline-hidden font-medium"
                       >
                         <option value="">-- Unassigned --</option>
-                        <option value="Under $2k">Under $2k</option>
-                        <option value="$2k - $10k">$2k - $10k (Core)</option>
-                        <option value="$10k+">$10k+ Enterprise</option>
+                        <option value="Under ₹5k">Under ₹5k</option>
+                        <option value="₹5k - ₹15k">₹5k - ₹15k (Core)</option>
+                        <option value="₹15k - ₹25k">₹15k - ₹25k</option>
+                        <option value="₹25k+">₹25k+ (Enterprise)</option>
                         <option value="Candidate Job">F-T / Contract Job</option>
                       </select>
                     </div>

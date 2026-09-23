@@ -17,11 +17,11 @@ export default function QMLogo({
   usePng = true,
 }: QMLogoProps) {
   const sizeMap = {
-    xs: { img: 'h-6 sm:h-7 w-auto', title: 'text-sm', subtitle: 'text-[7px]' },
-    sm: { img: 'h-8 sm:h-9 w-auto', title: 'text-lg', subtitle: 'text-[9px]' },
-    md: { img: 'h-12 sm:h-14 w-auto', title: 'text-2xl', subtitle: 'text-[11px]' },
-    lg: { img: 'h-16 sm:h-20 w-auto', title: 'text-4xl', subtitle: 'text-[13px]' },
-    xl: { img: 'h-24 sm:h-28 w-auto', title: 'text-5xl', subtitle: 'text-[14px]' },
+    xs: { img: 'h-6 sm:h-7 w-auto', width: 28, height: 28, title: 'text-sm', subtitle: 'text-[7px]' },
+    sm: { img: 'h-8 sm:h-9 w-auto', width: 36, height: 36, title: 'text-lg', subtitle: 'text-[9px]' },
+    md: { img: 'h-12 sm:h-14 w-auto', width: 56, height: 56, title: 'text-2xl', subtitle: 'text-[11px]' },
+    lg: { img: 'h-16 sm:h-20 w-auto', width: 80, height: 80, title: 'text-4xl', subtitle: 'text-[13px]' },
+    xl: { img: 'h-24 sm:h-28 w-auto', width: 112, height: 112, title: 'text-5xl', subtitle: 'text-[14px]' },
   };
 
   const currentSize = sizeMap[size];
@@ -32,12 +32,16 @@ export default function QMLogo({
         <img
           src={logoImg}
           alt="QM Labs Logo"
+          width={currentSize.width}
+          height={currentSize.height}
           referrerPolicy="no-referrer"
           className={`${currentSize.img} object-contain transition-transform duration-500 ease-out ${interactive ? 'group-hover:scale-105' : ''}`}
         />
       ) : (
         <svg
           viewBox="0 0 100 100"
+          width={currentSize.width}
+          height={currentSize.height}
           className={`${currentSize.img} object-contain transition-transform duration-500 ease-out ${interactive ? 'group-hover:scale-105' : ''}`}
           xmlns="http://www.w3.org/2000/svg"
         >
