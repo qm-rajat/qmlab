@@ -16,9 +16,11 @@ export default function GlassCursor() {
   const trail = useRef(Array(7).fill(0).map(() => ({ x: mouse.current.x, y: mouse.current.y })));
   const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
-  useEffect(() => {
-    if (isTouch) return;
+  if (isTouch) {
+    return null;
+  }
 
+  useEffect(() => {
     let rafId: number;
 
     const animate = () => {

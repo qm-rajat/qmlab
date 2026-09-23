@@ -290,6 +290,10 @@ export default function OverviewView({
                 src={rajatAvatar}
                 alt="Rajat Kumar Dash Avatar Illustration"
                 referrerPolicy="no-referrer"
+                width="200"
+                height="200"
+                fetchPriority="high"
+                loading="eager"
                 className="w-[200px] h-[200px] object-cover select-none pointer-events-none"
               />
             </div>
