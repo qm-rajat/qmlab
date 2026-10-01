@@ -181,16 +181,17 @@ export default function BlogPost({
       </div>
 
       {/* 4. FEATURED COVER IMAGE */}
-      {blog.cover_image_url && (
-        <div className="w-full h-64 sm:h-96 rounded-3xl overflow-hidden mb-8 border border-slate-200/80 relative shadow-xs">
-          <img
-            src={blog.cover_image_url}
-            alt={blog.title}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover select-none"
-          />
-        </div>
-      )}
+      <div className="w-full h-64 sm:h-96 rounded-3xl overflow-hidden mb-8 border border-slate-200/80 relative shadow-xs bg-slate-900 flex items-center justify-center">
+        <img
+          src={blog.cover_image_url || '/LOGO.png'}
+          alt={blog.title}
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/LOGO.png';
+          }}
+          className="w-full h-full object-cover select-none"
+        />
+      </div>
 
       {/* 5. KEY TAKEAWAYS CALLOUT BOX */}
       <div className="bg-gradient-to-br from-blue-50/60 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-3xl p-6 mb-8 text-left space-y-3">

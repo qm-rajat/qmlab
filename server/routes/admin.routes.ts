@@ -356,6 +356,44 @@ router.post("/upload", requireAdmin, async (req, res) => {
   }
 });
 
+// Batch Multiple File Upload endpoint
+router.post("/upload-multiple", requireAdmin, async (req, res) => {
+  try {
+    const { files } = req.body;
+    if (!Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ success: false, error: "Files array is required." });
+    }
+
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const fileItem = files[i];
+      if (!fileItem || !fileItem.filename || !fileItem.data) continue;
+
+      const safeName = `${Date.now()}_${i}_${fileItem.filename.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const filePath = path.join(uploadsDir, safeName);
+
+      let base64Data = fileItem.data;
+      if (fileItem.data.includes(";base64,")) {
+        base64Data = fileItem.data.split(";base64,").pop();
+      }
+      const buffer = Buffer.from(base64Data, "base64");
+      fs.writeFileSync(filePath, buffer);
+      uploadedUrls.push(`/uploads/${safeName}`);
+    }
+
+    res.json({ success: true, urls: uploadedUrls, count: uploadedUrls.length });
+  } catch (error: any) {
+    console.error("Batch upload error:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to batch upload files." });
+  }
+});
+
 // Media Library: List uploaded files
 router.get("/media", requireAdmin, async (req, res) => {
   try {

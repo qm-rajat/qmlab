@@ -259,8 +259,11 @@ export const AdminMediaTab: React.FC<AdminMediaTabProps> = ({
               <div key={file.filename} className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col group hover:border-slate-300 transition-all">
                 <div className="relative h-40 bg-slate-100 overflow-hidden flex items-center justify-center">
                   <img
-                    src={file.url}
+                    src={file.url || '/LOGO.png'}
                     alt={file.filename}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/LOGO.png';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />

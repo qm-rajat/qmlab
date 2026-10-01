@@ -39,7 +39,7 @@ export function getClientBaseUrl(settings?: SiteSettings | null): string {
  * Includes credentials, MBA in Product Management, engineering background, and skills.
  */
 export function generatePersonSchema(settings: SiteSettings, baseUrl: string) {
-  const profileImg = settings.profile_image_url || `${baseUrl}/logo.png`;
+  const profileImg = settings.profile_image_url || `${baseUrl}/LOGO.png`;
   const heroName = settings.hero_name || 'Rajat Kumar Dash';
   const brandName = settings.company_name || 'QM Labs';
 
@@ -115,7 +115,7 @@ export function generateOrganizationSchema(settings: SiteSettings, baseUrl: stri
     '@id': `${baseUrl}/#organization`,
     name: brandName,
     url: baseUrl,
-    logo: `${baseUrl}/assets/LOGO-BTDcmzva.png`,
+    logo: `${baseUrl}/LOGO.png`,
     description: settings.seo_services_description || 'QM Labs by Rajat Kumar Dash delivers enterprise-grade full-stack web engineering, custom AI/MCP server integrations, technical SEO audits, and cloud DevOps consulting.',
     founder: {
       '@type': 'Person',
@@ -285,7 +285,7 @@ export function generateBlogPostingSchema(blog: Blog, settings: SiteSettings, ba
   const rawImage = blog.cover_image_url || blog.og_image_url;
   const coverImage = rawImage
     ? (rawImage.startsWith('http') ? rawImage : `${baseUrl}${rawImage}`)
-    : `${baseUrl}/assets/LOGO-BTDcmzva.png`;
+    : `${baseUrl}/LOGO.png`;
 
   return {
     '@context': 'https://schema.org',
@@ -309,7 +309,7 @@ export function generateBlogPostingSchema(blog: Blog, settings: SiteSettings, ba
       name: settings.company_name || 'QM Labs',
       logo: {
         '@type': 'ImageObject',
-        url: `${baseUrl}/assets/LOGO-BTDcmzva.png`,
+        url: `${baseUrl}/LOGO.png`,
       },
     },
     keywords: blog.tags?.join(', '),

@@ -375,11 +375,11 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                     className="relative aspect-16/10 bg-slate-900 overflow-hidden border-b border-slate-100 cursor-pointer"
                   >
                     <img
-                      src={project.images[0] || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b'}
+                      src={project.images?.[0] || '/LOGO.png'}
                       alt={project.title}
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800';
+                        (e.target as HTMLImageElement).src = '/LOGO.png';
                       }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
                     />
@@ -553,7 +553,7 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                 
                 {/* Ambient Blurred Backdrop for Aspect Ratio Harmony */}
                 <img
-                  src={selectedProject.images[activeImgIdx] || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b'}
+                  src={selectedProject.images?.[activeImgIdx] || '/LOGO.png'}
                   alt=""
                   aria-hidden="true"
                   referrerPolicy="no-referrer"
@@ -563,11 +563,11 @@ export default function ProjectGallery({ projects }: ProjectGalleryProps) {
                 {/* Main Foreground High-Res Image */}
                 <div className="relative z-10 max-w-full max-h-full p-3 sm:p-4 flex items-center justify-center">
                   <img
-                    src={selectedProject.images[activeImgIdx] || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b'}
+                    src={selectedProject.images?.[activeImgIdx] || '/LOGO.png'}
                     alt={selectedProject.title}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800';
+                      (e.target as HTMLImageElement).src = '/LOGO.png';
                     }}
                     className="max-w-full max-h-[220px] sm:max-h-[280px] md:max-h-[340px] w-auto h-auto object-contain rounded-xl shadow-2xl border border-white/10"
                   />

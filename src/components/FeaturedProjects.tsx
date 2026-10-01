@@ -56,18 +56,15 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({
             <div className="space-y-4">
               {/* Project Image Header */}
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-150">
-                {(proj.image_url || (proj.images && proj.images[0])) ? (
-                  <img
-                    src={proj.image_url || proj.images[0]}
-                    alt={proj.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 text-[#0084ff]">
-                    <Layers className="w-10 h-10 opacity-40" />
-                  </div>
-                )}
+                <img
+                  src={proj.image_url || proj.images?.[0] || '/LOGO.png'}
+                  alt={proj.title}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/LOGO.png';
+                  }}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
                 
                 {proj.category && (
                   <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-slate-800 text-[10px] font-mono font-extrabold uppercase px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-xs">

@@ -1,8 +1,8 @@
 # Product Technical Specification & Architecture
 
-**Document Version:** v2.3.0  
-**Authors:** Rajat (Lead Product Engineer & Architect)  
-**Target System:** Full-Stack Node.js / Express + React 18 + Model Context Protocol (MCP)  
+**Document Version:** v2.6.0  
+**Authors:** Rajat Kumar Dash (Lead Product Engineer & Architect)  
+**Target System:** Full-Stack Node.js / Express + React 19 + TypeScript + Model Context Protocol (MCP)  
 
 ---
 
@@ -11,7 +11,7 @@
 ```
                       ┌──────────────────────────────────────────┐
                       │              CLIENT LAYER                │
-                      │  • React 18 + Tailwind CSS SPA          │
+                      │  • React 19 + Tailwind CSS SPA          │
                       │  • OpenAI ChatGPT / Claude Desktop Agent │
                       │  • Cursor IDE / LangChain MCP Clients    │
                       └────────────────────┬─────────────────────┘
@@ -28,6 +28,7 @@
                       │   • /api/content   │  • /api/mcp (HTTP)  │
                       │   • /api/contact   │  • /api/sse (Stream)│
                       │   • /api/admin/*   │  • 18+ Tool Handlers│
+                      │   • /api/services  │                     │
                       └──────────────┬─────┴──────────────┬──────┘
                                      │                    │
                       ┌──────────────▼────────────────────▼──────┐
@@ -35,6 +36,7 @@
                       │  • Dual-Persistence (Redis + JSON store) │
                       │  • SMTP Mailer Service (Nodemailer)      │
                       │  • Telemetry & Analytics Aggregator      │
+                      │  • Media Storage (/public/uploads/)      │
                       └──────────────────────────────────────────┘
 ```
 
@@ -73,13 +75,16 @@ interface Project {
 ```typescript
 interface SiteSettings {
   hero_name: string;
-  hero_tagline: string; // Comma-separated roles fed to animated TypewriterRoles (e.g. "Technical Product Manager, Full-Stack Developer, Technical SEO, IT Support")
+  hero_tagline: string; // Comma-separated roles fed to animated TypewriterRoles
   hero_bio: string;
   profile_image_url: string;
   about_text: string;
   seo_home_title: string;
   seo_home_description: string;
   seo_home_keywords: string;
+  seo_og_image_url?: string;
+  company_name?: string;
+  company_tagline?: string;
   skills: Skill[];
   experience: Experience[];
   education: Education[];
@@ -91,70 +96,7 @@ interface SiteSettings {
 }
 ```
 
-### 2.3 Career Profile Schema (`CareerProfile`)
-```typescript
-interface CareerProfile {
-  id: string; // e.g. 'product', 'general', 'seo', 'qa', 'cybersecurity'
-  name: string; // e.g. 'Product Manager (TPM)'
-  title: string; // e.g. 'Technical Product Manager & Product Strategist'
-  summary: string;
-  icon_name: string; // Lucide icon mapping e.g. 'Target', 'Code2', 'Search'
-  accent_color: string; // 'amber' | 'blue' | 'indigo' | 'emerald' | 'purple'
-  skills_categories: string[];
-  is_default: boolean; // Defaults to true for 'product'
-}
-```
-
----
-
-## 3. High-Fidelity Resume Print Engine
-- **Media Query:** Dedicated `@media print` layout rules inside `src/index.css`.
-- **Page Geometry:** `@page { size: A4 portrait; margin: 12mm 14mm; }` with exact background graphic color fidelity (`-webkit-print-color-adjust: exact`).
-- **Print Shielding:** All interactive navigation (`header`, `footer`, `nav`, `.no-print`, hero cursor, action toolbars) are suppressed.
-- **Break Avoidance:** `break-inside: avoid` and `break-after: avoid` rules prevent ugly splits across job experiences and headings.
-- **Link Formatter:** Raw contact URLs rendered in clean, printable monospace text.
-
----
-
-## 4. Model Context Protocol (MCP) Contract
-
-### 3.1 JSON-RPC 2.0 Ingress Specification
-- **Endpoint:** `POST /api/mcp`
-- **Headers:** `Content-Type: application/json`
-- **Supported Methods:** `initialize`, `ping`, `tools/list`, `tools/call`
-
-#### Example `tools/call` Payload:
-```json
-{
-  "jsonrpc": "2.0",
-  "id": "req_1710002",
-  "method": "tools/call",
-  "params": {
-    "name": "list_projects",
-    "arguments": {
-      "category": "product-management"
-    }
-  }
-}
-```
-
-#### Example Response Payload:
-```json
-{
-  "jsonrpc": "2.0",
-  "id": "req_1710002",
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "Found 4 projects in category 'product-management'..."
-      }
-    ]
-  }
-}
-```
-
-### 2.4 Freelance Service & Dynamic Workflow Schemas
+### 2.3 Freelance Service & Dynamic Workflow Schemas
 ```typescript
 interface FreelanceService {
   id: string;
@@ -196,6 +138,82 @@ interface TrustGuarantee {
 }
 ```
 
+### 2.4 Career Profile Persona Schema (`CareerProfile`)
+```typescript
+interface CareerProfile {
+  id: string; // e.g. 'product', 'general', 'seo', 'qa', 'cybersecurity'
+  name: string; // e.g. 'Product Manager (TPM)'
+  title: string; // e.g. 'Technical Product Manager & Product Strategist'
+  summary: string;
+  icon_name: string; // Lucide icon mapping e.g. 'Target', 'Code2', 'Search'
+  accent_color: string; // 'amber' | 'blue' | 'indigo' | 'emerald' | 'purple'
+  skills_categories: string[];
+  is_default: boolean; // Defaults to true for 'product'
+}
+```
+
+---
+
+## 3. Model Context Protocol (MCP) Protocol Engine
+
+### 3.1 JSON-RPC 2.0 Ingress Specification
+- **Endpoint:** `POST /api/mcp`
+- **Headers:** `Content-Type: application/json`
+- **Supported Methods:** `initialize`, `ping`, `tools/list`, `tools/call`
+
+#### Example `tools/call` Payload:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "req_1710002",
+  "method": "tools/call",
+  "params": {
+    "name": "list_projects",
+    "arguments": {
+      "category": "product-management"
+    }
+  }
+}
+```
+
+#### Example Response Payload:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "req_1710002",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Found 4 projects in category 'product-management'..."
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 4. Media & Asset Pipeline Specifications
+
+### 4.1 Canonical OpenGraph & Twitter Cards Image Resolution
+All social crawlers (LinkedIn, Twitter/X, WhatsApp, Facebook, iMessage) require absolute `https://` URLs for `og:image` and `twitter:image`. Relative paths (e.g. `/uploads/image.jpg`) are automatically resolved against the canonical production origin `https://qmlab.in`:
+
+```typescript
+const resolveAbsoluteImageUrl = (imgUrl?: string, fallbackBase: string = baseUrl): string => {
+  if (!imgUrl || !imgUrl.trim()) return `${fallbackBase}/LOGO.png`;
+  const clean = imgUrl.trim();
+  if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+  return `${fallbackBase}${clean.startsWith('/') ? '' : '/'}${clean}`;
+};
+```
+
+### 4.2 Universal Fallback Hierarchy
+All image elements across public and admin interfaces implement bulletproof error recovery:
+1. Primary `src`: Custom entity image (`cover_image_url`, `image_url`, `images[0]`).
+2. Inline fallback: Default to `/LOGO.png` or `/qmlogoonly.png`.
+3. Event handler: `onError={(e) => { (e.target as HTMLImageElement).src = '/LOGO.png'; }}` ensuring zero broken image frames.
+
 ---
 
 ## 5. Media Library & Backup / Restore Specifications
@@ -213,7 +231,16 @@ interface TrustGuarantee {
 
 ---
 
-## 4. Security & Performance Directives
+## 6. High-Fidelity Resume Print Engine
+- **Media Query:** Dedicated `@media print` layout rules inside `src/index.css`.
+- **Page Geometry:** `@page { size: A4 portrait; margin: 12mm 14mm; }` with exact background graphic color fidelity (`-webkit-print-color-adjust: exact`).
+- **Print Shielding:** All interactive navigation (`header`, `footer`, `nav`, `.no-print`, hero cursor, action toolbars) are suppressed.
+- **Break Avoidance:** `break-inside: avoid` and `break-after: avoid` rules prevent splits across job experiences and headings.
+- **Link Formatter:** Raw contact URLs rendered in clean, printable monospace text.
+
+---
+
+## 7. Security & Performance Directives
 
 1. **Strict Input Sanitization:** All markdown inputs processed through unified DOMPurify pipelines.
 2. **Rate Limiting:**

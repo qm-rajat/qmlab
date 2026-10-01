@@ -533,9 +533,12 @@ export default function ServicesHomePage({
             {featuredProjects.map(project => (
               <div key={project.id} className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
                 <div className="space-y-2.5">
-                  {project.image_url && (
-                    <img src={project.image_url} alt={project.title} className="w-full h-36 object-cover rounded-lg border border-slate-700" />
-                  )}
+                  <img 
+                    src={project.image_url || '/LOGO.png'} 
+                    alt={project.title} 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/LOGO.png'; }}
+                    className="w-full h-36 object-cover rounded-lg border border-slate-700" 
+                  />
                   <h4 className="text-base font-bold text-white leading-snug">{project.title}</h4>
                   <p className="text-xs text-slate-300 line-clamp-3">{project.description}</p>
                 </div>
@@ -561,7 +564,7 @@ export default function ServicesHomePage({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {[
             { cat: "Frontend Engineering", skills: ["React 19", "TypeScript", "Next.js", "Tailwind CSS", "Vite"] },
-            { cat: "Backend & Systems", skills: ["Node.js / Express", "REST & GraphQL", "Redis", "PostgreSQL", "Docker"] },
+            { cat: "Backend & Systems", skills: ["Python", "Node.js / Express", "REST & GraphQL", "Redis", "PostgreSQL", "Docker"] },
             { cat: "AI & LLM Architecture", skills: ["Google Gemini API", "Model Context Protocol", "RAG Pipelines", "Agent Tooling"] },
             { cat: "Product & SEO", skills: ["Technical PRD Strategy", "AEO / GEO Optimization", "Core Web Vitals", "Telemetry Analytics"] }
           ].map((item, idx) => (

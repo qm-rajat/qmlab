@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, Sparkles, X, Check, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, Sparkles, X, Check, Search, Image as ImageIcon, Star } from 'lucide-react';
 import { Project, SiteSettings } from '../../types';
 import { DEFAULT_PROFILES } from './AdminProfilesTab';
 import { ImageUploadInput } from './ImageUploadInput';
@@ -92,9 +92,9 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
     const finalSlug = projectForm.slug?.trim() || projectForm.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    const primaryImg = projectForm.images?.[0] || '';
+    const currentImgs = projectForm.images || [];
     const extraImgs = secondaryImagesInput.split(',').map(s => s.trim()).filter(Boolean);
-    const finalImages = [primaryImg, ...extraImgs].filter(Boolean);
+    const finalImages = Array.from(new Set([...currentImgs, ...extraImgs])).filter(Boolean);
 
     const parsedTech = techInput.split(',').map(s => s.trim()).filter(Boolean);
     const parsedFeatures = featuresInput.split(',').map(s => s.trim()).filter(Boolean);
@@ -102,7 +102,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
     const payload: Project = {
       ...(projectForm as Project),
-      images: finalImages,
+      images: finalImages.length > 0 ? finalImages : ['/LOGO.png'],
       technologies: parsedTech,
       features: parsedFeatures,
       architecture_highlights: parsedArch,
@@ -203,9 +203,12 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={proj.images[0]}
+                            src={proj.images?.[0] || '/LOGO.png'}
                             alt={proj.title}
                             referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/LOGO.png';
+                            }}
                             className="w-10 h-8 object-cover rounded-md border border-slate-100"
                           />
                           <div>
@@ -334,31 +337,155 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
               />
             </div>
 
-            {/* Primary Picture Link */}
-            <div className="space-y-1 md:col-span-2">
-              <ImageUploadInput
-                label="Primary Picture URL or Upload Local File"
-                value={projectForm.images?.[0] || ''}
-                onChange={(val) => {
-                  const currentImages = projectForm.images || [];
-                  const newImages = [val, ...currentImages.slice(1)];
-                  setProjectForm({ ...projectForm, images: newImages.filter(Boolean) });
-                }}
-                placeholder="https://images.unsplash.com/... or upload image file"
-              />
-            </div>
+            {/* PROJECT VISUAL ASSETS & MULTI-IMAGE GALLERY MANAGER */}
+            <div className="md:col-span-2 space-y-4 bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/70 pb-3">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                    <ImageIcon className="w-3.5 h-3.5 text-[#0084ff]" />
+                    Project Visual Assets &amp; Gallery
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Upload 3–4 images at once from your device or paste external image URLs.
+                  </p>
+                </div>
+                <span className="text-[11px] font-mono text-slate-500 font-semibold px-2.5 py-1 bg-white border border-slate-200 rounded-lg shadow-2xs self-start sm:self-auto">
+                  {(projectForm.images || []).length} Image(s) Attached
+                </span>
+              </div>
 
-            {/* Secondary Images Link */}
-            <div className="space-y-1">
-              <label htmlFor="pform-secondary-images" className="text-xs font-bold text-slate-505 block">Secondary Images URLs (Comma Separated)</label>
-              <input
-                id="pform-secondary-images"
-                type="text"
-                value={secondaryImagesInput}
-                onChange={(e) => setSecondaryImagesInput(e.target.value)}
-                placeholder="https://images.unsplash.com/..., https://..."
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
-              />
+              {/* Primary Cover Image Uploader */}
+              <div className="space-y-1.5">
+                <ImageUploadInput
+                  label="Primary Cover Picture (Default Display)"
+                  value={projectForm.images?.[0] || ''}
+                  onChange={(val) => {
+                    const currentImages = projectForm.images || [];
+                    const newImages = [val, ...currentImages.slice(1)].filter(Boolean);
+                    setProjectForm({ ...projectForm, images: newImages });
+                  }}
+                  placeholder="https://images.unsplash.com/... or upload primary cover"
+                />
+              </div>
+
+              {/* Secondary & Multi-Image Batch Upload */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <label htmlFor="pform-secondary-images" className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                    Secondary &amp; Additional Gallery Images
+                  </label>
+                  <span className="text-[11px] text-blue-600 font-semibold">
+                    Tip: Hold Ctrl/Cmd or Shift to select 3-4 images at once
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1">
+                    <ImageUploadInput
+                      multiple={true}
+                      value={secondaryImagesInput}
+                      onChange={(val) => setSecondaryImagesInput(val)}
+                      onUploadMultiple={(urls) => {
+                        const current = projectForm.images || [];
+                        const merged = [...current, ...urls].filter(Boolean);
+                        setProjectForm({ ...projectForm, images: merged });
+                        setSecondaryImagesInput('');
+                      }}
+                      placeholder="Paste single/comma-separated URLs or click Upload Images (Multi)"
+                    />
+                  </div>
+                  {secondaryImagesInput.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newUrls = secondaryImagesInput.split(',').map(s => s.trim()).filter(Boolean);
+                        const current = projectForm.images || [];
+                        setProjectForm({ ...projectForm, images: [...current, ...newUrls] });
+                        setSecondaryImagesInput('');
+                      }}
+                      className="px-3.5 py-2 bg-[#0084ff] hover:bg-blue-600 text-white rounded-lg text-xs font-bold shadow-xs transition-colors shrink-0 cursor-pointer self-start sm:self-auto mt-1 sm:mt-0"
+                    >
+                      + Add to Gallery
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Interactive Thumbnail Gallery Grid */}
+              {projectForm.images && projectForm.images.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 block">
+                      Attached Images &amp; Reordering
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      First image is used as primary card cover
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {projectForm.images.map((imgUrl, idx) => (
+                      <div
+                        key={`${imgUrl}-${idx}`}
+                        className={`relative rounded-xl border p-2 bg-white flex flex-col justify-between gap-2 transition-all shadow-2xs group ${
+                          idx === 0 ? 'border-[#0084ff] ring-2 ring-blue-500/20' : 'border-slate-200'
+                        }`}
+                      >
+                        <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-900 border border-slate-100 flex items-center justify-center">
+                          <img
+                            src={imgUrl}
+                            alt={`Preview ${idx + 1}`}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/LOGO.png';
+                            }}
+                            className="w-full h-full object-cover select-none"
+                          />
+                          <span className={`absolute top-1.5 left-1.5 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md shadow-xs ${
+                            idx === 0 ? 'bg-[#0084ff] text-white' : 'bg-slate-900/80 text-white'
+                          }`}>
+                            {idx === 0 ? 'Cover #1' : `#${idx + 1}`}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-1 pt-1">
+                          {idx !== 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const current = [...(projectForm.images || [])];
+                                const [target] = current.splice(idx, 1);
+                                current.unshift(target);
+                                setProjectForm({ ...projectForm, images: current });
+                              }}
+                              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
+                              title="Set as primary cover"
+                            >
+                              Make Cover
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-blue-600 px-1 font-mono">
+                              Primary
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = [...(projectForm.images || [])];
+                              current.splice(idx, 1);
+                              setProjectForm({ ...projectForm, images: current });
+                            }}
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer ml-auto"
+                            title="Remove image from project"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Category / Profile Domain */}

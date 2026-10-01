@@ -16,12 +16,12 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-50 border-t border-slate-100 py-16 px-4 sm:px-6 lg:px-8 mt-auto no-print">
+    <footer className="bg-slate-50 border-t border-slate-100 py-8 sm:py-10 px-4 sm:px-6 lg:px-8 mt-auto no-print">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6 mb-8">
           {/* Logo & Manifesto Column */}
           <div className="md:col-span-2 space-y-4 flex flex-col items-start text-left">
-            <QMLogo size="md" interactive={true} />
+            <QMLogo size="lg" interactive={true} imageSrc="/qmlogoonly.png" imgClassName="h-16 sm:h-20 w-auto" />
             <p className="text-sm text-slate-500 max-w-sm ml-1">
               {settings.hero_bio}
             </p>
@@ -122,7 +122,7 @@ export default function Footer({ settings, onViewChange }: FooterProps) {
         </div>
 
         {/* Bottom copyright details */}
-        <div className="border-t border-slate-200/80 pt-8 flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+        <div className="border-t border-slate-200/80 pt-6 flex flex-col sm:flex-row items-center sm:justify-between gap-4">
           <p className="text-xs text-slate-500 tracking-tight sm:tracking-normal inline-flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <span>© {currentYear} <strong className="font-semibold text-slate-700">Rajat Kumar Dash</strong>. All rights reserved.</span>
             <span className="text-slate-300 hidden sm:inline">•</span>

@@ -36,7 +36,19 @@ const SEO: React.FC<SEOProps> = ({
   const effectiveUrl = url || (typeof window !== 'undefined' ? window.location.href : baseUrl);
   const effectiveTitle = title || settings?.seo_home_title || `${settings?.hero_name || "Rajat Kumar Dash"} | Freelance Software Engineer & Technical Product Manager`;
   const effectiveDesc = description || settings?.seo_home_description || "Freelance Full-Stack Software Engineer & Technical Product Manager (MBA Candidate) providing custom web services, high-performance React/Node.js apps, AI integrations, and technical SEO.";
-  const ogImage = image || settings?.seo_og_image_url || `${baseUrl}/logo.png`;
+  
+  // Resolve absolute URL for OpenGraph and Twitter images (scrapers require full https:// URLs)
+  const rawImage = image || settings?.seo_og_image_url;
+  let ogImage = `${baseUrl}/LOGO.png`;
+  if (rawImage && rawImage.trim()) {
+    const trimmed = rawImage.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      ogImage = trimmed;
+    } else {
+      ogImage = `${baseUrl}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+    }
+  }
+
   const metaKeywords = keywords || settings?.seo_home_keywords || "freelance software engineer, freelance developer, web development services, custom web services, software engineer for hire, freelance full-stack developer, Technical Product Manager, React, Node.js, TypeScript, AI systems, Rajat Kumar Dash, QM Labs";
   const authorName = author || settings?.seo_author || settings?.hero_name || "Rajat Kumar Dash";
   const brandName = settings?.company_name || "QM Labs";
@@ -72,6 +84,8 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:title" content={effectiveTitle} />
       <meta property="og:description" content={effectiveDesc} />
       <meta property="og:image" content={ogImage} />
+      <meta property="og:image:secure_url" content={ogImage} />
+      <meta property="og:image:alt" content={effectiveTitle} />
       <meta property="og:site_name" content={brandName} />
       <meta property="og:locale" content="en_US" />
 
@@ -81,6 +95,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="twitter:title" content={effectiveTitle} />
       <meta name="twitter:description" content={effectiveDesc} />
       <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image:alt" content={effectiveTitle} />
       {effectiveTwitter && <meta name="twitter:creator" content={effectiveTwitter} />}
       {effectiveTwitter && <meta name="twitter:site" content={effectiveTwitter} />}
 

@@ -193,14 +193,15 @@ export default function BlogHub({
             
             {/* Left Image Cover */}
             <div className="lg:col-span-6 relative aspect-16/10 lg:aspect-auto overflow-hidden bg-slate-900 min-h-[260px] lg:min-h-[360px]">
-              {featuredArticle.cover_image_url && (
-                <img
-                  src={featuredArticle.cover_image_url}
-                  alt={featuredArticle.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
-                />
-              )}
+              <img
+                src={featuredArticle.cover_image_url || '/LOGO.png'}
+                alt={featuredArticle.title}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/LOGO.png';
+                }}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent lg:hidden" />
               <div className="absolute top-4 left-4 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-[#0084ff] text-white shadow-md">
@@ -427,21 +428,22 @@ export default function BlogHub({
               >
                 <div>
                   {/* Image Cover */}
-                  {b.cover_image_url && (
-                    <div className="aspect-16/10 bg-slate-100 overflow-hidden relative border-b border-slate-100">
-                      <img
-                        src={b.cover_image_url}
-                        alt={b.title}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3">
-                        <span className="text-[10px] font-mono font-extrabold uppercase bg-white/90 backdrop-blur-xs text-[#0084ff] border border-blue-100 px-2 py-0.5 rounded-lg shadow-2xs">
-                          {b.categories?.[0] || 'Technical Guide'}
-                        </span>
-                      </div>
+                  <div className="aspect-16/10 bg-slate-100 overflow-hidden relative border-b border-slate-100">
+                    <img
+                      src={b.cover_image_url || '/LOGO.png'}
+                      alt={b.title}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/LOGO.png';
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[10px] font-mono font-extrabold uppercase bg-white/90 backdrop-blur-xs text-[#0084ff] border border-blue-100 px-2 py-0.5 rounded-lg shadow-2xs">
+                        {b.categories?.[0] || 'Technical Guide'}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
                   {/* Article Card Body */}
                   <div className="p-5 sm:p-6 space-y-3">

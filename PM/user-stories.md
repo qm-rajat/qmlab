@@ -217,3 +217,35 @@
   Then the changes persist to Redis/JSON storage immediately
   And the public landing page renders the updated offerings in real time
   ```
+
+---
+
+### EPIC-7: Asset Pipeline, Canonical Social Sharing Cards & Universal Fallbacks
+
+#### US-7.1: Absolute Canonical URL Generation for Social Previews
+- **As a** Reader or Client sharing a technical blog or project link on LinkedIn, X, WhatsApp, or Facebook,
+- **I want** the shared card to render full high-resolution cover images with title and excerpt,
+- **So that** links generate rich visual previews instead of blank placeholders.
+- **Priority:** Must Have (P0) | **Points:** 3
+- **Acceptance Criteria (Gherkin):**
+  ```gherkin
+  Given an individual blog post or project page is requested
+  When the page meta tags are injected
+  Then `og:image` and `twitter:image` must output a fully-qualified absolute URL (e.g. `https://qmlab.in/...`)
+  And relative upload paths (e.g. `/uploads/...`) are prefixed with the canonical origin
+  And `og:image:secure_url` and `og:image:alt` attributes are present
+  ```
+
+#### US-7.2: Universal Error Recovery & Image Fallback Hierarchy
+- **As a** Visitor browsing case studies, blogs, or credentials,
+- **I want** all image frames to render cleanly even if third-party asset links break or fail to load,
+- **So that** I never encounter broken image boxes or layout shifts.
+- **Priority:** Must Have (P0) | **Points:** 3
+- **Acceptance Criteria (Gherkin):**
+  ```gherkin
+  Given an image asset fails to load or 404s
+  When the browser triggers an `onError` event
+  Then the image source automatically transitions to `/LOGO.png`
+  And the image layout preserves aspect ratio without breaking page geometry
+  ```
+

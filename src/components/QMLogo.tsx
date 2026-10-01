@@ -1,5 +1,4 @@
 import React from 'react';
-import logoImg from '../assets/images/LOGO.png';
 
 interface QMLogoProps {
   className?: string;
@@ -7,6 +6,8 @@ interface QMLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   interactive?: boolean;
   usePng?: boolean;
+  imageSrc?: string;
+  imgClassName?: string;
 }
 
 export default function QMLogo({
@@ -15,6 +16,8 @@ export default function QMLogo({
   size = 'md',
   interactive = true,
   usePng = true,
+  imageSrc = '/qmlogoonly.png',
+  imgClassName = '',
 }: QMLogoProps) {
   const sizeMap = {
     xs: { img: 'h-6 sm:h-7 w-auto', width: 28, height: 28, title: 'text-sm', subtitle: 'text-[7px]' },
@@ -30,19 +33,19 @@ export default function QMLogo({
     <div className={`flex flex-col items-center justify-center ${className} ${interactive ? 'group' : ''}`}>
       {usePng ? (
         <img
-          src={logoImg}
+          src={imageSrc}
           alt="QM Labs Logo"
           width={currentSize.width}
           height={currentSize.height}
           referrerPolicy="no-referrer"
-          className={`${currentSize.img} object-contain transition-transform duration-500 ease-out ${interactive ? 'group-hover:scale-105' : ''}`}
+          className={`${imgClassName || currentSize.img} object-contain transition-transform duration-500 ease-out ${interactive ? 'group-hover:scale-105' : ''}`}
         />
       ) : (
         <svg
           viewBox="0 0 100 100"
           width={currentSize.width}
           height={currentSize.height}
-          className={`${currentSize.img} object-contain transition-transform duration-500 ease-out ${interactive ? 'group-hover:scale-105' : ''}`}
+          className={`${imgClassName || currentSize.img} object-contain transition-transform duration-500 ease-out ${interactive ? 'group-hover:scale-105' : ''}`}
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>

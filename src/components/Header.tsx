@@ -55,7 +55,7 @@ export default function Header({ currentView, onViewChange, isAdminLoggedIn, isS
           onClick={() => handleNavClick('home')}
           className="flex items-center gap-2 cursor-pointer focus:outline-hidden"
         >
-          <QMLogo size="sm" interactive={true} />
+          <QMLogo size="sm" interactive={true} imageSrc="/qmlogoonly.png" />
         </button>
 
         {/* Desktop Navigation */}

@@ -287,9 +287,12 @@ export default function OverviewView({
           >
             <div className="w-full h-full rounded-[2rem] overflow-hidden bg-slate-55 border border-slate-100 flex items-center justify-center shadow-inner">
               <img
-                src={rajatAvatar}
+                src={rajatAvatar || '/LOGO.png'}
                 alt="Rajat Kumar Dash Avatar Illustration"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/LOGO.png';
+                }}
                 width="200"
                 height="200"
                 fetchPriority="high"
@@ -348,28 +351,66 @@ export default function OverviewView({
 
       {/* SECTION: QM LABS BRAND STRIP */}
       <motion.section
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         className="max-w-7xl mx-auto"
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-slate-150/90 rounded-2xl px-6 py-4 shadow-xs">
-          <div className="flex items-center gap-3.5">
-            <QMLogo size="xs" showTagline={false} interactive={false} />
-            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-            <div className="text-left">
-              <span className="text-xs font-bold text-slate-900 tracking-tight font-sans">
-                {settings.company_name || "QM Labs"}
-              </span>
-              <span className="text-xs text-slate-400 font-medium block sm:inline sm:ml-2">
-                • {settings.company_tagline || "Quality Builds Trust. Momentum Drives Growth."}
-              </span>
+        <div className="relative overflow-hidden bg-gradient-to-r from-white via-slate-50/80 to-blue-50/30 border border-slate-200/90 rounded-2xl p-4 sm:p-5 md:px-6 md:py-4.5 shadow-xs transition-all hover:border-blue-200 group">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-indigo-400/5 rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+            {/* Left: Brand Emblem & Info */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center text-center sm:text-left gap-3.5 sm:gap-4">
+              <div className="shrink-0 flex items-center justify-center">
+                <QMLogo size="sm" showTagline={false} interactive={true} imageSrc="/LOGO.png" imgClassName="h-10 sm:h-12 w-auto object-contain" />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight font-sans">
+                    {settings.company_name || "QM Labs"}
+                  </h3>
+                  <span className="hidden sm:inline text-slate-300">•</span>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {settings.company_tagline || "Quality Builds Trust. Momentum Drives Growth."}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-0.5">
+                  {['Full-Stack & Systems', 'AI / MCP Architecture', 'Technical SEO & AEO', 'Automated QA'].map((badge) => (
+                    <span key={badge} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-white border border-slate-200/70 text-slate-600">
+                      • {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="text-right hidden md:block">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
-              Engineering &amp; Strategy
-            </span>
+
+            {/* Right: Compact Action Buttons */}
+            <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto justify-center">
+              <button
+                onClick={() => {
+                  onNavigate('services');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-[#0084ff] text-white text-xs font-bold tracking-wide font-mono transition-all cursor-pointer shadow-2xs"
+              >
+                <span>Services</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => {
+                  onNavigate('contact');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              >
+                <span>Contact</span>
+              </button>
+            </div>
           </div>
         </div>
       </motion.section>

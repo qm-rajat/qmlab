@@ -315,9 +315,12 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
                   {/* Image Preview with Hover Inspection Overlay */}
                   <div className="relative aspect-16/10 bg-slate-900 overflow-hidden border-b border-slate-100">
                     <img
-                      src={cert.image_url}
+                      src={cert.image_url || '/LOGO.png'}
                       alt={cert.title}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/LOGO.png';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
                     />
                     
@@ -496,9 +499,12 @@ export default function CertificateGrid({ certificates }: CertificateGridProps) 
             {/* Modal Image Frame with Prev/Next Triggers */}
             <div className="relative w-full aspect-16/9 max-h-[55vh] bg-slate-950 flex items-center justify-center p-4">
               <img
-                src={filteredCerts[selectedIdx].image_url}
+                src={filteredCerts[selectedIdx].image_url || '/LOGO.png'}
                 alt={filteredCerts[selectedIdx].title}
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/LOGO.png';
+                }}
                 className="max-w-full max-h-full object-contain rounded-xl shadow-lg"
               />
 
