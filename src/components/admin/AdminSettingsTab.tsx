@@ -1274,15 +1274,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   />
                 </div>
               </div>
-              <div className="space-y-1">
-                <label htmlFor="seo-og-field" className="text-xs font-bold text-slate-600 block">Default OG Image URL</label>
-                <input
-                  id="seo-og-field"
-                  type="text"
-                  placeholder="https://.../og-image.png"
+              <div className="space-y-1 md:col-span-2">
+                <ImageUploadInput
+                  label="Default Social Sharing OG Image (URL or Upload File)"
                   value={settings.seo_og_image_url || ''}
-                  onChange={(e) => onUpdateSettings({ ...settings, seo_og_image_url: e.target.value })}
-                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden text-slate-800"
+                  onChange={(val) => onUpdateSettings({ ...settings, seo_og_image_url: val })}
+                  placeholder="https://.../og-image.png or upload site OG image file"
                 />
               </div>
             </div>
@@ -1740,6 +1737,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     </span>
                     <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
                       Custom Password Hash &amp; AI Key
+                    </span>
+                    <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-medium border border-emerald-200">
+                      Media Library &amp; Uploaded Images (/public/uploads)
                     </span>
                     <span className="px-2.5 py-1 bg-sky-50 text-sky-700 rounded-lg font-medium border border-sky-200">
                       Local SQLite Archive (npm run sync:sqlite)

@@ -61,7 +61,7 @@ A full-stack, responsive platform combining:
   - Experience timeline, MBA & B.Tech education cards, and inline draft customization.
   - Pixel-perfect ATS print & "Save as PDF" engine with `@page { size: A4 portrait }`, CSS print shields (`.no-print`, `print-page`), automatic heading break avoidance, and formatted print-friendly contact links.
   - Direct exports to Markdown, TXT, and JSON.
-- **FR-1.5 Verified Credentials & Certifications:** Official badge verification, credential IDs, issuing authority links, expiration trackers, and `/LOGO.png` fallback handlers.
+- **FR-1.5 Verified Credentials & Certifications:** Official badge verification, credential IDs, issuing authority links, direct single & batch image upload into `/public/uploads/`, and `/LOGO.png` fallback handlers.
 - **FR-1.6 Technical Blog Engine:** Markdown/HTML rendering with prose formatting, reading time calculation, tag filtering, bookmarking, view counters, reader notes scratchpad, and clean author attribution.
 - **FR-1.7 Contact & Lead Capture:** Anti-spam rate-limited contact form with SMTP email dispatch and admin inbox synchronization.
 - **FR-1.8 Universal Asset Fallback:** Guaranteed image resolution using `/LOGO.png` for all broken, missing, or loading errors across all media grids and modals.
@@ -80,7 +80,7 @@ A full-stack, responsive platform combining:
 - **FR-3.5 Career Profiles & Personas Manager:** Add, customize, and set default resume persona with customized summaries and category mappings.
 - **FR-3.6 Contact CRM:** Lead management with priority tagging, note taking, status workflows (*unread, read, replied, archived*), and estimated deal values in INR (`₹`).
 - **FR-3.7 Media Library & Storage Manager:** Local file repository management in `/public/uploads/` with automated saving, cross-reference usage tracking (In Use vs. Unused), and 1-click single/bulk cleanup.
-- **FR-3.8 Backup & Restore Engine:** Automated JSON snapshots (`.data/backups/latest.json`) and atomic live database restoration covering all site settings, projects, blogs, certificates, contacts, and AI API keys.
+- **FR-3.8 Backup & Restore Engine:** Automated JSON snapshots (`.data/backups/latest.json`) and atomic live database restoration covering all site settings, projects, blogs, certificates, contacts, AI API keys, and embedded `/public/uploads/` media files.
 
 ### 4.4 Search, AEO & GEO Engine (P0)
 - **FR-4.1 Regional GEO Targeting:** Optimized meta headers for Delhi NCR, India (`IN-DL`, coordinates `28.6139;77.2090`).

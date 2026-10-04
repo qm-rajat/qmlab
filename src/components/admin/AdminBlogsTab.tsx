@@ -335,15 +335,12 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                     className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label htmlFor="bform-og-image" className="text-xs font-bold text-slate-505 block">Social Image (OG)</label>
-                  <input
-                    id="bform-og-image"
-                    type="text"
+                <div className="space-y-1 md:col-span-2">
+                  <ImageUploadInput
+                    label="Social Image (OpenGraph URL or Upload File)"
                     value={blogForm.og_image_url || ''}
-                    onChange={(e) => setBlogForm({ ...blogForm, og_image_url: e.target.value })}
-                    placeholder="https://... (defaults to cover image)"
-                    className="w-full px-3.5 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                    onChange={(val) => setBlogForm({ ...blogForm, og_image_url: val })}
+                    placeholder="https://... (defaults to article cover image)"
                   />
                 </div>
                 <div className="md:col-span-2 space-y-1">

@@ -440,7 +440,30 @@ router.delete("/media", requireAdmin, async (req, res) => {
   }
 });
 
-// Backup All Data to JSON
+// Backup All Data to JSON (includes media files from /public/uploads/)
+const getMediaFilesForBackup = () => {
+  try {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadsDir)) return [];
+    const filenames = fs.readdirSync(uploadsDir);
+    return filenames.map(filename => {
+      const filePath = path.join(uploadsDir, filename);
+      const stat = fs.statSync(filePath);
+      if (stat.size < 10 * 1024 * 1024) {
+        const buf = fs.readFileSync(filePath);
+        return {
+          filename,
+          sizeBytes: stat.size,
+          data: buf.toString("base64")
+        };
+      }
+      return { filename, sizeBytes: stat.size };
+    });
+  } catch {
+    return [];
+  }
+};
+
 router.post("/backup", requireAdmin, async (req, res) => {
   try {
     const [settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees, customPassword, aiApiKey] = await Promise.all([
@@ -457,6 +480,8 @@ router.post("/backup", requireAdmin, async (req, res) => {
       getStoredAiApiKey(),
     ]);
 
+    const mediaFiles = getMediaFilesForBackup();
+
     const backupData = {
       version: 1,
       timestamp: new Date().toISOString(),
@@ -471,6 +496,7 @@ router.post("/backup", requireAdmin, async (req, res) => {
       trustGuarantees,
       customPassword,
       aiApiKey,
+      mediaFiles,
     };
 
     const backupsDir = path.join(process.cwd(), ".data", "backups");
@@ -514,6 +540,8 @@ router.get("/backup/download", requireAdmin, async (req, res) => {
       getStoredAiApiKey(),
     ]);
 
+    const mediaFiles = getMediaFilesForBackup();
+
     const backupData = {
       version: 1,
       timestamp: new Date().toISOString(),
@@ -528,6 +556,7 @@ router.get("/backup/download", requireAdmin, async (req, res) => {
       trustGuarantees,
       customPassword,
       aiApiKey,
+      mediaFiles,
     };
 
     const filename = `qmlabs-backup-${new Date().toISOString().split("T")[0]}.json`;
@@ -588,9 +617,26 @@ router.post("/restore", requireAdmin, async (req, res) => {
     if (payload.customPassword) await saveCustomPassword(payload.customPassword);
     if (payload.aiApiKey) await saveStoredAiApiKey(payload.aiApiKey);
 
+    // Restore uploaded media files if embedded in backup
+    if (payload.mediaFiles && Array.isArray(payload.mediaFiles)) {
+      const uploadsDir = path.join(process.cwd(), "public", "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      for (const item of payload.mediaFiles) {
+        if (item && item.filename && item.data) {
+          const filePath = path.join(uploadsDir, item.filename);
+          if (!fs.existsSync(filePath)) {
+            const buf = Buffer.from(item.data, "base64");
+            fs.writeFileSync(filePath, buf);
+          }
+        }
+      }
+    }
+
     res.json({ 
       success: true, 
-      message: "Restored all database records successfully (settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees)." 
+      message: "Restored all database records and media files successfully (settings, projects, blogs, certificates, contacts, services, faqs, workflowSteps, trustGuarantees, mediaFiles)." 
     });
   } catch (error: any) {
     console.error("Restore error:", error);

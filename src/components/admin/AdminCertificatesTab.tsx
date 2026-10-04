@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save, X, Check, Sparkles, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Check, Sparkles, Search, Image as ImageIcon } from 'lucide-react';
 import { Certificate, SiteSettings } from '../../types';
 import { DEFAULT_PROFILES } from './AdminProfilesTab';
+import { ImageUploadInput } from './ImageUploadInput';
 
 interface AdminCertificatesTabProps {
   certificates: Certificate[];
@@ -470,17 +471,54 @@ export const AdminCertificatesTab: React.FC<AdminCertificatesTabProps> = ({
               />
             </div>
             
-            {/* Image URL */}
-            <div className="md:col-span-2 space-y-1">
-              <label htmlFor="cform-image" className="text-xs font-bold text-slate-505 block">Image URL</label>
-              <input
-                id="cform-image"
-                type="text"
+            {/* Certificate Badge / Image Upload */}
+            <div className="md:col-span-2 space-y-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5">
+              <div className="flex items-center justify-between border-b border-slate-200/70 pb-2.5">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#0084ff]" />
+                  Credential Badge / Image Upload
+                </h4>
+                <span className="text-[11px] text-blue-600 font-semibold font-mono">
+                  Supports uploading from device or external URL
+                </span>
+              </div>
+
+              <ImageUploadInput
+                multiple={true}
+                label="Certification Badge Image URL or Upload File"
                 value={certForm.image_url || ''}
-                onChange={(e) => setCertForm({ ...certForm, image_url: e.target.value })}
-                placeholder="https://example.com/certificate-image.png"
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-primary rounded-xl focus:outline-hidden"
+                onChange={(val) => setCertForm({ ...certForm, image_url: val })}
+                onUploadMultiple={(urls) => {
+                  if (urls.length > 0) {
+                    setCertForm({ ...certForm, image_url: urls[0] });
+                  }
+                }}
+                placeholder="https://example.com/certificate-badge.png or click Upload File"
               />
+
+              {certForm.image_url && (
+                <div className="flex items-center gap-3.5 pt-2 border-t border-slate-200/60 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <div className="w-16 h-12 rounded-lg bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                    <img
+                      src={certForm.image_url}
+                      alt="Certificate Preview"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/LOGO.png'; }}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="text-xs text-slate-600 min-w-0 flex-1">
+                    <span className="font-bold text-slate-900 block">Attached Badge Preview</span>
+                    <code className="text-[10px] font-mono text-slate-500 truncate block max-w-full">{certForm.image_url}</code>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCertForm({ ...certForm, image_url: '' })}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              )}
             </div>
             
             {/* Expiry Date */}
